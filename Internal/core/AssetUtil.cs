@@ -113,7 +113,6 @@ namespace hexegeer.internallib {
 		void IncrementReferenceCount();
 		bool DecrementReferenceCount();
 
-
 		void Dispose();
 	}
 
