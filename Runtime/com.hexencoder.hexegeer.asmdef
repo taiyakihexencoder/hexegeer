@@ -2,7 +2,16 @@
     "name": "com.hexencoder.hexegeer",
     "rootNamespace": "",
     "references": [
-        "com.hexencoder.hexegeer.internal"
+        "com.hexencoder.hexegeer.internal",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Entities",
+        "Unity.Mathematics",
+        "Unity.Transforms",
+        "Unity.Physics",
+        "Unity.InputSystem",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
