@@ -1,0 +1,19 @@
+{
+    "name": "com.hexengine.hexegeer-editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:2f34404d415a92a46ba586c5fbcb6540",
+        "GUID:68625f7c34f27ec4c8e6324a5b1dd31c"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,16 @@
+{
+    "name": "com.hexencoder.hexegeer",
+    "rootNamespace": "",
+    "references": [
+        "com.hexencoder.hexegeer.internal"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
