@@ -100,8 +100,18 @@ namespace hexegeer.internallib {
 			return Self;
 		}
 
+		public T WidthPercent(float percent) {
+			style.width = new StyleLength(new Length(percent, LengthUnit.Percent));
+			return Self;
+		}
+
 		public T Height(float height) {
 			style.height = height;
+			return Self;
+		}
+
+		public T HeightPercent(float percent) {
+			style.height = new StyleLength(new Length(percent, LengthUnit.Percent));
 			return Self;
 		}
 
