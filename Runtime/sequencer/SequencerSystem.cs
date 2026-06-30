@@ -21,7 +21,7 @@ namespace hexegeer {
 
 				foreach(SequenceRequest request in requests) {
 					if (contextList.TryGetValue(request.contextKey, out SequencerContext context)) {
-						context.RequestSequence(request.sequenceId);
+						context.ChangeSequence(request.sequenceId);
 					}
 				}
 

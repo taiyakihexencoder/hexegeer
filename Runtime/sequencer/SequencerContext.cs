@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using hexegeer.internallib;
+using Unity.Entities;
 using Unity.Mathematics;
 
 namespace hexegeer {
@@ -80,7 +82,19 @@ namespace hexegeer {
 			}
 		}
 
-		internal void RequestSequence(int sequenceId) {
+		/// <summary>
+		/// シーケンス移動依頼
+		/// ILayeredSequence.OnUpdateで使う想定。
+		/// </summary>
+		/// <param name="sequenceId"></param>
+		public void RequestSequence(int sequenceId) {
+			SyncContext.Post(() => {
+
+			});
+
+		}
+
+		internal void ChangeSequence(int sequenceId) {
 			if (_nowTranslate) {
 				D.Log($"Translation locked: ignore={sequenceId}");
 				return;
