@@ -92,7 +92,7 @@ namespace hexegeer {
 				HexegeerUtility.ECS.CreateEntity(new SequenceRequest{
 					contextKey = _key,
 					sequenceId = sequenceId,
-				})
+				});
 			});
 		}
 
