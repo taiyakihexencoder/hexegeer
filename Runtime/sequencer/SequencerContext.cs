@@ -89,9 +89,11 @@ namespace hexegeer {
 		/// <param name="sequenceId"></param>
 		public void RequestSequence(int sequenceId) {
 			SyncContext.Post(() => {
-
+				HexegeerUtility.ECS.CreateEntity(new SequenceRequest{
+					contextKey = _key,
+					sequenceId = sequenceId,
+				})
 			});
-
 		}
 
 		internal void ChangeSequence(int sequenceId) {
