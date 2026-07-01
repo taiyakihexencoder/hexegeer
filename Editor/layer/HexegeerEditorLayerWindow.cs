@@ -1,4 +1,5 @@
-﻿using hexegeer.internallib;
+﻿using System.Collections.Generic;
+using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -53,6 +54,7 @@ namespace hexegeer.editor {
 				for (int j = 0; j <= i; ++j) {
 					int toIndex = settings.LayerIndex(j);
 					Toggle toggle = new Toggle();
+					toggle.focusable = false;
 					toggle.enabledSelf = i >= defaultLayerCount && j >= defaultLayerCount 
 						&& !string.IsNullOrEmpty(fromName) && !string.IsNullOrEmpty(settings.LayerName(j));
 					toggle.style.marginLeft = 0f;
@@ -87,9 +89,27 @@ namespace hexegeer.editor {
 			}
 			pane.Add(nameRow);
 
+			pane.Add(new Spacer(height:16f));
+
+			ClickButton button = ClickButton.Create()
+				.Label("Generate Script");
+
+			button.OnClicked += GenerateScript;
+			pane.Add(button);
+
 			pane.Add(new Spacer(height:24f));
 
 			return pane;
+		}
+
+		private void GenerateScript() {
+			SourceCodeGenerator generator = new LayerScriptGenerator();
+
+			if (generator.Validation(out List<string> errorMessages)) {
+				generator.Generate($"layer{FileUtil.Sep}Layer.cs");
+			} else {
+				EditorUtility.DisplayDialog("エラー", string.Join(FileUtil.Lb, errorMessages), "ok");
+			}
 		}
 	}
 }

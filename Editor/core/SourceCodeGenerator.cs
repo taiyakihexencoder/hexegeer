@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -96,13 +97,18 @@ namespace hexegeer.editor {
 			stream.AppendLine("", false);
 		}
 
-		public void Generate(string pathFromAssets) {
+		public void Generate(string path) {
 			WriteScript();
-			stream.Generate(pathFromAssets);
+			stream.Generate(path);
 
 			if (!IsExistAsmref()) {
 				CreateAsmref();
 			}
+		}
+
+		public virtual bool Validation(out List<string> errorMessages) { 
+			errorMessages = new List<string>();
+			return true;
 		}
 
 		protected abstract void WriteScript();
@@ -206,7 +212,7 @@ namespace hexegeer.editor {
 				Path.DirectorySeparatorChar +
 				genPath;
 			
-			string[] splits = asmrefPath.Split(Path.DirectorySeparatorChar);
+			string[] splits = genPath.Split(Path.DirectorySeparatorChar);
 			string basePath = Application.dataPath;
 			for (int i = 0; i < splits.Length -1; ++i) {
 				basePath += $"{Path.DirectorySeparatorChar}{splits[i]}";
@@ -224,7 +230,9 @@ namespace hexegeer.editor {
 					}
 				}
 
-				AssetDatabase.ImportAsset($"Assets{Path.DirectorySeparatorChar}{genPath}");
+				EditorApplication.delayCall += () => {
+					AssetDatabase.ImportAsset($"Assets{Path.DirectorySeparatorChar}{genPath}");
+				};
 			}
 			catch (System.Exception e) {
 				Debug.LogError(e);
