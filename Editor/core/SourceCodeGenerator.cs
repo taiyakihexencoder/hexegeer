@@ -1,63 +1,214 @@
 ﻿using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
 namespace hexegeer.editor {
-	public sealed class SourceCodeGenerator {
-		private class IndentScope : System.IDisposable {
-			private SourceCodeGenerator gen;
+	public abstract class SourceCodeGenerator {
+		protected string assemblyName => "com.hexencoder.hexegeer";
+		protected virtual string autoGeneratePath => $"com.hexengine.hexegeer{Path.DirectorySeparatorChar}Auto-Generate{Path.DirectorySeparatorChar}Runtime{Path.DirectorySeparatorChar}";
 
-			public IndentScope(SourceCodeGenerator gen) {
-				this.gen = gen;
-				gen.AddIndent();
+		protected IGeneratorStream stream;
+
+		public SourceCodeGenerator() {
+			stream = new GeneratorStream(autoGeneratePath);
+		}
+
+		protected IndentScope Indent {
+			get {
+				stream.AddIndent();
+				return new IndentScope(() => stream.RemoveIndent());
+			}
+		}
+		protected IndentScope Class(
+			string name,
+			bool isPartial = false,
+			bool isStatic = false
+		) {
+			string header = "";
+			header += "public ";
+			if (isStatic) {
+				header += "static ";
+			}
+			if (isPartial) {
+				header += "partial ";
+			}
+			stream.AppendLine($"{header}class {name} {{");
+			stream.AddIndent();
+			return new IndentScope(() => {
+				stream.RemoveIndent();
+				stream.AppendLine($"}}");
+			});
+		}
+
+		protected IndentScope Struct(
+			string name,
+			bool isPartial = false,
+			bool isStatic = false,
+			bool isReadonly = false
+		) {
+			string header = "";
+			header += "public ";
+			if (isStatic) {
+				header += "static ";
+			}
+			if (isReadonly) {
+				header += "readonly ";
+			}
+			if (isPartial) {
+				header += "partial ";
+			}
+			stream.AppendLine($"{header}struct {name} {{");
+			stream.AddIndent();
+			return new IndentScope(() => {
+				stream.RemoveIndent();
+				stream.AppendLine($"}}");
+			});
+		}
+
+		protected IndentScope Namespace(string name) {
+			stream.AppendLine($"namespace {name} {{");
+			stream.AddIndent();
+			return new IndentScope(() => {
+				stream.RemoveIndent();
+				stream.AppendLine($"}}");
+			});
+		}
+
+		protected IndentScope Function(string name) {
+			stream.AppendLine($"{name} {{");
+			stream.AddIndent();
+			return new IndentScope(() => {
+				stream.RemoveIndent();
+				stream.AppendLine($"}}");
+			});
+		}
+
+		protected void Append(string text, bool indent = true) {
+			stream.Append(text, indent);
+		}
+
+		protected void AppendLine(string text, bool indent = true) {
+			stream.AppendLine(text, indent);
+		}
+
+		protected void AppendLine() {
+			stream.AppendLine("", false);
+		}
+
+		public void Generate(string pathFromAssets) {
+			WriteScript();
+			stream.Generate(pathFromAssets);
+
+			if (!IsExistAsmref()) {
+				CreateAsmref();
+			}
+		}
+
+		protected abstract void WriteScript();
+
+		protected class IndentScope : System.IDisposable {
+			public System.Action onClose;
+
+			public IndentScope(System.Action onClose) {
+				this.onClose = onClose;
 			}
 
 			void System.IDisposable.Dispose() {
-				gen.RemoveIndent();
+				onClose();
 			}
 		}
 
-		private static string assemblyName = "com.hexencoder.hexegeer";
-		private static string autoGeneratePath = $"com.hexengine.hexegeer{Path.DirectorySeparatorChar}Auto-Generate{Path.DirectorySeparatorChar}Runtime{Path.DirectorySeparatorChar}";
-
-		private int _indent;
-
-		private string script;
-
-		public SourceCodeGenerator() {
-			_indent = 0;
-			script = "";
+		protected interface IGeneratorStream {
+			void AddIndent();
+			void RemoveIndent();
+			void Append(string text, bool indent = true);
+			void AppendLine(string text, bool indent = true);
+			void Generate(string pathFromAssets);
 		}
 
-		public void AddIndent() {
-			_indent++;
+		private class GeneratorStream : IGeneratorStream {
+			private int _indent;
+			private StringBuilder _sb;
+			private string _autoGeneratePath;
+
+			public GeneratorStream(string autoGeneratePath) {
+				_indent = 0;
+				_sb = new StringBuilder();
+				_autoGeneratePath = autoGeneratePath;
+			}
+
+			void IGeneratorStream.AddIndent() {
+				_indent++;
+			}
+
+			void IGeneratorStream.RemoveIndent() {
+				_indent--;
+				if (_indent < 0) { _indent = 0; }
+			}
+
+			void IGeneratorStream.Append(string text, bool indent) {
+				if (indent && _indent > 0) {
+					_sb.Append(new string('\t', _indent));
+				}
+				_sb.Append(text);
+			}
+
+			void IGeneratorStream.AppendLine(string text, bool indent) {
+				if (indent && _indent > 0) {
+					_sb.Append(new string('\t', _indent));
+				}
+				_sb.Append(text);
+				_sb.Append(System.Environment.NewLine);
+			}
+
+			void IGeneratorStream.Generate(string path) {
+				string pathFromAssets = $"{_autoGeneratePath}{path}";
+				string absPath = Application.dataPath + Path.DirectorySeparatorChar + pathFromAssets;
+				try {
+					// フォルダ作成
+					string[] splits = pathFromAssets.Split(Path.DirectorySeparatorChar);
+					string basePath = Application.dataPath;
+					for (int i = 0; i < splits.Length -1; ++i) {
+						basePath += $"{Path.DirectorySeparatorChar}{splits[i]}";
+						if (!Directory.Exists(basePath)) {
+							Directory.CreateDirectory(basePath);
+						}
+					}
+
+					using (FileStream stream = new FileStream(absPath, FileMode.Create, FileAccess.Write)) {
+						using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8)) {
+							writer.Write(_sb.ToString());
+						}
+					}
+					AssetDatabase.ImportAsset("Assets" + Path.DirectorySeparatorChar + pathFromAssets);
+				} catch (System.Exception e) {
+					EditorUtility.DisplayDialog(
+						title: "Error",
+						message: "Failed: Script Generator stopped.",
+						ok: "Ok"
+					);
+					Debug.LogError(e);
+				}
+			}
+
 		}
 
-		public void RemoveIndent() {
-			_indent--;
+		protected bool IsExistAsmref() {
+			return File.Exists(
+				Application.dataPath + Path.DirectorySeparatorChar + $"{autoGeneratePath}{assemblyName}.asmref"
+			);
 		}
 
-		public System.IDisposable IndentBlock => new IndentScope(this);
-
-		public void Append(string text, bool indent = false) {
-			string indents = indent ? new string('\t', _indent) : "";
-			script += indents + text.Replace(System.Environment.NewLine, $"{System.Environment.NewLine}{indents}");
-		}
-
-		public void AppendLine(string text) {
-			Append(text, indent: true);
-			script += System.Environment.NewLine;
-		}
-
-		public void Generate(string path, bool checkAssembly = true) {
-			string genPath = autoGeneratePath + path;
-
-			string absPath = Application.dataPath + Path.DirectorySeparatorChar + genPath;
-			string relPath = "Assets" + Path.DirectorySeparatorChar + genPath;
-
+		protected void CreateAsmref() {
+			string genPath = $"{autoGeneratePath}{assemblyName}.asmref";
+			string asmrefPath = Application.dataPath +
+				Path.DirectorySeparatorChar +
+				genPath;
+			
+			string[] splits = asmrefPath.Split(Path.DirectorySeparatorChar);
 			string basePath = Application.dataPath;
-			string[] splits = genPath.Split(Path.DirectorySeparatorChar);
-			for(int i = 0; i < splits.Length - 1; ++i) {
+			for (int i = 0; i < splits.Length -1; ++i) {
 				basePath += $"{Path.DirectorySeparatorChar}{splits[i]}";
 				if (!Directory.Exists(basePath)) {
 					Directory.CreateDirectory(basePath);
@@ -65,52 +216,20 @@ namespace hexegeer.editor {
 			}
 
 			try {
-				using (FileStream stream = new FileStream(absPath, FileMode.Create, FileAccess.Write)) {
-					using (StreamWriter writer = new StreamWriter(stream, System.Text.Encoding.UTF8)) {
-						writer.Write(script);
+				using (FileStream stream = new FileStream(asmrefPath, FileMode.Create, FileAccess.Write)) {
+					using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8)) {
+						writer.WriteLine($"{{");
+						writer.WriteLine($"\t\"reference\": \"{assemblyName}\"");
+						writer.WriteLine($"}}");
 					}
 				}
-				AssetDatabase.ImportAsset(relPath);
 
-				if (checkAssembly) {
-					CreateAsmref();
-				}
-
-				Debug.Log($"Generated:{relPath}");
-			} catch (System.Exception e){
-				EditorUtility.DisplayDialog(
-					title: "Error",
-					message: "SourceCodeGenerator.Generate stopped. Causes should be logged on console.",
-					ok: "Ok"
-				);
+				AssetDatabase.ImportAsset($"Assets{Path.DirectorySeparatorChar}{genPath}");
+			}
+			catch (System.Exception e) {
 				Debug.LogError(e);
 			}
-		}
 
-		private void CreateAsmref() {
-			string genPath = $"{autoGeneratePath}{assemblyName}.asmref";
-			string asmrefPath = Application.dataPath +
-				Path.DirectorySeparatorChar +
-				genPath;
-				
-			if (!File.Exists(asmrefPath)) {
-				try {
-					if (File.Exists(asmrefPath)) { return; }
-
-					using (FileStream stream = new FileStream(asmrefPath, FileMode.Create, FileAccess.Write)) {
-						using (StreamWriter writer = new StreamWriter(stream, System.Text.Encoding.UTF8)) {
-							writer.WriteLine($"{{");
-							writer.WriteLine($"\t\"reference\": \"{assemblyName}\"");
-							writer.WriteLine($"}}");
-						}
-					}
-
-					AssetDatabase.ImportAsset($"Assets{Path.DirectorySeparatorChar}{genPath}");
-				}
-				catch (System.Exception e) {
-					Debug.LogError(e);
-				}
-			}
 		}
 	}
 }
