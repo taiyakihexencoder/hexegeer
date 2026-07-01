@@ -18,6 +18,8 @@ namespace hexegeer.editor {
 			ScrollPane frame = new ScrollPane()
 				.Padding(vertical: 16, horizontal: 24);
 
+			frame.Add(Text.H2("Editor Mode"));
+
 			EnumField field = new EnumField(mainSettings.ViewType);
 			field.RegisterValueChangedCallback(v => {
 				mainSettings.ViewType = (FieldViewType) v.newValue;
@@ -31,6 +33,12 @@ namespace hexegeer.editor {
 					break;
 				}
 			}
+
+			ClickButton button = ClickButton.Create()
+				.Label("Generate Runtime Resource");
+			button.OnClicked += OnRequestGenerate;
+
+			frame.Add(button);
 
 			return frame;
 		}
@@ -60,6 +68,10 @@ namespace hexegeer.editor {
 			internalColumn.AddChildren(widthField, offsetField);
 
 			return column;
+		}
+
+		private void OnRequestGenerate() {
+
 		}
 	}
 }
