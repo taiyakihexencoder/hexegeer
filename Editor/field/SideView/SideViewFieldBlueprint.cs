@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace hexegeer.editor {
 	[CreateAssetMenu(fileName = "SideViewFieldBlueprint", menuName = "Hexegeer/Field Blueprint/Side view")]
-	public sealed class SideViewFieldBlueprint : ScriptableObject {
+	internal sealed class SideViewFieldBlueprint : BaseFieldBlueprint {
 		[SerializeField]
 		private Vector2 _rootPosition = Vector2.zero;
 		public Vector2 RootPosition => _rootPosition;
@@ -27,97 +25,61 @@ namespace hexegeer.editor {
 			private Vector2[] _points;
 			public Vector2[] Points => _points;
 		}
-	}
 
-	[CustomEditor(typeof(SideViewFieldBlueprint))]
-	internal class SideViewFieldBlueprintEditor : Editor {
-		private Mesh[] meshes = new Mesh[0];
-
-		private void OnEnable() {
-			SceneView.duringSceneGui += SceneGUI;
-			UpdateMesh();
-		}
-
-		private void OnDisable() {
-			SceneView.duringSceneGui -= SceneGUI;
-
-			for(int i = 0; i < meshes.Length; ++i) {
-				DestroyImmediate(meshes[i]);
-			}
-			meshes = new Mesh[0];
-		}
-
-		public override void OnInspectorGUI(){
-			using (var scope = new EditorGUI.ChangeCheckScope()) {
-				base.OnInspectorGUI();
-				if (scope.changed) {
-					UpdateMesh();
-				}
+		public override Vector3 Position => new Vector3(_rootPosition.x, _rootPosition.y, FieldSideViewSettings.instance.ZOffset);
+		public override Quaternion Rotation => Quaternion.identity;
+		public override int MeshCount => _fieldElements.Length;
+		public override string GetName(int index) {
+			if (index < 0 || _fieldElements.Length <= index) {
+				return "";
+			} else {
+				return _fieldElements[index].Name;
 			}
 		}
 
-		private void SceneGUI(SceneView sceneView) {
-			SideViewFieldBlueprint scriptable = target as SideViewFieldBlueprint;
-
-			Vector2 rootPosition = scriptable.RootPosition;
-			Handles.SphereHandleCap(0, rootPosition, Quaternion.identity, 1.0f, EventType.Repaint);
-
-			for(int i = 0; i < scriptable.FieldElements.Length; ++i) {
-				if (scriptable.FieldElements[i].Visible) {
-					Graphics.DrawMeshNow(meshes[i], Matrix4x4.Translate(rootPosition), -1);
-				}
-			}
-		}
-
-		private void UpdateMesh() {
-			SideViewFieldBlueprint scriptable = target as SideViewFieldBlueprint;
-
-			List<Mesh> meshList = new List<Mesh>();
-			foreach(SideViewFieldBlueprint.FieldElement element in scriptable.FieldElements) {
-				CreateVertexList(element.Points, out Vector3[] vertices, out int[] indices);
-				Mesh mesh = new Mesh();
-				mesh.SetVertices(vertices);
-				mesh.SetIndices(indices, MeshTopology.Triangles, 0);
-				mesh.RecalculateNormals();
-				meshList.Add(mesh);
-			}
-			
-			for (int i = 0; i < meshes.Length; ++i) {
-				DestroyImmediate(meshes[i]);
-			}
-			meshes = meshList.ToArray();
-		}
-
-		internal static void CreateVertexList(Vector2[] points, out Vector3[] vertices, out int[] indices) {
-			if (points.Length < 2) {
+		public override bool TryGetMesh(int index, out Vector3[] vertices, out int[] indices){
+			if (index < 0 || _fieldElements.Length <= index) {
 				vertices = new Vector3[0];
 				indices = new int[0];
-				return;
+				return false;
 			} else {
-				int vertexCount = (points.Length-1) * 6;
-				vertices = new Vector3[vertexCount];
-				indices = new int[vertexCount];
+				Vector2[] points = _fieldElements[index].Points;
+				if (points.Length < 2) {
+					vertices = new Vector3[0];
+					indices = new int[0];
+					return false;
+				} else {
+					int vertexCount = (points.Length-1) * 6;
+					vertices = new Vector3[vertexCount];
+					indices = new int[vertexCount];
 
-				FieldSideViewSettings settings = FieldSideViewSettings.instance;
+					FieldSideViewSettings sideViewSettings = FieldSideViewSettings.instance;
 
-				float halfWidth = settings.Width * 0.5f;
-				float zOffset = settings.ZOffset;
-				for(int i = 1, n = 0; i < points.Length; ++i, n += 6) {
-					vertices[n] = new Vector3(points[i-1].x, points[i-1].y, -halfWidth + zOffset);
-					vertices[n+1] = new Vector3(points[i-1].x, points[i-1].y, halfWidth + zOffset);
-					vertices[n+2] = new Vector3(points[i].x, points[i].y, halfWidth + zOffset);
-					vertices[n+3] = new Vector3(points[i].x, points[i].y, halfWidth + zOffset);
-					vertices[n+4] = new Vector3(points[i].x, points[i].y, -halfWidth + zOffset);
-					vertices[n+5] = new Vector3(points[i-1].x, points[i-1].y, -halfWidth + zOffset);
+					float zOffset = sideViewSettings.ZOffset;
+					float halfWidth = sideViewSettings.Width * 0.5f;
 
-					indices[n] = n;
-					indices[n+1] = n+1;
-					indices[n+2] = n+2;
-					indices[n+3] = n+3;
-					indices[n+4] = n+4;
-					indices[n+5] = n+5;
+					for(int i = 1, n = 0; i < points.Length; ++i, n += 6) {
+						vertices[n] = new Vector3(points[i-1].x, points[i-1].y, -halfWidth + zOffset);
+						vertices[n+1] = new Vector3(points[i-1].x, points[i-1].y, halfWidth + zOffset);
+						vertices[n+2] = new Vector3(points[i].x, points[i].y, halfWidth + zOffset);
+						vertices[n+3] = new Vector3(points[i].x, points[i].y, halfWidth + zOffset);
+						vertices[n+4] = new Vector3(points[i].x, points[i].y, -halfWidth + zOffset);
+						vertices[n+5] = new Vector3(points[i-1].x, points[i-1].y, -halfWidth + zOffset);
+
+						indices[n] = n;
+						indices[n+1] = n+1;
+						indices[n+2] = n+2;
+						indices[n+3] = n+3;
+						indices[n+4] = n+4;
+						indices[n+5] = n+5;
+					}
+					return true;
 				}
 			}
+		}
+
+		public override bool IsVisible(int index) {
+			return 0 <= index && index < _fieldElements.Length && _fieldElements[index].Visible;
 		}
 	}
 }

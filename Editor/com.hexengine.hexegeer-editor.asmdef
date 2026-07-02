@@ -2,8 +2,10 @@
     "name": "com.hexengine.hexegeer-editor",
     "rootNamespace": "",
     "references": [
-        "GUID:2f34404d415a92a46ba586c5fbcb6540",
-        "GUID:68625f7c34f27ec4c8e6324a5b1dd31c"
+        "com.hexencoder.hexegeer.internal",
+        "com.hexencoder.hexegeer",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor"
     ],
     "includePlatforms": [
         "Editor"

@@ -12,6 +12,7 @@ namespace hexegeer.internallib {
 
 		private Text(string text) {
 			label = new Label(text);
+			style.justifyContent = Justify.Center;
 			Add(label);
 		}
 
@@ -51,6 +52,16 @@ namespace hexegeer.internallib {
 
 		public Text Style(FontStyle fontStyle) {
 			style.unityFontStyleAndWeight = fontStyle;
+			return this;
+		}
+
+		public Text TextAlign(TextAnchor anchor) {
+			label.style.unityTextAlign = anchor;
+			return this;
+		}
+
+		public Text TextColor(Color color) {
+			label.style.color = color;
 			return this;
 		}
 	}
