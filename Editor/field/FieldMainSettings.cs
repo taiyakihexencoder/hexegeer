@@ -51,5 +51,17 @@ namespace hexegeer.editor {
 				}
 			}
 		}
+
+		[SerializeField]
+		private double _updateInterval = 1.0f;
+		internal double UpdateInterval {
+			get => _updateInterval;
+			set {
+				if(_updateInterval != value) {
+					_updateInterval = value;
+					Save(true);
+				}
+			}
+		}
 	}
 }

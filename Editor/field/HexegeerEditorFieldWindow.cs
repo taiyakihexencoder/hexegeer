@@ -57,6 +57,15 @@ namespace hexegeer.editor {
 			cacheCountField.isDelayed = true;
 			frame.Add(cacheCountField);
 
+			// Update Interval
+			DoubleField updateIntervalField = new DoubleField("Update Interval");
+			updateIntervalField.SetValueWithoutNotify(mainSettings.UpdateInterval);
+			updateIntervalField.RegisterValueChangedCallback(v => {
+				mainSettings.UpdateInterval = v.newValue < 0.0 ? 0.0 : v.newValue;
+			});
+			updateIntervalField.isDelayed = true;
+			frame.Add(updateIntervalField);
+
 			frame.Add(new Spacer(height: 20f));
 
 			// Each View Settings
@@ -73,11 +82,19 @@ namespace hexegeer.editor {
 
 			frame.Add(new Spacer(height:20f));
 
-			ClickButton button = ClickButton.Create()
+			ClickButton resourceButton = ClickButton.Create()
 				.Label("Generate Runtime Resource");
-			button.OnClicked += OnRequestGenerate;
+			resourceButton.OnClicked += OnRequestGenerateResource;
 
-			frame.Add(button);
+			ClickButton scriptButton = ClickButton.Create()
+				.Label("Generate Script");
+			scriptButton.OnClicked += OnRequestGenerateScript;
+
+			Row buttons = new Row();
+			buttons.AddChildren(resourceButton, new Spacer(width: 24f), scriptButton);
+
+
+			frame.Add(buttons);
 
 			return frame;
 		}
@@ -220,7 +237,7 @@ namespace hexegeer.editor {
 			return column;
 		}
 
-		private void OnRequestGenerate() {
+		private void OnRequestGenerateResource() {
 			FieldMainSettings settings = FieldMainSettings.instance;
 			System.Type resourceType = settings.ViewType.GetResourceType();
 			foreach (string guid in AssetDatabase.FindAssets($"t:{resourceType.Name}")) {
@@ -233,6 +250,19 @@ namespace hexegeer.editor {
 
 			ResourceGenerator<FieldTable> tableGenerator = new FieldTableGenerator();
 			tableGenerator.Generate($"{typeof(FieldTable).Name}.asset");
+		}
+
+		private void OnRequestGenerateScript() {
+			FieldScriptGenerator generator = new FieldScriptGenerator();
+			if (generator.Validation(out List<string> messages)) {
+				generator.Generate("FieldAssetAddress.cs");
+			} else {
+				EditorUtility.DisplayDialog(
+					title: "Error",
+					message: string.Join('\n', messages),
+					ok: "ok"
+				);
+			}
 		}
 	}
 }
