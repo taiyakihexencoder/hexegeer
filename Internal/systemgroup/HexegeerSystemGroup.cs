@@ -1,4 +1,5 @@
 ﻿using Unity.Entities;
+using Unity.Physics.Systems;
 
 namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -6,6 +7,12 @@ namespace hexegeer.internallib {
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerInternalSystemGroup : ComponentSystemGroup { }
+
+	[UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
+	public partial class HexegeerAfterPhysicsSystemGroup : ComponentSystemGroup { }
+
+	[UpdateInGroup(typeof(HexegeerAfterPhysicsSystemGroup))]
+	public partial class HexegeerColliderGroup : ComponentSystemGroup { }
 
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
