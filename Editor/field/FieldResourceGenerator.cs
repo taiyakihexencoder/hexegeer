@@ -44,6 +44,7 @@ namespace hexegeer.editor {
 
 			// set address
 			SetAddress(serializedObject, blueprint.RuntimeAssetAddress);
+			AssetDatabase.SaveAssets();
 		}
 	}
 }

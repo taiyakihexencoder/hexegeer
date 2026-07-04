@@ -7,6 +7,7 @@ namespace hexegeer.internallib {
 		[System.Serializable]
 		internal class Row {
 			public int id;
+			public int contentKey;
 			public string address;
 			public string name;
 			public string guid;

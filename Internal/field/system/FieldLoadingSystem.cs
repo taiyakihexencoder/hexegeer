@@ -164,6 +164,7 @@ namespace hexegeer.internallib {
 					FieldHeader header = new FieldHeader {
 						active = false,
 						id = row.id,
+						contentKey = row.contentKey,
 						boundsMin = row.boundsMin,
 						boundsMax = row.boundsMax,
 						lastUpdated = 0.0,

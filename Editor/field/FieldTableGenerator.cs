@@ -36,6 +36,7 @@ namespace hexegeer.editor {
 
 				rowsProperty.Add( p => {
 					p.FindPropertyRelative("id").intValue = blueprint.Id;
+					p.FindPropertyRelative("contentKey").intValue = blueprint.ContentKey;
 					p.FindPropertyRelative("address").stringValue = blueprint.RuntimeAssetAddress;
 					p.FindPropertyRelative("name").stringValue = blueprint.name;
 					p.FindPropertyRelative("guid").stringValue = guid;

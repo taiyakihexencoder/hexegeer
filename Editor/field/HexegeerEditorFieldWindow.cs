@@ -6,11 +6,22 @@ using UnityEngine.UIElements;
 
 namespace hexegeer.editor {
 	public sealed class HexegeerEditorFieldWindow : EditorWindow {
+		private ListPopupBuilder<int> popupBuilder;
+
 		private void OnEnable() {
 			titleContent = new GUIContent("Field");
 
+			ContentKeySetting keySettings = ContentKeySetting.instance;
+
+			popupBuilder = keySettings.CreateListPopupBuilder();
+
 			VisualElement mainView = CreateMainView();
 			rootVisualElement.Add(mainView);
+		}
+
+		private void OnFocus() {
+			ContentKeySetting keySettings = ContentKeySetting.instance;
+			popupBuilder = keySettings.UpdateKeys(popupBuilder);
 		}
 
 		private VisualElement CreateMainView() {
@@ -142,8 +153,9 @@ namespace hexegeer.editor {
 
 			Text headerGuid = Text.Body("Guid").Width(200.0f).TextColor(Color.black);
 			Text headerAssetPath = Text.Body("Location").Weight(1f).TextColor(Color.black);
+			Text headerKey = Text.Body("Key").Width(100f).TextColor(Color.black);
 			Text headerAddress = Text.Body("Address").Weight(1f).TextColor(Color.black);
-			header.AddChildren(headerGuid, headerAssetPath, headerAddress);
+			header.AddChildren(headerGuid, headerAssetPath, headerKey, headerAddress);
 
 			column.Add(header);
 
@@ -205,12 +217,21 @@ namespace hexegeer.editor {
 					.Weight(1f);
 				assetPathLabel.style.fontSize = 10f;
 
+				BaseFieldBlueprint blueprint = table[guid];
+
+				PopupField<int> contentKeyPopup = popupBuilder.Generate(blueprint.ContentKey);
+				contentKeyPopup.style.width = 100f;
+				contentKeyPopup.RegisterValueChangedCallback(v => {
+					SerializedObject obj = new SerializedObject(blueprint);
+					obj.FindProperty("_contentKey").intValue = v.newValue;
+					obj.ApplyModifiedProperties();
+				});
+
 				TextField runtimeAssetAddressField = new TextField("");
 				runtimeAssetAddressField.style.flexBasis = 0f;
 				runtimeAssetAddressField.style.flexGrow = 1f;
 				runtimeAssetAddressField.style.fontSize = 10f;
 
-				BaseFieldBlueprint blueprint = table[guid];
 				runtimeAssetAddressField.RegisterValueChangedCallback(v => {
 					SerializedObject obj = new SerializedObject(blueprint);
 					obj.FindProperty("_runtimeAssetAddress").stringValue = v.newValue;
@@ -230,7 +251,7 @@ namespace hexegeer.editor {
 					runtimeAssetAddressField.SetValueWithoutNotify(runtimeAssetAddress);
 				}
 
-				row.AddChildren(guidLabel, assetPathLabel, runtimeAssetAddressField);
+				row.AddChildren(guidLabel, assetPathLabel, contentKeyPopup, runtimeAssetAddressField);
 				column.Add(row);
 			}
 

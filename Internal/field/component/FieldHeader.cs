@@ -12,6 +12,11 @@ namespace hexegeer.internallib {
 		public int id;
 
 		/// <summary>
+		/// コンテンツキー
+		/// </summary>
+		public int contentKey;
+
+		/// <summary>
 		/// LunarscapeFieldMeshComponentの読込状態
 		/// 読込開始でONになる。
 		/// </summary>

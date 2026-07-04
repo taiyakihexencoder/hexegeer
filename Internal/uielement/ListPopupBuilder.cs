@@ -42,9 +42,14 @@ namespace hexegeer.internallib {
 			EventCallback<DetachFromPanelEvent> detach = default;
 			detach = evt => {
 				onDictionaryUpdated -= onUpdated;
-				popup.UnregisterCallback(detach);
 			};
 			popup.RegisterCallback(detach);
+
+			EventCallback<AttachToPanelEvent> attach = default;
+			attach = evt => {
+				onDictionaryUpdated += onUpdated;
+			};
+			popup.RegisterCallback(attach);
 
 			return popup;
 		}

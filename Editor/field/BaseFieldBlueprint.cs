@@ -12,6 +12,10 @@ namespace hexegeer.editor {
 		private int _id = 0;
 		public int Id => _id;
 
+		[SerializeField]
+		private int _contentKey = 0;
+		public int ContentKey => _contentKey;
+
 		public abstract Vector3 Position { get; }
 		public abstract Quaternion Rotation { get; }
 		public abstract int MeshCount { get; }
