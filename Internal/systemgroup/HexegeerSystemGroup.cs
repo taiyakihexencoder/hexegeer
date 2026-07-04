@@ -8,5 +8,18 @@ namespace hexegeer.internallib {
 	public partial class HexegeerInternalSystemGroup : ComponentSystemGroup { }
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
+	public partial class HexegeerFieldSystemGroup : ComponentSystemGroup {
+	}
+
+	[UpdateInGroup(typeof(HexegeerFieldSystemGroup))]
+	public partial class HexegeerFieldInternalSystemGroup : ComponentSystemGroup {
+		protected override void OnCreate(){
+			base.OnCreate();
+			RequireForUpdate<FieldSetting>();
+		}
+	}
+
+
+	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerInputSystemGroup : ComponentSystemGroup { }
 }

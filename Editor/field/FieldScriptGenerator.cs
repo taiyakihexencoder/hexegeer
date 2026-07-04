@@ -40,12 +40,43 @@ namespace hexegeer.editor {
 			
 			string[] guids = AssetDatabase.FindAssets($"t:{resourceType.Name}");
 
+			AppendLine("using Unity.Entities;");
+			AppendLine("using Unity.Mathematics;");
+			AppendLine("using Unity.Transforms;");
+			AppendLine("using hexegeer.internallib;");
+
+			AppendLine();
+
 			using (Namespace("hexegeer")) {
 				using (Struct("FieldAssetAddress", isPartial: true, isStatic: false, isReadonly: true)) {
 					foreach (string guid in guids) {
 						string assetPath = AssetDatabase.GUIDToAssetPath(guid);
 						BaseFieldBlueprint blueprint = AssetDatabase.LoadAssetAtPath<BaseFieldBlueprint>(assetPath);
 						AppendLine($"public static readonly FieldAssetAddress {blueprint.name} = new FieldAssetAddress({blueprint.Id}, \"{blueprint.RuntimeAssetAddress}\", \"{blueprint.name}\");");
+					}
+				}
+				AppendLine();
+				using (Class("FieldSettingGenerator", isPartial: true)) {
+					using (Function("partial void GenerateInternal(EntityManager entityManager)")) {
+						AppendLine($"Entity settingEntity = entityManager.Create(");
+						using (Indent) {
+							AppendLine($"new FieldSetting {{");
+							using (Indent) {
+								AppendLine($"loadFieldDistance = {mainSettings.LoadFieldDistance}f,");
+								AppendLine($"unloadFieldDistance = {mainSettings.UnloadFieldDistance}f,");
+								AppendLine($"cacheFieldMeshCount = {mainSettings.MeshCacheCount},");
+								AppendLine($"updateInterval = {mainSettings.UpdateInterval},");
+								AppendLine($"belongsTo = Layer.Terrain,");
+								AppendLine($"collidesWith = LayerCollide.Terrain,");
+							}
+							AppendLine($"}},");
+							AppendLine($"new AttachHexegeerTree(),");
+							AppendLine($"new Parent(),");
+							AppendLine($"LocalTransform.Identity,");
+							AppendLine($"new LocalToWorld {{ Value = float4x4.identity, }}");
+						}
+						AppendLine($");");
+						AppendLine($"ECS.SetEntityName(entityManager, settingEntity, \"Field Setting@Hexegeer\");");
 					}
 				}
 			}

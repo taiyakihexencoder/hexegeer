@@ -1,4 +1,6 @@
-﻿using Unity.Entities;
+﻿using System.Threading.Tasks;
+using hexegeer.internallib;
+using Unity.Entities;
 
 namespace hexegeer {
 	public static partial class HexegeerUtility {
@@ -28,6 +30,19 @@ namespace hexegeer {
 				where T3: unmanaged, IComponentData {
 				return internallib.ECS.CreateEntity(component1, component2, component3);
 			}
+
+			public static async Task WaitQueryExists(EntityQuery query) {
+				while (SyncContext.Send(() => query.IsEmpty)) {
+					await Task.Yield();
+				}
+			}
+
+			public static async Task WaitQueryEmpty(EntityQuery query) {
+				while (SyncContext.Send(() => !query.IsEmpty)) {
+					await Task.Yield();
+				}
+			}
+
 		}
 
 		/// <summary>

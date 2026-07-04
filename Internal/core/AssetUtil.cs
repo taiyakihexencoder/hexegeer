@@ -36,7 +36,7 @@ namespace hexegeer.internallib {
 			}
 
 			holder.IncrementReferenceCount();
-			return Object.Instantiate(original);
+			return SyncContext.Send(() => Object.Instantiate(original));
 		}
 
 		public static void Release(string address) {
@@ -63,9 +63,14 @@ namespace hexegeer.internallib {
 			holder.IncrementReferenceCount();
 
 			List<T> instances = new List<T>();
-			foreach(T original in objList) {
-				instances.Add(Object.Instantiate(original));
-			}
+
+			SyncContext.Send(() => {
+				foreach(T original in objList) {
+					T instance = Object.Instantiate(original);
+					instance.name = original.name;
+					instances.Add(instance);
+				}
+			});
 			return instances;
 		}
 

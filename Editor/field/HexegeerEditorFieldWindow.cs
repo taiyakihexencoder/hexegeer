@@ -255,7 +255,7 @@ namespace hexegeer.editor {
 		private void OnRequestGenerateScript() {
 			FieldScriptGenerator generator = new FieldScriptGenerator();
 			if (generator.Validation(out List<string> messages)) {
-				generator.Generate("FieldAssetAddress.cs");
+				generator.Generate("FieldAutoGenerates.cs");
 			} else {
 				EditorUtility.DisplayDialog(
 					title: "Error",
