@@ -74,6 +74,8 @@ namespace hexegeer.editor {
 				foreach (Key k in instance.Keys) {
 					if (k.id == key) { return k.name; }
 				}
+				if (key == 0) { return "Global"; }
+
 				return "";
 			});
 
@@ -82,7 +84,7 @@ namespace hexegeer.editor {
 		}
 
 		public ListPopupBuilder<int> UpdateKeys(ListPopupBuilder<int> builder) {
-			List<int> keys = new List<int>();
+			List<int> keys = new List<int>(){0};
 			foreach(Key k in Keys) {
 				keys.Add(k.id);
 			}

@@ -33,6 +33,22 @@ namespace hexegeer.editor {
 			ContentKeySetting settings = ContentKeySetting.instance;
 			ContentKeySetting.Key[] keys = settings.Keys;
 
+			{
+				Row globalRow = new Row();
+				TextField globalField = new TextField();
+				globalField.style.width = 200;
+				globalField.SetValueWithoutNotify("Global");
+				globalField.enabledSelf = false;
+
+				ClickButton dummyButton = ClickButton.Create()
+					.Label("-");
+				dummyButton.enabledSelf = false;
+
+				globalRow.AddChildren(globalField, dummyButton);
+
+				parent.Add(globalRow);
+			}
+
 			for(int i = 0; i < keys.Length; ++i) {
 				int index = i;
 				Row row = new Row();

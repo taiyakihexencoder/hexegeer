@@ -7,6 +7,11 @@ namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerInternalSystemGroup : ComponentSystemGroup { }
 
+
+	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
+	public partial class HexegeerContentKeySystemGroup : ComponentSystemGroup { }
+
+
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerFieldSystemGroup : ComponentSystemGroup {
 	}

@@ -33,6 +33,7 @@ namespace hexegeer.internallib {
 		private struct EntityCreateInfo {
 			public Entity headerEntity;
 			public int id;
+			public int contentKey;
 			public List<MeshCreateInfo> meshList;
 		}
 
@@ -203,6 +204,7 @@ namespace hexegeer.internallib {
 					_queue.Enqueue(
 						new EntityCreateInfo {
 							id = id,
+							contentKey = row.contentKey,
 							headerEntity = parent,
 							meshList = meshes,
 						}
@@ -275,6 +277,9 @@ namespace hexegeer.internallib {
 			foreach(Entity entity in entities) {
 				group.Add(new LinkedEntityGroup { Value = entity, });
 			}
+
+			// コンテンツの追加を依頼
+			EntityManager.Create(new ContentKeyLoadRequest { contentKey = createInfo.contentKey, });
 		}
 		
 		private void SetCacheCount(int cacheCount) {

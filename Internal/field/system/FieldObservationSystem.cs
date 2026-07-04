@@ -157,6 +157,10 @@ namespace hexegeer.internallib {
 				foreach(Child child in children) {
 					commandBuffer.DestroyEntity(sortKey, child.Value);
 				}
+
+				// コンテンツのアンロード
+				Entity unloadContentsEntity = commandBuffer.CreateEntity(sortKey);
+				commandBuffer.AddComponent(sortKey, unloadContentsEntity, new ContentKeyLoadRequest{ contentKey = header.ValueRO.contentKey, });
 			}
 		}
 	}

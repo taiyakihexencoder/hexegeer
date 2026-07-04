@@ -12,8 +12,6 @@ namespace hexegeer {
 				.WithAll<LaunchFieldSystemRequest>()
 				.Build(EntityManager);
 			RequireForUpdate(_launchQuery);
-
-			EntityManager.Create(new FieldLoadRequest { id = FieldAssetAddress.test.Id, });
 		}
 
 		protected override void OnUpdate() {
