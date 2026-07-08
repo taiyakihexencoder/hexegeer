@@ -14,6 +14,8 @@ namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerAfterPhysicsSystemGroup))]
 	public partial class HexegeerColliderGroup : ComponentSystemGroup { }
 
+	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
+	public partial class HexegeerCharacterSystemGroup : ComponentSystemGroup { }
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerContentKeySystemGroup : ComponentSystemGroup { }

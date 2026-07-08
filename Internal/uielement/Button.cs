@@ -19,14 +19,14 @@ namespace hexegeer.internallib {
 		private Color _textHoverColor;
 		private Color _textClickColor;
 
-		private ClickButton() {
+		private ClickButton(Align align) {
 			style.backgroundColor = _color;
 			style.alignContent = UnityEngine.UIElements.Align.Center;
+			style.alignSelf = align;
 			style.justifyContent = Justify.Center;
 			style.minWidth = 50.0f;
 			style.minHeight = 30.0f;
 			style.flexGrow = 0f;
-			style.alignSelf = UnityEngine.UIElements.Align.FlexStart;
 
 			RegisterCallback<GeometryChangedEvent>(
 				evt => {
@@ -78,8 +78,8 @@ namespace hexegeer.internallib {
 			Add(_label);
 		}
 
-		public static ClickButton Create() {
-			return new ClickButton().Border(new Color(0.5f, 0.5f, 0.5f), 1f, 0f)
+		public static ClickButton Create(Align align = UnityEngine.UIElements.Align.FlexStart) {
+			return new ClickButton(align).Border(new Color(0.5f, 0.5f, 0.5f), 1f, 0f)
 				.Padding(vertical: 6, horizontal: 16)
 				.BackgroundColor(
 					new Color(0.2f, 0.2f, 0.2f),

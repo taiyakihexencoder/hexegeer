@@ -76,7 +76,7 @@ namespace hexegeer.editor {
 				}
 				if (key == 0) { return "Global"; }
 
-				return "";
+				return " - ";
 			});
 
 			builder = UpdateKeys(builder);

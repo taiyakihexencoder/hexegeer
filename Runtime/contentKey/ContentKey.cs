@@ -2,6 +2,8 @@
 	public readonly partial struct ContentKey {
 		public readonly int value;
 
+		public static readonly ContentKey Global = new ContentKey(0);
+
 		public ContentKey(int key) {
 			this.value = key;
 		}

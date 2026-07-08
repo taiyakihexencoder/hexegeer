@@ -75,7 +75,7 @@ namespace hexegeer.internallib {
 			entityManager.SetComponentData(entity, component4);
 		}
 
-				/// <summary>
+		/// <summary>
 		/// Componentをまとめてセット
 		/// </summary>
 		public static void SetComponents<T1, T2, T3, T4, T5>(
@@ -215,6 +215,33 @@ namespace hexegeer.internallib {
 			where T2: unmanaged, IComponentData
 			where T3: unmanaged, IComponentData {
 			return World.DefaultGameObjectInjectionWorld.EntityManager.Create(component1, component2, component3);
+		}
+
+		public static void RemoveComponents<T1, T2>(this EntityManager entityManager, Entity entity) 
+			where T1: unmanaged, IComponentData 
+			where T2: unmanaged, IComponentData {
+			entityManager.RemoveComponent<T1>(entity);
+			entityManager.RemoveComponent<T2>(entity);
+		}
+
+		public static void RemoveComponents<T1, T2, T3>(this EntityManager entityManager, Entity entity) 
+			where T1: unmanaged, IComponentData 
+			where T2: unmanaged, IComponentData 
+			where T3: unmanaged, IComponentData {
+			entityManager.RemoveComponent<T1>(entity);
+			entityManager.RemoveComponent<T2>(entity);
+			entityManager.RemoveComponent<T3>(entity);
+		}
+
+		public static void RemoveComponents<T1, T2, T3, T4>(this EntityManager entityManager, Entity entity) 
+			where T1: unmanaged, IComponentData 
+			where T2: unmanaged, IComponentData 
+			where T3: unmanaged, IComponentData 
+			where T4: unmanaged, IComponentData {
+			entityManager.RemoveComponent<T1>(entity);
+			entityManager.RemoveComponent<T2>(entity);
+			entityManager.RemoveComponent<T3>(entity);
+			entityManager.RemoveComponent<T4>(entity);
 		}
 	}
 }

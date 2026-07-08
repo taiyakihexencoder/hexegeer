@@ -8,7 +8,8 @@ namespace hexegeer.internallib {
 	/// <typeparam name="T"></typeparam>
 	public class SelectableList<T> : CommonVisualElement<SelectableList<T>> where T: class {
 		private ScrollView _scrollView;
-		private T _selected;
+		public T Selected { get; private set; }
+
 		private Color _selectedColor;
 
 		public System.Action<T> selectionChanged;
@@ -35,10 +36,10 @@ namespace hexegeer.internallib {
 		/// </summary>
 		/// <param name="key"></param>
 		public void Select(T key) {
-			if (!key.Equals(_selected)) {
+			if (!key.Equals(Selected)) {
 				foreach(VisualElement ve in _scrollView.Children()) {
 					if (ve.userData is T userData && userData.Equals(key)) {
-						_selected = key;
+						Selected = key;
 						OnListSelected();
 						selectionChanged?.Invoke(userData);
 					}
@@ -57,8 +58,8 @@ namespace hexegeer.internallib {
 			ve.RegisterCallback<MouseDownEvent>(
 				evt => {
 					if(evt.button == 0) {
-						if (ve.userData is T userData && !userData.Equals(_selected)) {
-							_selected = userData;
+						if (ve.userData is T userData && !userData.Equals(Selected)) {
+							Selected = userData;
 							OnListSelected();
 							selectionChanged?.Invoke(userData);
 						}
@@ -72,7 +73,7 @@ namespace hexegeer.internallib {
 			foreach(VisualElement ve in _scrollView.Children()) {
 				if (ve.userData is T userData) {
 					Color color = _selectedColor;
-					color.a = userData.Equals(_selected) ? 1.0f : 0.0f;
+					color.a = userData.Equals(Selected) ? 1.0f : 0.0f;
 					ve.style.backgroundColor = new StyleColor(color);
 				}
 			}
@@ -82,7 +83,7 @@ namespace hexegeer.internallib {
 		/// 選択解除
 		/// </summary>
 		public void Unselect() {
-			_selected = null;
+			Selected = null;
 			OnListSelected();
 			selectionChanged?.Invoke(null);
 		}
@@ -92,7 +93,7 @@ namespace hexegeer.internallib {
 		/// </summary>
 		public void ClearElements() {
 			_scrollView.Clear();
-			_selected = null;
+			Unselect();
 		}
 	}
 }

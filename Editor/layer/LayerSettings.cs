@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using hexegeer.internallib;
+using UnityEditor;
 using UnityEngine;
 
 namespace hexegeer.editor {
@@ -80,6 +82,44 @@ namespace hexegeer.editor {
 			_table[a * LAYER_COUNT + b] = value;
 			_table[a + b * LAYER_COUNT] = value;
 			Save(true);
+		}
+
+		public ListPopupBuilder<int> CreateListPopupBuilder() {
+			ListPopupBuilder<int> builder = new ListPopupBuilder<int>();
+
+			builder.SetConverter(key => {
+				int[] indices = instance.LayerIndices;
+				for(int i = 0; i < indices.Length; ++i) {
+					
+					if (indices[i] == key) { return instance.LayerNames[i]; }
+				}
+				return " - ";
+			});
+
+			builder = UpdateKeys(builder);
+			return builder;
+		}
+
+		public ListPopupBuilder<int> UpdateKeys(ListPopupBuilder<int> builder) {
+			List<int> keys = new List<int>(LayerIndices);
+			List<string> layerNames = new List<string>(LayerNames);
+			DefaultLayer[] defaultLayers = System.Enum.GetValues(typeof(DefaultLayer)) as DefaultLayer[];
+			foreach (DefaultLayer defaultLayer in defaultLayers) {
+				int index = layerNames.FindIndex(_ => _ == defaultLayer.ToString());
+				if (index >= 0) { 
+					keys.RemoveAt(index);
+					layerNames.RemoveAt(index);
+				}
+			}
+
+			for(int i = keys.Count-1; i >= 0; --i) {
+				if (string.IsNullOrEmpty(layerNames[i])) { 
+					keys.RemoveAt(i);
+					layerNames.RemoveAt(i);
+				}
+			}
+
+			return builder.SetKeys(keys);
 		}
 	}
 }
