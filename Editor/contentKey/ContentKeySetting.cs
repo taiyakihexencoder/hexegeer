@@ -13,11 +13,11 @@ namespace hexegeer.editor {
 		}
 
 		[SerializeField]
-		private Key[] _keys;
-		public Key[] Keys => _keys;
+		private List<Key> _keys;
+		public List<Key> Keys => _keys;
 
 		public void SetName(Key key, string name) {
-			for (int i = 0; i < _keys.Length; ++i) {
+			for (int i = 0; i < _keys.Count; ++i) {
 				if (key.id == _keys[i].id) {
 					_keys[i].name = name;
 					Save(true);
@@ -30,7 +30,7 @@ namespace hexegeer.editor {
 			int id = 1;
 
 			List<int> ids = new List<int>();
-			for(int i = 0; i < _keys.Length; ++i) {
+			for(int i = 0; i < _keys.Count; ++i) {
 				ids.Add(_keys[i].id);
 			}
 			ids.Sort();
@@ -41,30 +41,15 @@ namespace hexegeer.editor {
 				id = ids[i]+1;
 			}
 
-			Key[] newKeys = new Key[_keys.Length +1];
-			System.Array.Copy(_keys, newKeys, _keys.Length);
-			newKeys[_keys.Length] = new Key {
-				id = id,
-				name = name,
-			};
-
-			_keys = newKeys;
+			_keys.Add(
+				new Key { id = id, name = name, }
+			);
 			Save(true);
 		}
 
 		public void Remove(int id) {
-			if (_keys.Length > 0) {
-				Key[] newKey = new Key[_keys.Length-1];
-
-				for (int i = 0, j = 0; i < _keys.Length; ++i) {
-					if (_keys[i].id != id) {
-						newKey[j] = _keys[i];
-						++j;
-					}
-				}
-				_keys = newKey;
-				Save(true);
-			}
+			_keys.RemoveAll(_ => _.id == id);
+			Save(true);
 		}
 
 		public ListPopupBuilder<int> CreateListPopupBuilder() {

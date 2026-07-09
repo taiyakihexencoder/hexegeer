@@ -140,5 +140,21 @@ namespace hexegeer.internallib {
 			_label.text = text;
 			return this;
 		}
+
+		public ClickButton IgnoreMinSize(bool width = true, bool height = true) {
+			if (width) { 
+				style.minWidth = 0f; 
+				Padding(horizontal: 0f);
+			}
+			if (height) { 
+				style.minHeight = 0f; 
+				Padding(vertical: 0f);
+			}
+			return this;
+		}
+
+		public ClickButton Circle(float size = 30f) {
+			return Width(size).Height(size).IgnoreMinSize();
+		}
 	}
 }

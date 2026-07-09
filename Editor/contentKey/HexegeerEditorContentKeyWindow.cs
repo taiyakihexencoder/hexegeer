@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace hexegeer.editor {
+	using System.Collections.Generic;
 	using hexegeer.internallib;
 
 	public sealed class HexegeerEditorContentKeyWindow : EditorWindow {
@@ -31,7 +32,7 @@ namespace hexegeer.editor {
 			parent.Clear();
 
 			ContentKeySetting settings = ContentKeySetting.instance;
-			ContentKeySetting.Key[] keys = settings.Keys;
+			List<ContentKeySetting.Key> keys = settings.Keys;
 
 			{
 				Row globalRow = new Row();
@@ -49,7 +50,7 @@ namespace hexegeer.editor {
 				parent.Add(globalRow);
 			}
 
-			for(int i = 0; i < keys.Length; ++i) {
+			for(int i = 0; i < keys.Count; ++i) {
 				int index = i;
 				Row row = new Row();
 

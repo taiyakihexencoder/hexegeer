@@ -11,7 +11,7 @@ namespace hexegeer.editor {
 			LayerSettings layerSettings = LayerSettings.instance;
 
 			SerializedProperty charactersProperty = serializedObject.FindProperty("_characters");
-			charactersProperty.arraySize = settings.Characters.Length;
+			charactersProperty.arraySize = settings.Characters.Count;
 
 			for (int i = 0; i < charactersProperty.arraySize; ++i) {
 				SerializedProperty characterProperty = charactersProperty.Of(i);
@@ -43,7 +43,7 @@ namespace hexegeer.editor {
 			}
 
 			SerializedProperty keyTablesProperty = serializedObject.FindProperty("_keyTables");
-			keyTablesProperty.arraySize = contentKeySettings.Keys.Length + 1;
+			keyTablesProperty.arraySize = contentKeySettings.Keys.Count + 1;
 			keyTablesProperty.Of(0).Of("key").intValue = ContentKey.Global.value;
 			keyTablesProperty.Of(0).Of("characterIndices").arraySize = 0;
 			for (int i = 1; i < keyTablesProperty.arraySize; ++i) {
@@ -53,9 +53,9 @@ namespace hexegeer.editor {
 				keyTableProperty.Of("characterIndices").arraySize = 0;
 			}
 
-			CharacterSettings.CharacterData[] characters = settings.Characters;
+			List<CharacterSettings.CharacterData> characters = settings.Characters;
 			List<ContentKeySetting.Key> keys = new List<ContentKeySetting.Key>(contentKeySettings.Keys);
-			for(int i = 0; i < characters.Length; ++i) {
+			for(int i = 0; i < characters.Count; ++i) {
 				foreach(int key in characters[i].contentKeys) {
 					if (key == ContentKey.Global.value) {
 						keyTablesProperty.Of(0).Of("characterIndices").Add(p => p.intValue = i);

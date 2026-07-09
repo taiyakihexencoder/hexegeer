@@ -90,7 +90,7 @@ namespace hexegeer.editor {
 			addButton.OnClicked += () => {
 				settings.Add("New Character");
 				_updateListView?.Invoke();
-				_listView.Select(settings.Characters[settings.Characters.Length-1]);
+				_listView.Select(settings.Characters[settings.Characters.Count-1]);
 			};
 
 			column.AddChildren(
@@ -121,7 +121,7 @@ namespace hexegeer.editor {
 		}
 
 		private VisualElement DetailedView() {
-			ContentKeySetting.Key[] contentKeys = ContentKeySetting.instance.Keys;
+			List<ContentKeySetting.Key> contentKeys = ContentKeySetting.instance.Keys;
 			CharacterSettings settings = CharacterSettings.instance;
 			CharacterSettings.CharacterData character = _listView.Selected;
 
@@ -218,7 +218,7 @@ namespace hexegeer.editor {
 				internallib.Column contentList = new internallib.Column();
 				Row contentRow = new Row();
 				pane.Add(contentRow);
-				for (int i = 0; i < contentKeys.Length; ++i) {
+				for (int i = 0; i < contentKeys.Count; ++i) {
 					int contentKey = contentKeys[i].id;
 					Row checkbox = new Row()
 						.Weight(1f);
@@ -242,7 +242,7 @@ namespace hexegeer.editor {
 						pane.Add(contentRow);
 					}
 				}
-				for (int i = (contentKeys.Length+2) % 3; i < 2; ++i) {
+				for (int i = (contentKeys.Count+2) % 3; i < 2; ++i) {
 					VisualElement ve = new VisualElement();
 					ve.style.flexGrow = 1f;
 					ve.style.flexBasis = 0f;

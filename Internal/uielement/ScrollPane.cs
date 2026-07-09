@@ -14,6 +14,13 @@ namespace hexegeer.internallib {
 			base.Add(_scrollView);
 		}
 
+		public override ScrollPane AddChildren(params VisualElement[] children) {
+			foreach(VisualElement child in children) {
+				_scrollView.Add(child);
+			}
+			return this;
+		}
+
 		public new void Add(VisualElement element) {
 			_scrollView.Add(element);
 		}

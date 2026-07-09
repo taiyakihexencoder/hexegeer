@@ -17,8 +17,8 @@ namespace hexegeer.editor {
 		}
 
 		[SerializeField]
-		private CharacterData[] _characters = new CharacterData[0];
-		public CharacterData[] Characters => _characters;
+		private List<CharacterData> _characters;
+		public List<CharacterData> Characters => _characters;
 
 		[SerializeField]
 		private int[] _observationPoint = new int[0];
@@ -37,7 +37,7 @@ namespace hexegeer.editor {
 		}
 
 		private void UpdateItem(CharacterData characterData, System.Action<CharacterData> action) {
-			for (int i = 0; i < _characters.Length; ++i) {
+			for (int i = 0; i < _characters.Count; ++i) {
 				if (_characters[i].id == characterData.id) {
 					action(_characters[i]);
 					Save(true);
@@ -47,7 +47,7 @@ namespace hexegeer.editor {
 		}
 
 		public void AddContentKeys(CharacterData characterData, int contentKey) {
-			for (int i = 0; i < _characters.Length; ++i) {
+			for (int i = 0; i < _characters.Count; ++i) {
 				if (_characters[i].id == characterData.id) {
 					for (int j = 0; j < _characters[i].contentKeys.Length; ++j) {
 						if (_characters[i].contentKeys[j] == contentKey) {
@@ -65,7 +65,7 @@ namespace hexegeer.editor {
 		}
 
 		public void RemoveContentKey(CharacterData characterData, int contentKey) {
-			for (int i = 0; i < _characters.Length; ++i) {
+			for (int i = 0; i < _characters.Count; ++i) {
 				if (_characters[i].id == characterData.id) {
 					for (int j = 0; j < _characters[i].contentKeys.Length; ++j) {
 						if (_characters[i].contentKeys[j] == contentKey) {
@@ -89,46 +89,31 @@ namespace hexegeer.editor {
 		public void Add(string name) {
 			int id = 1;
 
-			List<int> ids = new List<int>();
-			for(int i = 0; i < _characters.Length; ++i) {
-				ids.Add(_characters[i].id);
-			}
+			List<int> ids = _characters.Map(_ => _.id);
 			ids.Sort();
 			for(int i = 0; i < ids.Count; ++i) {
 				if (ids[i] - id > 0) { break; }
 				id = ids[i] + 1;
 			}
 
-			CharacterData[] newCharacters = new CharacterData[_characters.Length+1];
-			System.Array.Copy(_characters, newCharacters, _characters.Length);
 
 			int defaultLayerCount = System.Enum.GetValues(typeof(DefaultLayer)).Length;
 			LayerSettings layerSettings = LayerSettings.instance;
-			newCharacters[_characters.Length] = new CharacterData {
-				id = id,
-				layer = layerSettings.LayerIndices[defaultLayerCount],
-				collider = 0,
-				contentKeys = new int[0],
-				name = name,
-			};
-
-			_characters = newCharacters;
+			_characters.Add( 
+				new CharacterData {
+					id = id,
+					layer = layerSettings.LayerIndices[defaultLayerCount],
+					collider = 0,
+					contentKeys = new int[0],
+					name = name,
+				}
+			);
 			Save(true);
 		}
 
 		public void Remove(int id) {
-			if (_characters.Length > 0) {
-				CharacterData[] newCharacters = new CharacterData[_characters.Length-1];
-
-				for (int i = 0, j = 0; i < _characters.Length; ++i) {
-					if (_characters[i].id != id) {
-						newCharacters[j] = _characters[i];
-						++j;
-					}
-				}
-				_characters = newCharacters;
-				Save(true);
-			}
+			_characters.RemoveAll(_ => _.id == id);
+			Save(true);
 		}
 
 		public ListPopupBuilder<int> CreateListPopupBuilder() {

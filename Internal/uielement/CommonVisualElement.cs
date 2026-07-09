@@ -121,7 +121,7 @@ namespace hexegeer.internallib {
 			return Self;
 		}
 
-		public T AddChildren(params VisualElement[] children) {
+		public virtual T AddChildren(params VisualElement[] children) {
 			foreach(VisualElement child in children) {
 				Add(child);
 			}
