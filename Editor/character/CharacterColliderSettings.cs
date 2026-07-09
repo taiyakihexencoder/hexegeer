@@ -15,17 +15,11 @@ namespace hexegeer.editor {
 		}
 
 		[SerializeField]
-		private PhysicsCollider[] _physicsColliders;
-		internal PhysicsCollider[] PhysicsColliders => _physicsColliders;
+		private List<PhysicsCollider> _physicsColliders;
+		internal List<PhysicsCollider> PhysicsColliders => _physicsColliders;
 
 		internal int Add() {
-			PhysicsCollider[] newList = new PhysicsCollider[_physicsColliders.Length+1];
-			System.Array.Copy(_physicsColliders, newList, _physicsColliders.Length);
-
-			List<int> ids = new List<int>();
-			foreach(PhysicsCollider collider in _physicsColliders) {
-				ids.Add(collider.id);
-			}
+			List<int> ids = _physicsColliders.Map(_ => _.id);
 			ids.Sort();
 
 			int id = 1;
@@ -36,32 +30,25 @@ namespace hexegeer.editor {
 				id = current;
 			}
 
-			newList[_physicsColliders.Length] = new PhysicsCollider {
-				id = id,
-				name = "new collider",
-				radius = 0.5f,
-				height = 2f,
-			};
-			_physicsColliders = newList;
+			_physicsColliders.Add(
+				new PhysicsCollider {
+					id = id,
+					name = "new collider",
+					radius = 0.5f,
+					height = 2f,
+				}
+			);
 			Save(true);
 			return id;
 		}
 
 		internal void Remove(int id) {
-			for(int i = 0; i < _physicsColliders.Length; ++i) {
-				if (_physicsColliders[i].id == id) {
-					PhysicsCollider[] newList = new PhysicsCollider[_physicsColliders.Length-1];
-					System.Array.Copy(_physicsColliders, newList, i);
-					System.Array.Copy(_physicsColliders, i+1, newList, i, newList.Length-i);
-					_physicsColliders = newList;
-					Save(true);
-					return;
-				}
-			}
+			_physicsColliders.RemoveAll(_ => _.id == id);
+			Save(true);
 		}
 
 		internal void UpdateCollider(PhysicsCollider collider) {
-			for (int i = 0; i < _physicsColliders.Length; ++i) {
+			for (int i = 0; i < _physicsColliders.Count; ++i) {
 				if (collider.id == _physicsColliders[i].id) {
 					_physicsColliders[i] = collider;
 					Save(true);
@@ -75,12 +62,7 @@ namespace hexegeer.editor {
 
 			builder.SetConverter(key => {
 				if (key == 0) { return "None"; }
-
-				PhysicsCollider[] colliders = instance.PhysicsColliders;
-				foreach(PhysicsCollider collider in colliders) {
-					if (collider.id == key) { return collider.name; }
-				}
-				return " - ";
+				return instance.PhysicsColliders.Find(_ => _.id == key)?.name ?? " - ";
 			});
 
 			return UpdateKeys(builder);

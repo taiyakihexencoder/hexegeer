@@ -7,6 +7,8 @@ using UnityEngine.UIElements;
 
 namespace hexegeer.editor {
 	public sealed class HexegeerEditorLayoutWindow : PreviewWindow {
+		private const int CAPSULE_RESOLUTION = 4;
+
 		protected override Rect PreviewRect => new Rect(
 			new Vector2(5f, 5f),
 			position.size - new Vector2(10f, 10f)
@@ -22,7 +24,9 @@ namespace hexegeer.editor {
 		private List<IViewContents> _viewContents = new List<IViewContents>();
 
 		private Color _characterColor = new Color(0.0f, 1.0f, 1.0f, 0.5f);
+		private Color _noColliderColor = new Color(1.0f, 0.0f, 0.25f, 0.5f);
 		private Material _characterMaterial;
+		private Material _noColliderCharacterMaterial;
 
 		private int _selectedContentKey = ContentKey.Global.value;
 
@@ -46,6 +50,7 @@ namespace hexegeer.editor {
 			
 			if (!_initialized) {
 				_initialized = true;
+				camera.fov = 60f;
 
 				FieldMainSettings fieldSettings = FieldMainSettings.instance;
 				System.Type type = fieldSettings.ViewType.GetResourceType();
@@ -54,21 +59,36 @@ namespace hexegeer.editor {
 					_blueprints.Add(AssetDatabase.LoadAssetAtPath<BaseFieldBlueprint>(assetPath));
 				}
 			}
+			OnSelectContentKey(_selectedContentKey);
 
 			// ContentKeyの変更を反映する
 			ContentKeySetting contentKeySetting = ContentKeySetting.instance;
 			LayoutSetting layoutSetting = LayoutSetting.instance;
 			layoutSetting.UpdateLayouts(contentKeySetting.Keys.Map(_ => _.id));
-
 			_contentKeyPopupBuilder = ContentKeySetting.instance.UpdateKeys(_contentKeyPopupBuilder);
 
 			previewPaused = false;
-
-			camera.fov = 60f;
 		}
 
 		private void OnLostFocus() {
+			_detailView.Clear();
+			foreach(IViewContents content in _viewContents) {
+				content.OnDestroy();
+			}
+			_viewContents.Clear();
 			previewPaused = true;
+		}
+
+		private void OnDestroy() {
+			if (_characterMaterial != null) {
+				DestroyImmediate(_characterMaterial);
+				_characterMaterial = null;
+			}
+
+			if (_noColliderCharacterMaterial != null) { 
+				DestroyImmediate(_noColliderCharacterMaterial);
+				_noColliderCharacterMaterial = null;
+			}
 		}
 
 		private VisualElement CreateView() {
@@ -163,91 +183,96 @@ namespace hexegeer.editor {
 		}
 
 		private void OnSelectContentKey(int contentKey) {
-			_selectedContentKey = contentKey;
-			LoadLayout(_selectedContentKey);
-
+			_detailView.Clear();
 			foreach(IViewContents content in _viewContents) {
 				content.OnDestroy();
 			}
 			_viewContents.Clear();
 
-			if (_characterMaterial != null) {
-				DestroyImmediate(_characterMaterial);
-			}
-			_characterMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-			_characterMaterial.SetFloat("_Surface", 1);
-			_characterMaterial.SetFloat("_Blend", 0);
-			_characterMaterial.SetInt("_BlendOp", (int)BlendOp.Add);
-			_characterMaterial.SetInt("_SrcBlend", (int)BlendMode.One);
-			_characterMaterial.SetInt("_DstBlend", (int)BlendMode.One);
-			_characterMaterial.SetInt("_SrcBlendAlpha", (int)BlendMode.SrcAlpha);
-			_characterMaterial.SetInt("_DstBlendAlpha", (int)BlendMode.OneMinusSrcAlpha);
-			_characterMaterial.SetInt("_ZWrite", 0);
-			_characterMaterial.renderQueue = (int)RenderQueue.Transparent;
-			_characterMaterial.SetColor("_BaseColor", _characterColor);
+			InitMaterial(ref _characterMaterial, _characterColor);
+			InitMaterial(ref _noColliderCharacterMaterial, _noColliderColor);
+
+			_selectedContentKey = contentKey;
 
 			if (contentKey != ContentKey.Global.value) {
-				FieldMainSettings mainSettings = FieldMainSettings.instance;
-				FieldViewType viewType = mainSettings.ViewType;
-
-				BaseFieldBlueprint bp = _blueprints.Find(_ => _.ContentKey == contentKey);
-				if (bp != null) {
-					FieldMeshContents field = new FieldMeshContents(bp);
-
-					// ビューの調整
-
-					// 視点の中心を領域の中心に
-					Vector3 center = field.BoundsMin + (field.BoundsMax - field.BoundsMin) * 0.5f;
-					camera.pivotPosition = center;
-
-					if (viewType == FieldViewType.SideView) {
-						// 0度だとメッシュと並行して見えないのでちょっとずらす
-						camera.rotation = Quaternion.AngleAxis(20f, Vector3.right);
-
-						// 映すべきxy平面の領域から必要な距離を計算
-						Vector3 size = field.BoundsMax - field.BoundsMin;
-						Vector2 viewSize = PreviewRect.size;
-						float ratio = viewSize.x / viewSize.y;
-						float requireViewWidth = Mathf.Max(size.x, size.y * ratio);
-						float distance = requireViewWidth * Mathf.Tan(Mathf.Deg2Rad * camera.fov * 0.5f);
-						camera.SetZoomRange(1f, distance);
-						camera.distance = distance;
-
-						// クリップは余裕を持たせる
-						camera.farClipPlane = distance * 1.5f;
-					}
-
-					_viewContents.Add(field);
-				}
-			}
-
-			_viewContents.Add(CapsuleContents("Name", Vector3.zero, Quaternion.identity, 0.25f, 1.5f, 4, _characterMaterial));
-
-			foreach(IViewContents content in _viewContents) {
-				content.AddTo(scene);
+				LoadContentKey(_selectedContentKey);
 			}
 		}
 
-		private void LoadLayout(int contentKey) {
+		private void InitMaterial(ref Material material, Color color) {
+			if (material != null) { DestroyImmediate(material); }
+			material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+			material.SetFloat("_Surface", 1);
+			material.SetFloat("_Blend", 0);
+			material.SetInt("_BlendOp", (int)BlendOp.Add);
+			material.SetInt("_SrcBlend", (int)BlendMode.One);
+			material.SetInt("_DstBlend", (int)BlendMode.One);
+			material.SetInt("_SrcBlendAlpha", (int)BlendMode.SrcAlpha);
+			material.SetInt("_DstBlendAlpha", (int)BlendMode.OneMinusSrcAlpha);
+			material.SetInt("_ZWrite", 0);
+			material.renderQueue = (int)RenderQueue.Transparent;
+			material.SetColor("_BaseColor", color);
+		}
+
+		private void LoadContentKey(int contentKey) {
+			// フィールドの読込
+			FieldMainSettings mainSettings = FieldMainSettings.instance;
+			FieldViewType viewType = mainSettings.ViewType;
+
+			BaseFieldBlueprint bp = _blueprints.Find(_ => _.ContentKey == contentKey);
+			if (bp != null) {
+				FieldMeshContents field = new FieldMeshContents(bp);
+
+				// 視点の中心を領域の中心に
+				Vector3 center = field.BoundsMin + (field.BoundsMax - field.BoundsMin) * 0.5f;
+				camera.pivotPosition = center;
+
+				if (viewType == FieldViewType.SideView) {
+					// 0度だとメッシュと並行して見えないのでちょっとずらす
+					camera.rotation = Quaternion.AngleAxis(20f, Vector3.right);
+
+					// 映すべきxy平面の領域から必要な距離を計算
+					Vector3 size = field.BoundsMax - field.BoundsMin;
+					Vector2 viewSize = PreviewRect.size;
+					float ratio = viewSize.x / viewSize.y;
+					float requireViewWidth = Mathf.Max(size.x, size.y * ratio);
+					float distance = requireViewWidth * Mathf.Tan(Mathf.Deg2Rad * camera.fov * 0.5f);
+					camera.SetZoomRange(1f, distance);
+					camera.distance = distance;
+
+					// クリップは余裕を持たせる
+					camera.farClipPlane = distance * 1.5f;
+				}
+				(field as IViewContents).AddTo(scene);
+				_viewContents.Add(field);
+			}
+
 			LayoutSetting layoutSetting = LayoutSetting.instance;
 			int layoutIndex = layoutSetting.LayoutProfiles.FindIndex(_ => _.contentKey == contentKey);
 
-			_detailView.Clear();
 
 			if (layoutIndex >= 0) { 
 				LayoutSetting.LayoutProfile layout = layoutSetting.LayoutProfiles[layoutIndex];
 				CreateLayoutDetailView(layoutIndex);
 			}
-
 		}
 
 		private void CreateLayoutDetailView(int layoutIndex) {
 			_detailView.Clear();
 
+			// 再描画を考慮して作成コンテンツをすべて破棄
+			for(int i = _viewContents.Count-1; i >= 0; --i) {
+				if (_viewContents[i] is CapsuleViewContents) {
+					_viewContents[i].OnDestroy();
+					_viewContents.RemoveAt(i);
+				}
+			}
+
 			LayoutSetting layoutSetting = LayoutSetting.instance;
 			LayoutSetting.LayoutProfile layout = layoutSetting.LayoutProfiles[layoutIndex];
 
 			CharacterSettings characterSettings = CharacterSettings.instance;
+			CharacterColliderSettings colliderSettings = CharacterColliderSettings.instance;
 			List<CharacterSettings.CharacterData> characters = characterSettings.Characters;
 			ListPopupBuilder<int> characterPopupBuilder = characterSettings.CreateListPopupBuilder();
 
@@ -256,6 +281,8 @@ namespace hexegeer.editor {
 				_detailView.Add(new Spacer(height: 6f));
 				int characterIndex = i;
 				LayoutSetting.CharacterLayout character = layout.characters[i];
+				CharacterSettings.CharacterData data = characters.Find(_ => _.id == character.character);
+				IViewContents sceneContents = AddCharacterContent(character.character, character.position, character.rotation);
 
 				Row headerRow = new Row()
 					.HorzontalArrangement(Justify.SpaceBetween)
@@ -267,7 +294,6 @@ namespace hexegeer.editor {
 					layoutSetting.RemoveCharacter(layoutIndex, characterIndex);
 					CreateLayoutDetailView(layoutIndex);
 				};
-				CharacterSettings.CharacterData data = characters.Find(_ => _.id == character.character);
 				Text nameText = Text.Body(data?.name ?? "!Undefined");
 				headerRow.AddChildren(nameText, deleteButton);
 
@@ -278,9 +304,9 @@ namespace hexegeer.editor {
 
 				PopupField<int> characterPopup = characterPopupBuilder.Generate(character.character);
 				characterPopup.RegisterValueChangedCallback(v => {
-					CharacterSettings.CharacterData data = characters.Find(_ => _.id == v.newValue);
-					nameText.text = data?.name ?? "!Undefined";
 					layoutSetting.UpdateCharacter(layoutIndex, characterIndex, v.newValue);
+					// GameObjectを作り直しなのでビューごと更新
+					CreateLayoutDetailView(layoutIndex);
 				});
 
 				Text positionText = Text.Body("Position");
@@ -289,6 +315,9 @@ namespace hexegeer.editor {
 				positionField.SetValueWithoutNotify(character.position);
 				positionField.RegisterValueChangedCallback(v => {
 					layoutSetting.UpdateCharacterPosition(layoutIndex, characterIndex, v.newValue);
+					if (sceneContents != null) {
+						sceneContents.GameObject.transform.position = v.newValue;
+					}
 				});
 
 				Text rotationText = Text.Body("Rotation");
@@ -296,7 +325,11 @@ namespace hexegeer.editor {
 				rotationField.style.paddingLeft = 20f;
 				rotationField.SetValueWithoutNotify(character.rotation.eulerAngles);
 				rotationField.RegisterValueChangedCallback(v => {
-					layoutSetting.UpdateCharacterRotation(layoutIndex, characterIndex, Quaternion.Euler(v.newValue));
+					Quaternion rotation = Quaternion.Euler(v.newValue);
+					layoutSetting.UpdateCharacterRotation(layoutIndex, characterIndex, rotation);
+					if (sceneContents != null) {
+						sceneContents.GameObject.transform.rotation = rotation;
+					}
 				});
 				headerFoldout.AddChildren(
 					new Spacer(height: 12f),
@@ -320,17 +353,51 @@ namespace hexegeer.editor {
 
 		}
 
+		private IViewContents AddCharacterContent(int characterId, Vector3 position, Quaternion rotation) {
+			CharacterSettings characterSettings = CharacterSettings.instance;
+			CharacterColliderSettings colliderSettings = CharacterColliderSettings.instance;
+			List<CharacterSettings.CharacterData> characters = characterSettings.Characters;
+
+			CharacterSettings.CharacterData data = characters.Find(_ => _.id == characterId);
+			CharacterColliderSettings.PhysicsCollider collider = colliderSettings.PhysicsColliders.Find(_ => _.id == data?.id);
+			IViewContents sceneContents = null;
+			if (collider != null) {
+				sceneContents = CapsuleContents(
+					data?.name ?? "!Undefined",
+					position,
+					rotation,
+					collider.radius,
+					collider.height,
+					_characterMaterial
+				);
+				sceneContents.AddTo(scene);
+				_viewContents.Add(sceneContents);
+			} else {
+				sceneContents = CapsuleContents(
+					data?.name ?? "!Undefined",
+					position,
+					rotation,
+					0.5f,
+					2f,
+					_noColliderCharacterMaterial
+				);
+				sceneContents.AddTo(scene);
+				_viewContents.Add(sceneContents);
+			}
+			return sceneContents;
+		}
+
+
 		private IViewContents CapsuleContents(
 			string name,
 			Vector3 position,
 			Quaternion rotation,
 			float radius, 
-			float height, 
-			int resolution, 
+			float height,
 			Material material
 		) {
 			return new CapsuleViewContents(
-				CreateCapsule(radius, height, resolution), 
+				CreateCapsule(radius, height, CAPSULE_RESOLUTION), 
 				material, 
 				position, 
 				rotation,

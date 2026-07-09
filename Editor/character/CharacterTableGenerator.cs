@@ -32,7 +32,7 @@ namespace hexegeer.editor {
 			}
 
 			SerializedProperty collidersProperty = serializedObject.FindProperty("_colliders");
-			collidersProperty.arraySize = colliderSettings.PhysicsColliders.Length;
+			collidersProperty.arraySize = colliderSettings.PhysicsColliders.Count;
 			for (int i = 0; i < collidersProperty.arraySize; ++i) {
 				SerializedProperty colliderProperty = collidersProperty.Of(i);
 				CharacterColliderSettings.PhysicsCollider data = colliderSettings.PhysicsColliders[i];

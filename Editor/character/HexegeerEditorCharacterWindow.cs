@@ -266,15 +266,7 @@ namespace hexegeer.editor {
 		private void SetColliderItem(VisualElement parent, CharacterSettings.CharacterData character) {
 			parent.Clear();
 
-			// 現在のコライダー
-			CharacterColliderSettings.PhysicsCollider[] colliders = _colliderSettings.PhysicsColliders;
-			CharacterColliderSettings.PhysicsCollider currentCollider = null;
-			foreach(CharacterColliderSettings.PhysicsCollider collider in colliders) {
-				if (collider.id == character.collider) {
-					currentCollider = collider;
-					break;
-				}
-			}
+			CharacterColliderSettings.PhysicsCollider currentCollider = _colliderSettings.PhysicsColliders.Find(_ => _.id == character.collider);
 
 			Row colliderRow = new Row()
 				.VerticalAlignment(Align.FlexStart);
