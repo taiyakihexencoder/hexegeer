@@ -27,7 +27,7 @@ namespace hexegeer.editor {
 				if (current - id > 0) {
 					break;
 				}
-				id = current;
+				id = current+1;
 			}
 
 			_physicsColliders.Add(
@@ -63,7 +63,7 @@ namespace hexegeer.editor {
 
 			builder.SetConverter(key => {
 				if (key == 0) { return "None"; }
-				return instance.PhysicsColliders.Find(_ => _.id == key)?.name ?? " - ";
+				return PhysicsColliders.Find(_ => _.id == key)?.name ?? " - ";
 			});
 
 			return UpdateKeys(builder);
@@ -72,7 +72,7 @@ namespace hexegeer.editor {
 		internal ListPopupBuilder<int> UpdateKeys(ListPopupBuilder<int> builder) {
 			List<int> list = new List<int>();
 			list.Add(0);
-			foreach(PhysicsCollider collider in instance.PhysicsColliders) {
+			foreach(PhysicsCollider collider in PhysicsColliders) {
 				list.Add(collider.id);
 			}
 

@@ -131,6 +131,21 @@ namespace hexegeer.editor {
 				overlayView.Add(popupElement);
 			}
 
+			// Generate Resource Button
+			{
+				ClickButton generateButton = ClickButton.Create()
+					.Label("Generate Resource");
+				generateButton.style.position = Position.Absolute;
+				generateButton.style.right = new Length(20f);
+				generateButton.style.bottom = new Length(10f);
+				generateButton.OnClicked += () => {
+					LayoutResourceGenerator generator = new LayoutResourceGenerator();
+					generator.Generate("LayoutTable.asset");
+				};
+				overlayView.Add(generateButton);
+			}
+
+
 			// detail view
 			if (_openDetail) {
 				// item list

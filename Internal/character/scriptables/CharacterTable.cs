@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace hexegeer.internallib {
 	public sealed class CharacterTable : ScriptableObject {
@@ -25,7 +26,7 @@ namespace hexegeer.internallib {
 		[System.Serializable]
 		public class KeyTable {
 			public int key;
-			public int[] characterIndices;
+			public List<int> characterIndices;
 		}
 
 		[SerializeField]
@@ -37,24 +38,19 @@ namespace hexegeer.internallib {
 		public int PhysicsObjectCollides => _physicsObjectCollides;
 
 		[SerializeField]
-		private Character[] _characters;
-		public Character[] Characters => _characters;
+		private List<Character> _characters;
+		public List<Character> Characters => _characters;
 
 		[SerializeField]
-		private CharacterCollider[] _colliders;
-		public CharacterCollider[] Colliders => _colliders;
+		private List<CharacterCollider> _colliders;
+		public List<CharacterCollider> Colliders => _colliders;
 
 		[SerializeField]
 		private KeyTable[] _keyTables;
 		public KeyTable[] KeyTables => _keyTables;
 
 		public CharacterCollider GetCollider(int id) {
-			foreach(CharacterCollider collider in _colliders) {
-				if (collider.id == id) {
-					return collider;
-				}
-			}
-			return null;
+			return _colliders.Find(_ => _.id == id);
 		}
 	}
 }

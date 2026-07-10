@@ -12,6 +12,8 @@ namespace hexegeer.internallib {
 		private EntityQuery _query;
 		private bool _initialized;
 
+		private LayoutTable _layoutTable;
+
 		private Entity _characterRootEntity;
 		private CharacterTable _characterTable;
 		private ConcurrentDictionary<int, BlobAssetReference<Collider>> _colliders;
@@ -58,6 +60,7 @@ namespace hexegeer.internallib {
 		}
 
 		override protected void OnUpdate() {
+			if (_layoutTable == null) { return; }
 			if (_characterTable == null) { return; }
 
 			NativeArray<ContentKeyLoadRequest> requests = _query.ToComponentDataArray<ContentKeyLoadRequest>(Allocator.Temp);
@@ -75,19 +78,40 @@ namespace hexegeer.internallib {
 		}
 
 		private async Task LoadTables() {
+			_layoutTable = await AssetUtil.RequestLoad<LayoutTable>(LayoutTable.RESOURCE_ADDRESS);
 			_characterTable = await AssetUtil.RequestLoad<CharacterTable>(CharacterTable.RESOURCE_ADDRESS);
 		}
 
 		private async Task LoadKeyContents(int key) {
+			// Layout Character
+			LayoutTable.Profile layoutProfile = _layoutTable.LayoutProfiles.Find(_ => _.ContentKey == key);
+			if (layoutProfile != null) {
+				foreach(int characterId in layoutProfile.CharacterIds) {
+					CharacterTable.Character character =  _characterTable.Characters.Find(_ => _.id == characterId);
+					if (character != null) {
+						await LoadCharacter(character);
+					}
+				}
+			}
+
 			// Character
 			foreach(CharacterTable.KeyTable table in _characterTable.KeyTables) {
 				if (table.key == key) {
-					for (int i = 0; i < table.characterIndices.Length; ++i) {
+					for (int i = 0; i < table.characterIndices.Count; ++i) {
 						CharacterTable.Character character = _characterTable.Characters[i];
 						Entity prefab = await LoadCharacter(character);
 					}
 					break;
 				}
+			}
+
+			// Layout
+			if (layoutProfile != null) {
+				SyncContext.Send(() => {
+					foreach(LayoutTable.CharacterLayout characterLayout in layoutProfile.Characters) {
+						SpawnCharacter(characterLayout.Id, characterLayout.Position, characterLayout.Rotation);
+					}
+				});
 			}
 		}
 
@@ -127,6 +151,7 @@ namespace hexegeer.internallib {
 						);
 						EntityManager.AddSharedComponent(prefab, new PhysicsWorldIndex{ Value = 0, });
 					}
+					_characters.TryAdd(character.id, prefab);
 				});
 			}
 
@@ -153,6 +178,13 @@ namespace hexegeer.internallib {
 				asset = capsule;
 			}
 			return asset;
+		}
+
+		private void SpawnCharacter(int characterId, float3 position, quaternion rotation) {
+			if (_characters.TryGetValue(characterId, out Entity prefab)) {
+				Entity instance = EntityManager.Instantiate(prefab);
+				EntityManager.SetComponentData(instance, LocalTransform.FromPositionRotation(position, rotation));
+			}
 		}
 	}
 }
