@@ -1,10 +1,9 @@
-﻿using hexegeer.internallib;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Physics;
 
-namespace hexegeer {
+namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerColliderGroup))]
 	public partial struct ColliderTriggerSystem : ISystem {
 		private EntityQuery stayQuery;
