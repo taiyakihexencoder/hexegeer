@@ -5,18 +5,18 @@ using UnityEngine;
 
 namespace hexegeer.editor {
 	[FilePath("Hexegeer/Character/CharacterColliderSettings.geer", FilePathAttribute.Location.ProjectFolder)]
-	internal sealed class CharacterColliderSettings : ScriptableSingleton<CharacterColliderSettings> {
+	public sealed class CharacterColliderSettings : ScriptableSingleton<CharacterColliderSettings> {
 		[System.Serializable]
-		internal class PhysicsCollider {
-			internal int id;
-			internal string name;
-			internal float radius;
-			internal float height;
+		public class PhysicsCollider {
+			public int id;
+			public string name;
+			public float radius;
+			public float height;
 		}
 
 		[SerializeField]
 		private List<PhysicsCollider> _physicsColliders;
-		internal List<PhysicsCollider> PhysicsColliders => _physicsColliders;
+		public List<PhysicsCollider> PhysicsColliders => _physicsColliders;
 
 		internal int Add() {
 			List<int> ids = _physicsColliders.Map(_ => _.id);
@@ -38,6 +38,7 @@ namespace hexegeer.editor {
 					height = 2f,
 				}
 			);
+
 			Save(true);
 			return id;
 		}

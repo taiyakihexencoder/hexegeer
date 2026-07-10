@@ -9,7 +9,6 @@ namespace hexegeer.editor {
 		private LayerSettings _layerSettings;
 		private ListPopupBuilder<int> _layerPopupBuilder;
 
-		private CharacterColliderSettings _colliderSettings;
 		private ListPopupBuilder<int> _physicsColliderPopupBuilder;
 
 		private SelectableList<CharacterSettings.CharacterData> _listView;
@@ -21,8 +20,8 @@ namespace hexegeer.editor {
 			_layerSettings = LayerSettings.instance;
 			_layerPopupBuilder = _layerSettings.CreateListPopupBuilder();
 
-			_colliderSettings = CharacterColliderSettings.instance;
-			_physicsColliderPopupBuilder = _colliderSettings.CreateListPopupBuilder();
+			CharacterColliderSettings colliderSettings = CharacterColliderSettings.instance;
+			_physicsColliderPopupBuilder = colliderSettings.CreateListPopupBuilder();
 
 			_listView = new SelectableList<CharacterSettings.CharacterData>();
 			_listView.selectionChanged += (selection) => {
@@ -266,7 +265,7 @@ namespace hexegeer.editor {
 		private void SetColliderItem(VisualElement parent, CharacterSettings.CharacterData character) {
 			parent.Clear();
 
-			CharacterColliderSettings.PhysicsCollider currentCollider = _colliderSettings.PhysicsColliders.Find(_ => _.id == character.collider);
+			CharacterColliderSettings.PhysicsCollider currentCollider = CharacterColliderSettings.instance.PhysicsColliders.Find(_ => _.id == character.collider);
 
 			Row colliderRow = new Row()
 				.VerticalAlignment(Align.FlexStart);
@@ -295,9 +294,9 @@ namespace hexegeer.editor {
 				.Label("New")
 				.Margin(horizontal: 12f);
 			addColliderButton.OnClicked += () => {
-				int id = _colliderSettings.Add();
+				int id = CharacterColliderSettings.instance.Add();
 				CharacterSettings.instance.SetCollider(character, id);
-				_colliderSettings.UpdateKeys(_physicsColliderPopupBuilder);
+				CharacterColliderSettings.instance.UpdateKeys(_physicsColliderPopupBuilder);
 				SetColliderItem(parent, character);
 			};
 
@@ -321,7 +320,7 @@ namespace hexegeer.editor {
 			nameField.RegisterValueChangedCallback(v => {
 				if (currentCollider != null) {
 					currentCollider.name = v.newValue;
-					_colliderSettings.UpdateCollider(currentCollider);
+					CharacterColliderSettings.instance.UpdateCollider(currentCollider);
 					SetColliderItem(parent, character);
 				}
 			});
@@ -338,7 +337,7 @@ namespace hexegeer.editor {
 			radiusField.RegisterValueChangedCallback(v => {
 				if (currentCollider != null) {
 					currentCollider.radius = v.newValue;
-					_colliderSettings.UpdateCollider(currentCollider);
+					CharacterColliderSettings.instance.UpdateCollider(currentCollider);
 				}
 			});
 			radiusRow.AddChildren(radiusLabel, radiusField);
@@ -354,7 +353,7 @@ namespace hexegeer.editor {
 			heightField.RegisterValueChangedCallback(v => {
 				if (currentCollider != null) {
 					currentCollider.height = v.newValue;
-					_colliderSettings.UpdateCollider(currentCollider);
+					CharacterColliderSettings.instance.UpdateCollider(currentCollider);
 				}
 			});
 			heightRow.AddChildren(heightLabel, heightField);
@@ -367,8 +366,10 @@ namespace hexegeer.editor {
 					if (EditorUtility.DisplayDialog("Confirm", "Delete Collider ?", "Yes", "No")) {
 						CharacterSettings.instance.SetCollider(character, 0);
 
-						_colliderSettings.Remove(currentCollider.id);
-						_colliderSettings.UpdateKeys(_physicsColliderPopupBuilder);
+						CharacterColliderSettings colliderSettings = CharacterColliderSettings.instance;
+						colliderSettings.Remove(currentCollider.id);
+
+						colliderSettings.UpdateKeys(_physicsColliderPopupBuilder);
 						SetColliderItem(parent, character);
 					}
 				}

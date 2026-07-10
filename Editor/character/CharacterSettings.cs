@@ -2,7 +2,6 @@
 using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 namespace hexegeer.editor {
 	[FilePath("Hexegeer/Character/CharacterSettings.geer", FilePathAttribute.Location.ProjectFolder)]
@@ -21,7 +20,7 @@ namespace hexegeer.editor {
 		public List<CharacterData> Characters => _characters;
 
 		[SerializeField]
-		private int[] _observationPoint = new int[0];
+		private int[] _observationPoint;
 		public int[] ObservationPoint => _observationPoint;
 
 		public void SetName(CharacterData characterData, string name) {
