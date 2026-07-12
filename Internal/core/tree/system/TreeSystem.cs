@@ -1,5 +1,6 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace hexegeer.internallib {
@@ -9,13 +10,9 @@ namespace hexegeer.internallib {
 		private Entity _rootEntity;
 
 		void ISystem.OnCreate(ref SystemState state) {
-			_rootEntity = state.EntityManager.CreateEntity(
-				state.EntityManager.CreateArchetype(
-					new ComponentType[] {
-						ComponentType.ReadWrite(typeof(LocalTransform)),
-						ComponentType.ReadWrite(typeof(LocalToWorld)),
-					}
-				)
+			_rootEntity = state.EntityManager.Create(
+				LocalTransform.Identity,
+				new LocalToWorld{ Value = float4x4.identity}
 			);
 			ECS.SetEntityName(state.EntityManager, _rootEntity, "Root@Hexegeer");
 

@@ -57,7 +57,7 @@ namespace hexegeer.editor {
 				}
 				AppendLine();
 				using (Class("FieldSettingGenerator", isPartial: true)) {
-					using (Function("partial void GenerateInternal(EntityManager entityManager)")) {
+					using (Function("partial void GenerateInternal(EntityManager entityManager, Entity parent)")) {
 						AppendLine($"Entity settingEntity = entityManager.Create(");
 						using (Indent) {
 							AppendLine($"new FieldSetting {{");
@@ -70,8 +70,7 @@ namespace hexegeer.editor {
 								AppendLine($"collidesWith = LayerCollide.Terrain,");
 							}
 							AppendLine($"}},");
-							AppendLine($"new AttachHexegeerTree(),");
-							AppendLine($"new Parent(),");
+							AppendLine($"new Parent {{ Value = parent, }},");
 							AppendLine($"LocalTransform.Identity,");
 							AppendLine($"new LocalToWorld {{ Value = float4x4.identity, }}");
 						}

@@ -7,10 +7,11 @@ namespace hexegeer.internallib {
 	/// <summary>
 	/// フィールドの読み込みと破棄の判定を行う。
 	/// </summary>
-	[UpdateInGroup(typeof(HexegeerFieldInternalSystemGroup))]
+	[UpdateInGroup(typeof(HexegeerFieldSystemGroup))]
 	public partial struct FieldObservationSystem : ISystem {
 		private EntityQuery _observerQuery;
-		private EntityQuery _fieldQuery;
+		private EntityQuery _loadFieldQuery;
+		private EntityQuery _unloadFieldQuery;
 
 		void ISystem.OnCreate(ref SystemState state) {
 			_observerQuery = new EntityQueryBuilder(Allocator.Temp)
@@ -18,11 +19,15 @@ namespace hexegeer.internallib {
 				.Build(ref state);
 			state.RequireForUpdate(_observerQuery);
 
-			_fieldQuery = new EntityQueryBuilder(Allocator.Temp)
-				.WithAll<Child>()
+			_loadFieldQuery = new EntityQueryBuilder(Allocator.Temp)
 				.WithAllRW<FieldHeader>()
 				.Build(ref state);
-			state.RequireForUpdate(_fieldQuery);
+			state.RequireForUpdate(_loadFieldQuery);
+
+			_unloadFieldQuery = new EntityQueryBuilder(Allocator.Temp)
+				.WithAllRW<FieldHeader>()
+				.WithAll<Child>()
+				.Build(ref state);
 		}
 
 		void ISystem.OnUpdate(ref SystemState state) {
@@ -37,14 +42,14 @@ namespace hexegeer.internallib {
 				elapsed = SystemAPI.Time.ElapsedTime,
 				commandBuffer = commandBuffer,
 				loadDistance = setting.loadFieldDistance,
-			}.ScheduleParallel(_fieldQuery, state.Dependency);
+			}.ScheduleParallel(_loadFieldQuery, state.Dependency);
 
 			state.Dependency = new CheckUnloadJob {
 				localToWorlds = localToWorlds,
 				elapsed = SystemAPI.Time.ElapsedTime,
 				commandBuffer = commandBuffer,
 				unloadDistance = setting.unloadFieldDistance,
-			}.ScheduleParallel(_fieldQuery, state.Dependency);
+			}.ScheduleParallel(_unloadFieldQuery, state.Dependency);
 
 			state.Dependency = localToWorlds.Dispose(state.Dependency);
 		}

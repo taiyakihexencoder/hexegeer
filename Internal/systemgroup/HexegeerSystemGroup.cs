@@ -2,11 +2,22 @@
 using Unity.Physics.Systems;
 
 namespace hexegeer.internallib {
+	/// <summary>
+	/// Boot関係の初期化なしで動かすSystem
+	/// </summary>
 	[UpdateInGroup(typeof(SimulationSystemGroup))]
-	public partial class HexegeerSimulationSystemGroup : ComponentSystemGroup {	}
+	public partial class HexegeerGlobalSystemGroup : ComponentSystemGroup { }
 
-	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
-	public partial class HexegeerInternalSystemGroup : ComponentSystemGroup { }
+	/// <summary>
+	/// Boot, 物理、Transform以外のSystemのルート
+	/// </summary>
+	[UpdateInGroup(typeof(HexegeerGlobalSystemGroup))]
+	public partial class HexegeerSimulationSystemGroup : ComponentSystemGroup {
+		protected override void OnCreate(){
+			base.OnCreate();
+			RequireForUpdate<HexegeerSystemInstance>();
+		}
+	}
 
 	[UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
 	public partial class HexegeerAfterPhysicsSystemGroup : ComponentSystemGroup { }
@@ -14,19 +25,29 @@ namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerAfterPhysicsSystemGroup))]
 	public partial class HexegeerColliderGroup : ComponentSystemGroup { }
 
-	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
-	public partial class HexegeerCharacterSystemGroup : ComponentSystemGroup { }
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
+	public partial class HexegeerInternalSystemGroup : ComponentSystemGroup { }
+
+	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
+	public partial class HexegeerWorldSystemGroup : ComponentSystemGroup {
+		protected override void OnCreate(){
+			base.OnCreate();
+			RequireForUpdate<HexegeerWorldInstance>();
+		}
+	}
+
+
+
+	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
+	public partial class HexegeerCharacterSystemGroup : ComponentSystemGroup { }
+
+	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
 	public partial class HexegeerContentKeySystemGroup : ComponentSystemGroup { }
 
 
-	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
+	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
 	public partial class HexegeerFieldSystemGroup : ComponentSystemGroup {
-	}
-
-	[UpdateInGroup(typeof(HexegeerFieldSystemGroup))]
-	public partial class HexegeerFieldInternalSystemGroup : ComponentSystemGroup {
 		protected override void OnCreate(){
 			base.OnCreate();
 			RequireForUpdate<FieldSetting>();

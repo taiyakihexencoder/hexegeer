@@ -7,39 +7,46 @@ namespace hexegeer {
 	using internallib;
 
 	public static class HexegeerRuntimeManager {
+		/// <summary>
+		/// フィールド用の設定データ
+		/// </summary>
+		private static EntityQuery _fieldSettingQuery;
+
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		static void Init() {
-			Field = new _Field();
+			EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+			_fieldSettingQuery = new EntityQueryBuilder(Allocator.Temp)
+				.WithAll<FieldSetting>()
+				.Build(entityManager);
 		}
 
-		public class _Field {
-			private static EntityQuery _query;
-
-			public _Field() {
-				_query = new EntityQueryBuilder(Allocator.Temp)
-					.WithAll<FieldSetting>()
-					.Build(World.DefaultGameObjectInjectionWorld.EntityManager);
-			}
-
-			public void Launch() {
-				EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-				entityManager.Create(new LaunchFieldSystemRequest{});
-			}
-
-			public void Terminate() {
-				EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-				entityManager.Create(new TerminateFieldSystemRequest{});
-			}
-
-			public async Task WaitLaunch() {
-				await HexegeerUtility.ECS.WaitQueryExists(_query);
-			}
-
-			public async Task WaitTerminate() {
-				await HexegeerUtility.ECS.WaitQueryEmpty(_query);
-			}
+		public static void Boot() {
+			EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+			HexegeerManager.BootSystem(entityManager);
 		}
 
-		public static _Field Field { get; private set; }
+		public static async Task StartWorld() {
+			SyncContext.Post(() => {
+				EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+				HexegeerManager.StartWorld(entityManager);
+			});
+
+			await HexegeerUtility.ECS.WaitQueryExists(_fieldSettingQuery);
+		}
+
+		public static async Task EndWorld() {
+			SyncContext.Post(() => {
+				EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+				HexegeerManager.EndWorld(entityManager);
+			});
+
+			await HexegeerUtility.ECS.WaitQueryEmpty(_fieldSettingQuery);
+		}
+
+		public static void Shutdown() {
+			EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+			HexegeerManager.ShutdownSystem(entityManager);
+		}
 	}
 }

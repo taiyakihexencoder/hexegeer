@@ -11,16 +11,13 @@ namespace hexegeer.internallib {
 	/// <summary>
 	/// フィールドの読み込み
 	/// </summary>
-	[UpdateInGroup(typeof(HexegeerFieldInternalSystemGroup))]
+	[UpdateInGroup(typeof(HexegeerFieldSystemGroup))]
 	public partial class FieldLoadingSystem : SystemBase {
 		private EntityQuery _requestQuery;
 		private EntityQuery _queueQuery;
 
-		private FieldTable _table;
-		private bool _awaked;
-
 		private List<EntityCreateInfo> _cacheList;
-		private ConcurrentDictionary<int, Entity> _headerEntities;
+		private Dictionary<int, Entity> _headerEntities;
 		private ConcurrentQueue<EntityCreateInfo> _queue;
 
 		private EntityArchetype _headerArchetype;
@@ -54,10 +51,11 @@ namespace hexegeer.internallib {
 
 			RequireAnyForUpdate(_requestQuery, _queueQuery);
 
-			_awaked = false;
+			RequireForUpdate<FieldSetting>();
+			RequireForUpdate<FieldBlobTable>();
 			
 			_cacheList = new List<EntityCreateInfo>();
-			_headerEntities = new ConcurrentDictionary<int, Entity>();
+			_headerEntities = new Dictionary<int, Entity>();
 
 			_queue = new ConcurrentQueue<EntityCreateInfo>();
 
@@ -93,29 +91,49 @@ namespace hexegeer.internallib {
 			);
 			ECS.SetEntityName(EntityManager, _loadQueueEntity, "Field Load Queue@Hexegeer");
 			EntityManager.SetEnabled(_loadQueueEntity, false);
+		}
 
-			_table = null;
+		protected override void OnStartRunning(){
+			base.OnStartRunning();
+
+			FieldBlobTable table = SystemAPI.GetSingleton<FieldBlobTable>();
+			CreateHeaders(table);
+		}
+
+		private void CreateHeaders(FieldBlobTable table) {
+			for (int i = 0; i < table.asset.Value.rows.Length; ++i) {
+				FieldInfo row = table.asset.Value.rows[i];
+				FieldHeader header = new FieldHeader {
+					active = false,
+					id = row.id,
+					contentKey = row.contentKey,
+					boundsMin = row.boundsMin,
+					boundsMax = row.boundsMax,
+					lastUpdated = 0.0,
+				};
+
+				Entity entity = EntityManager.CreateEntity(_headerArchetype);
+				ECS.SetComponents(
+					EntityManager,
+					entity,
+					LocalTransform.FromPositionRotation(row.position, row.rotation),
+					new LocalToWorld { Value = float4x4.TRS(row.position, row.rotation, new float3(1f,1f,1f)), },
+					new Parent { Value = _rootEntity, },
+					header
+				);
+				ECS.SetEntityName(EntityManager, entity, row.name);
+
+				_headerEntities.Add(row.id, entity);
+			}
 		}
 
 		protected override void OnDestroy() {
-			if (_table != null) {
-				AssetUtil.Release(FieldTable.RESOURCE_ADDRESS);
-			}
 			SetCacheCount(0);
 		}
 
-		protected override void OnStartRunning() {
-			if(!_awaked) {
-				_awaked = true;
-
-				// 初期化処理
-				Task.Run( async () => _table = await LoadFieldTable() );
-			}
-		}
-
 		protected override void OnUpdate() {
-			if (! SystemAPI.TryGetSingleton(out FieldSetting settings)) { return; }
-			if (_table == null) { return; }
+			FieldSetting settings = SystemAPI.GetSingleton<FieldSetting>();
+			FieldBlobTable table = SystemAPI.GetSingleton<FieldBlobTable>();
 
 			NativeArray<FieldLoadRequest> requests = _requestQuery.ToComponentDataArray<FieldLoadRequest>(Allocator.Temp);
 
@@ -137,6 +155,7 @@ namespace hexegeer.internallib {
 
 					Task.Run( async () => {
 						await LoadFieldMesh(
+							table,
 							parent, 
 							id, 
 							settings.belongsTo, 
@@ -157,54 +176,21 @@ namespace hexegeer.internallib {
 			EntityManager.DestroyEntity(_requestQuery);
 		}
 
-		private async Task<FieldTable> LoadFieldTable() {
-			FieldTable table = await AssetUtil.RequestLoad<FieldTable>(FieldTable.RESOURCE_ADDRESS);
-
-			SyncContext.Send(() => {
-				foreach(FieldTable.Row row in table.Rows) {
-					FieldHeader header = new FieldHeader {
-						active = false,
-						id = row.id,
-						contentKey = row.contentKey,
-						boundsMin = row.boundsMin,
-						boundsMax = row.boundsMax,
-						lastUpdated = 0.0,
-					};
-
-					Entity entity = EntityManager.CreateEntity(_headerArchetype);
-					ECS.SetComponents(
-						EntityManager,
-						entity,
-						LocalTransform.FromPositionRotation(row.position, row.rotation),
-						new LocalToWorld { Value = float4x4.TRS(row.position, row.rotation, new float3(1f,1f,1f)), },
-						new Parent { Value = _rootEntity, },
-						header
-					);
-					ECS.SetEntityName(EntityManager, entity, row.name);
-
-					_headerEntities.TryAdd(row.id, entity);
-				}
-			});
-
-			return table;
-		}
-
-		private async Task LoadFieldMesh(Entity parent, int id, uint belongsTo, uint collidesWith) {
-			// フィールドテーブルの読み込み待ち
-			while(_table == null) { await Task.Yield(); }
-
+		private async Task LoadFieldMesh(FieldBlobTable table, Entity parent, int id, uint belongsTo, uint collidesWith) {
 			CollisionFilter filter = new CollisionFilter {
 				BelongsTo = belongsTo,
 				CollidesWith = collidesWith,
 			};
-
-			foreach(FieldTable.Row row in _table.Rows) {
-				if (row.id == id) {
-					List<MeshCreateInfo> meshes = await LoadMeshes(row.address, filter);
+			
+			int count = table.asset.Value.rows.Length;
+			for (int i = 0; i < count; ++i) {
+				FieldInfo fieldInfo = table.asset.Value.rows[i];
+				if (fieldInfo.id == id) {
+					List<MeshCreateInfo> meshes = await LoadMeshes(fieldInfo.address.ConvertToString(), filter);
 					_queue.Enqueue(
 						new EntityCreateInfo {
 							id = id,
-							contentKey = row.contentKey,
+							contentKey = fieldInfo.contentKey,
 							headerEntity = parent,
 							meshList = meshes,
 						}
@@ -230,7 +216,7 @@ namespace hexegeer.internallib {
 						return MeshCollider.Create(mesh, filter, _material);
 					});
 					createList.Add(
-						new MeshCreateInfo{
+						new MeshCreateInfo {
 							collider = collider,
 							name = mesh.name,
 						}

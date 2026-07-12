@@ -5,7 +5,7 @@ namespace hexegeer.internallib {
 		public const string RESOURCE_ADDRESS = "field_table";
 
 		[System.Serializable]
-		internal class Row {
+		public class Row {
 			public int id;
 			public int contentKey;
 			public string address;
@@ -19,6 +19,6 @@ namespace hexegeer.internallib {
 
 		[SerializeField]
 		private Row[] _rows;
-		internal Row[] Rows => _rows;
+		public Row[] Rows => _rows;
 	}
 }

@@ -9,6 +9,7 @@
         "Unity.Mathematics",
         "Unity.Transforms",
         "Unity.Physics",
+        "Unity.Physics.Hybrid",
         "Unity.InputSystem",
         "Unity.Addressables",
         "Unity.ResourceManager"
