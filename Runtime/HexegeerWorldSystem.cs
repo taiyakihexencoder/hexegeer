@@ -13,6 +13,7 @@ namespace hexegeer {
 		private Entity _fieldTableEntity;
 		private Entity _layoutTableEntity;
 		private Entity _characterTableEntity;
+		private Entity _cameraEntity;
 
 		protected override void OnCreate() {
 			base.OnCreate();
@@ -20,12 +21,14 @@ namespace hexegeer {
 			_fieldTableEntity = Entity.Null;
 			_layoutTableEntity = Entity.Null;
 			_characterTableEntity = Entity.Null;
+			_cameraEntity = Entity.Null;
 		}
 
 		protected override void OnStartRunning() {
 			base.OnStartRunning();
 
 			CreateDebugView(EntityManager);
+			CreateCameraInstance(EntityManager);
 
 			_masterDataEntity = EntityManager.Create(
 				new Parent(),
@@ -65,6 +68,26 @@ namespace hexegeer {
 				new LocalToWorld{ Value = float4x4.identity, }
 			);
 			ECS.SetEntityName(entityManager, debugViewEntity, "Physics Debug Display@Hexegeer");
+		}
+
+		private void CreateCameraInstance(EntityManager entityManager) {
+			_cameraEntity = entityManager.Create(
+				new CameraInstance(),
+				new CameraBounds(),
+				new FixedCamera(),
+				new FollowCamera(),
+				new CameraLerp(),
+				LocalTransform.Identity,
+				new LocalToWorld { Value = float4x4.identity, },
+				new Parent(),
+				new AttachHexegeerTree()
+			);
+
+			entityManager.SetComponentEnabled<CameraBounds>(_cameraEntity, false);
+			entityManager.SetComponentEnabled<FixedCamera>(_cameraEntity, false);
+			entityManager.SetComponentEnabled<FollowCamera>(_cameraEntity, false);
+			entityManager.SetComponentEnabled<CameraLerp>(_cameraEntity, false);
+			ECS.SetEntityName(entityManager, _cameraEntity, "Camera@Hexegeer");
 		}
 
 		/// <summary>

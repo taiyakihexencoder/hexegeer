@@ -167,7 +167,7 @@ namespace hexegeer.internallib {
 			return entity;
 		}
 
-				/// <summary>
+		/// <summary>
 		/// Entityを作成する。
 		/// </summary>
 		public static Entity Create<T1, T2, T3, T4, T5>(this EntityManager entityManager, T1 component1, T2 component2, T3 component3, T4 component4, T5 component5) 
@@ -188,6 +188,132 @@ namespace hexegeer.internallib {
 			if (!type3.IsZeroSized) entityManager.SetComponentData(entity, component3);
 			if (!type4.IsZeroSized) entityManager.SetComponentData(entity, component4);
 			if (!type5.IsZeroSized) entityManager.SetComponentData(entity, component5);
+			return entity;
+		}
+
+		/// <summary>
+		/// Entityを作成する。
+		/// </summary>
+		public static Entity Create<T1, T2, T3, T4, T5, T6>(this EntityManager entityManager, T1 component1, T2 component2, T3 component3, T4 component4, T5 component5, T6 component6) 
+			where T1: unmanaged, IComponentData
+			where T2: unmanaged, IComponentData
+			where T3: unmanaged, IComponentData
+			where T4: unmanaged, IComponentData
+			where T5: unmanaged, IComponentData
+			where T6: unmanaged, IComponentData {
+			ComponentType type1 = ComponentType.ReadWrite<T1>();
+			ComponentType type2 = ComponentType.ReadWrite<T2>();
+			ComponentType type3 = ComponentType.ReadWrite<T3>();
+			ComponentType type4 = ComponentType.ReadWrite<T4>();
+			ComponentType type5 = ComponentType.ReadWrite<T5>();
+			ComponentType type6 = ComponentType.ReadWrite<T6>();
+
+			Entity entity = entityManager.CreateEntity(type1, type2, type3, type4, type5, type6);
+			if (!type1.IsZeroSized) entityManager.SetComponentData(entity, component1);
+			if (!type2.IsZeroSized) entityManager.SetComponentData(entity, component2);
+			if (!type3.IsZeroSized) entityManager.SetComponentData(entity, component3);
+			if (!type4.IsZeroSized) entityManager.SetComponentData(entity, component4);
+			if (!type5.IsZeroSized) entityManager.SetComponentData(entity, component5);
+			if (!type6.IsZeroSized) entityManager.SetComponentData(entity, component6);
+			return entity;
+		}
+
+		/// <summary>
+		/// Entityを作成する。
+		/// </summary>
+		public static Entity Create<T1, T2, T3, T4, T5, T6, T7>(this EntityManager entityManager, T1 component1, T2 component2, T3 component3, T4 component4, T5 component5, T6 component6, T7 component7) 
+			where T1: unmanaged, IComponentData
+			where T2: unmanaged, IComponentData
+			where T3: unmanaged, IComponentData
+			where T4: unmanaged, IComponentData
+			where T5: unmanaged, IComponentData
+			where T6: unmanaged, IComponentData
+			where T7: unmanaged, IComponentData {
+			ComponentType type1 = ComponentType.ReadWrite<T1>();
+			ComponentType type2 = ComponentType.ReadWrite<T2>();
+			ComponentType type3 = ComponentType.ReadWrite<T3>();
+			ComponentType type4 = ComponentType.ReadWrite<T4>();
+			ComponentType type5 = ComponentType.ReadWrite<T5>();
+			ComponentType type6 = ComponentType.ReadWrite<T6>();
+			ComponentType type7 = ComponentType.ReadWrite<T7>();
+
+			Entity entity = entityManager.CreateEntity(type1, type2, type3, type4, type5, type6, type7);
+			if (!type1.IsZeroSized) entityManager.SetComponentData(entity, component1);
+			if (!type2.IsZeroSized) entityManager.SetComponentData(entity, component2);
+			if (!type3.IsZeroSized) entityManager.SetComponentData(entity, component3);
+			if (!type4.IsZeroSized) entityManager.SetComponentData(entity, component4);
+			if (!type5.IsZeroSized) entityManager.SetComponentData(entity, component5);
+			if (!type6.IsZeroSized) entityManager.SetComponentData(entity, component6);
+			if (!type7.IsZeroSized) entityManager.SetComponentData(entity, component7);
+			return entity;
+		}
+
+		/// <summary>
+		/// Entityを作成する。
+		/// </summary>
+		public static Entity Create<T1, T2, T3, T4, T5, T6, T7, T8>(this EntityManager entityManager, T1 component1, T2 component2, T3 component3, T4 component4, T5 component5, T6 component6, T7 component7, T8 component8) 
+			where T1: unmanaged, IComponentData
+			where T2: unmanaged, IComponentData
+			where T3: unmanaged, IComponentData
+			where T4: unmanaged, IComponentData
+			where T5: unmanaged, IComponentData
+			where T6: unmanaged, IComponentData
+			where T7: unmanaged, IComponentData
+			where T8: unmanaged, IComponentData {
+			ComponentType type1 = ComponentType.ReadWrite<T1>();
+			ComponentType type2 = ComponentType.ReadWrite<T2>();
+			ComponentType type3 = ComponentType.ReadWrite<T3>();
+			ComponentType type4 = ComponentType.ReadWrite<T4>();
+			ComponentType type5 = ComponentType.ReadWrite<T5>();
+			ComponentType type6 = ComponentType.ReadWrite<T6>();
+			ComponentType type7 = ComponentType.ReadWrite<T7>();
+			ComponentType type8 = ComponentType.ReadWrite<T8>();
+
+			Entity entity = entityManager.CreateEntity(type1, type2, type3, type4, type5, type6, type7, type8);
+			if (!type1.IsZeroSized) entityManager.SetComponentData(entity, component1);
+			if (!type2.IsZeroSized) entityManager.SetComponentData(entity, component2);
+			if (!type3.IsZeroSized) entityManager.SetComponentData(entity, component3);
+			if (!type4.IsZeroSized) entityManager.SetComponentData(entity, component4);
+			if (!type5.IsZeroSized) entityManager.SetComponentData(entity, component5);
+			if (!type6.IsZeroSized) entityManager.SetComponentData(entity, component6);
+			if (!type7.IsZeroSized) entityManager.SetComponentData(entity, component7);
+			if (!type8.IsZeroSized) entityManager.SetComponentData(entity, component8);
+			return entity;
+		}
+
+		/// <summary>
+		/// Entityを作成する。
+		/// </summary>
+		public static Entity Create<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this EntityManager entityManager, T1 component1, T2 component2, T3 component3, T4 component4, T5 component5, T6 component6, T7 component7, T8 component8, T9 component9) 
+			where T1: unmanaged, IComponentData
+			where T2: unmanaged, IComponentData
+			where T3: unmanaged, IComponentData
+			where T4: unmanaged, IComponentData
+			where T5: unmanaged, IComponentData
+			where T6: unmanaged, IComponentData
+			where T7: unmanaged, IComponentData
+			where T8: unmanaged, IComponentData
+			where T9: unmanaged, IComponentData {
+			ComponentType type1 = ComponentType.ReadWrite<T1>();
+			ComponentType type2 = ComponentType.ReadWrite<T2>();
+			ComponentType type3 = ComponentType.ReadWrite<T3>();
+			ComponentType type4 = ComponentType.ReadWrite<T4>();
+			ComponentType type5 = ComponentType.ReadWrite<T5>();
+			ComponentType type6 = ComponentType.ReadWrite<T6>();
+			ComponentType type7 = ComponentType.ReadWrite<T7>();
+			ComponentType type8 = ComponentType.ReadWrite<T8>();
+			ComponentType type9 = ComponentType.ReadWrite<T9>();
+
+			Entity entity = entityManager.CreateEntity(type1, type2, type3, type4, type5, type6, type7, type8, type9);
+			if (!type1.IsZeroSized) entityManager.SetComponentData(entity, component1);
+			if (!type2.IsZeroSized) entityManager.SetComponentData(entity, component2);
+			if (!type3.IsZeroSized) entityManager.SetComponentData(entity, component3);
+			if (!type4.IsZeroSized) entityManager.SetComponentData(entity, component4);
+			if (!type5.IsZeroSized) entityManager.SetComponentData(entity, component5);
+			if (!type6.IsZeroSized) entityManager.SetComponentData(entity, component6);
+			if (!type7.IsZeroSized) entityManager.SetComponentData(entity, component7);
+			if (!type8.IsZeroSized) entityManager.SetComponentData(entity, component8);
+			if (!type9.IsZeroSized) entityManager.SetComponentData(entity, component9);
 			return entity;
 		}
 
