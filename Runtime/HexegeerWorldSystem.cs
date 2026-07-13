@@ -14,6 +14,7 @@ namespace hexegeer {
 		private Entity _layoutTableEntity;
 		private Entity _characterTableEntity;
 		private Entity _cameraEntity;
+		private Entity _worldReadyEntity;
 
 		protected override void OnCreate() {
 			base.OnCreate();
@@ -22,6 +23,7 @@ namespace hexegeer {
 			_layoutTableEntity = Entity.Null;
 			_characterTableEntity = Entity.Null;
 			_cameraEntity = Entity.Null;
+			_worldReadyEntity = Entity.Null;
 		}
 
 		protected override void OnStartRunning() {
@@ -38,20 +40,37 @@ namespace hexegeer {
 			);
 			ECS.SetEntityName(EntityManager, _masterDataEntity, "Master Data@Hexegeer");
 
-			// Field Setting
-			Task.Run(LoadFieldTable);
+			// Dummy Entry Point
+			HexegeerManager.CreateEntryPoint(EntityManager, new float3(0f, 20f, 0f));
 
-			// Layout Settings
-			Task.Run(LoadLayoutTable);
-
-			// Character Setting
-			Task.Run(LoadCharacterTable);
-			
 			// Global Content
 			CreateGlobalContentKeyRequest(EntityManager);
 
-			// Dummy Entry Point
-			HexegeerManager.CreateEntryPoint(EntityManager, new float3(0f, 20f, 0f));
+			Task.Run(LoadTask);
+		}
+
+		private async Task LoadTask() {
+			// Field Setting
+			await LoadFieldTable();
+
+			// Layout Settings
+			await LoadLayoutTable();
+
+			// Character Setting
+			await LoadCharacterTable();
+
+			await Task.Yield();
+
+			SyncContext.Send(() => {
+				_worldReadyEntity = EntityManager.Create(
+					new Parent(),
+					new LocalToWorld{ Value = float4x4.identity, },
+					LocalTransform.Identity,
+					new AttachHexegeerTree(),
+					new HexegeerWorldReady{ }
+				);
+				ECS.SetEntityName(EntityManager, _masterDataEntity, "World Ready@Hexegeer");
+			});
 		}
 
 		private void CreateDebugView(EntityManager entityManager) {
@@ -265,6 +284,11 @@ namespace hexegeer {
 		}
 
 		protected override void OnStopRunning() {
+			if (_worldReadyEntity != Entity.Null) {
+				EntityManager.DestroyEntity(_worldReadyEntity);
+				_worldReadyEntity = Entity.Null;
+			}
+
 			// Field Setting
 			if (_fieldTableEntity != Entity.Null) {
 				FieldBlobTable table = EntityManager.GetComponentData<FieldBlobTable>(_fieldTableEntity);

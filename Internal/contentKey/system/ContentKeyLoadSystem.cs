@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -73,7 +72,6 @@ namespace hexegeer.internallib {
 		}
 
 		protected override void OnDestroy() {
-			// TODO 方法は後で考えるがいったん仮置きしておく
 			foreach(KeyValuePair<int, BlobAssetReference<Collider>> collider in _colliders) {
 				collider.Value.Dispose();
 			}

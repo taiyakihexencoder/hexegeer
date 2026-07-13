@@ -8,16 +8,24 @@ namespace hexegeer {
 
 	public static class HexegeerRuntimeManager {
 		/// <summary>
-		/// フィールド用の設定データ
+		/// ワールド読み込み完了確認用クエリ
 		/// </summary>
-		private static EntityQuery _fieldSettingQuery;
+		private static EntityQuery _worldIsReadyQuery;
+
+		/// <summary>
+		/// ワールド存在確認用クエリ
+		/// </summary>
+		private static EntityQuery _worldInstanceQuery;
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		static void Init() {
 			EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+			_worldIsReadyQuery = new EntityQueryBuilder(Allocator.Temp)
+				.WithAll<HexegeerWorldReady>()
+				.Build(entityManager);
 
-			_fieldSettingQuery = new EntityQueryBuilder(Allocator.Temp)
-				.WithAll<FieldSetting>()
+			_worldInstanceQuery = new EntityQueryBuilder(Allocator.Temp)
+				.WithAll<HexegeerWorldInstance>()
 				.Build(entityManager);
 		}
 
@@ -32,7 +40,7 @@ namespace hexegeer {
 				HexegeerManager.StartWorld(entityManager);
 			});
 
-			await HexegeerUtility.ECS.WaitQueryExists(_fieldSettingQuery);
+			await HexegeerUtility.ECS.WaitQueryExists(_worldIsReadyQuery);
 		}
 
 		public static async Task EndWorld() {
@@ -41,7 +49,7 @@ namespace hexegeer {
 				HexegeerManager.EndWorld(entityManager);
 			});
 
-			await HexegeerUtility.ECS.WaitQueryEmpty(_fieldSettingQuery);
+			await HexegeerUtility.ECS.WaitQueryEmpty(_worldInstanceQuery);
 		}
 
 		public static void Shutdown() {
