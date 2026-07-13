@@ -7,15 +7,12 @@ using UnityEditor;
 #endif
 
 namespace hexegeer.internallib {
-	public abstract class PseudoEnum<T> : PseudoEnum, System.IComparable<T> where T: PseudoEnum<T> {
-		[SerializeField]
-		private int _id;
-		public override int Id => _id;
-
-		[SerializeField]
-		private string _name;
-		public override string Name => _name;
-
+	/// <summary>
+	/// 継承先で_id, _nameを定義してId, Name Getterを定義する。
+	/// classだとECSから利用しづらいのでstructで定義できるようにした。
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	public interface IPseudoEnum<T> : IPseudoEnum, System.IComparable<T> where T : IPseudoEnum<T> {
 		public static IEnumerable<T> GetAll() {
 			System.Reflection.FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
 			T[] values = new T[fields.Length];
@@ -23,37 +20,21 @@ namespace hexegeer.internallib {
 				values[i] = (T)fields[i].GetValue(null);
 			}
 			return values;
-		} 
-
-		protected PseudoEnum(int id, string name) {
-			_id = id;
-			_name = name;
 		}
 
-		int System.IComparable<T>.CompareTo(T other) {
-			return _id.CompareTo(other._id);
-		}
-
-		public override int GetHashCode() {
-			return _id.GetHashCode();
-		}
-
-		public override bool Equals(object obj) {
-			return obj is T other && other._id == _id;
-		}
-
-		public override string ToString() {
-			return _name;
-		}
+		int System.IComparable<T>.CompareTo(T other) { return Id.CompareTo(other.Id); }
+		bool Equals(object obj) { return obj is T other && other.Id == Id; }
+		int GetHashCode() { return Id.GetHashCode(); }
+		string ToString() { return Name; }
 	}
 
-	public abstract class PseudoEnum {
-		public abstract int Id { get; }
-		public abstract string Name { get; }
+	public interface IPseudoEnum {
+		int Id { get; }
+		string Name { get; }
 	}
 
 #if UNITY_EDITOR
-	[CustomPropertyDrawer(typeof(PseudoEnum<>), true)]
+	[CustomPropertyDrawer(typeof(IPseudoEnum), true)]
 	public sealed class PseudoEnumPropertyDrawer : PropertyDrawer {
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 			System.Type type = fieldInfo.FieldType;
@@ -61,7 +42,7 @@ namespace hexegeer.internallib {
 			int[] ids = new int[fields.Length];
 			GUIContent[] names = new GUIContent[fields.Length];
 			for(int i = 0; i < fields.Length; ++i) {
-				PseudoEnum value = (PseudoEnum) fields[i].GetValue(null);
+				IPseudoEnum value = (IPseudoEnum) fields[i].GetValue(null);
 				ids[i] = value.Id;
 				names[i] = new GUIContent(value.Name);
 			}

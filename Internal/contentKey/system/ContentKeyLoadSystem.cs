@@ -19,10 +19,18 @@ namespace hexegeer.internallib {
 		private ConcurrentDictionary<int, BlobAssetReference<Collider>> _colliders;
 		private Dictionary<int, Entity> _characters;
 
+		private EntityArchetype _characterEntryArchetype;
 		private EntityArchetype _characterArchetype;
 
 		override protected void OnCreate() {
 			_initialized = false;
+
+			_characterEntryArchetype = EntityManager.CreateArchetype(
+				ComponentType.ReadWrite<CharacterPrefabEntry>(),
+				ComponentType.ReadWrite<Parent>(),
+				ComponentType.ReadWrite<LocalTransform>(),
+				ComponentType.ReadWrite<LocalToWorld>()
+			);
 
 			_characterArchetype = EntityManager.CreateArchetype(
 				ComponentType.ReadOnly<Prefab>(),
@@ -61,6 +69,13 @@ namespace hexegeer.internallib {
 				_characters = new Dictionary<int, Entity>();
 
 				_initialized = true;
+			}
+		}
+
+		protected override void OnDestroy() {
+			// TODO 方法は後で考えるがいったん仮置きしておく
+			foreach(KeyValuePair<int, BlobAssetReference<Collider>> collider in _colliders) {
+				collider.Value.Dispose();
 			}
 		}
 
@@ -157,35 +172,46 @@ namespace hexegeer.internallib {
 			int belongsTo,
 			int collidesWith
 		) {
-			Entity prefab = EntityManager.CreateEntity(_characterArchetype);
+			Entity entry = entityManager.CreateEntity(_characterEntryArchetype);
+			ECS.SetEntityName(entityManager, entry, $"Prefab Entry - {info.name}");
 
-			ECS.SetEntityName(EntityManager, prefab, info.name);
+			Entity prefab = entityManager.CreateEntity(_characterArchetype);
+			ECS.SetEntityName(entityManager, prefab, info.name);
 
 			ECS.SetComponents(
-				EntityManager,
+				entityManager,
+				entry,
+				LocalTransform.FromPositionRotation(float3.zero, quaternion.identity),
+				new LocalToWorld { Value = float4x4.identity, },
+				new Parent { Value = _characterRootEntity, },
+				new CharacterPrefabEntry{ id = info.id, prefab = prefab, }
+			);
+
+			ECS.SetComponents(
+				entityManager,
 				prefab,
 				LocalTransform.FromPositionRotation(float3.zero, quaternion.identity),
 				new LocalToWorld { Value = float4x4.identity, },
 				new CharacterHeader { id = info.id, },
-				new Parent { Value = _characterRootEntity, }
+				new Parent { Value = entry, }
 			);
 
 			if (info.hasObservationPoint) {
-				EntityManager.AddComponent<FieldObservationPoint>(prefab);
+				entityManager.AddComponent<FieldObservationPoint>(prefab);
 			}
 
 			// Collider
 			if (collider == null) {
-				EntityManager.RemoveComponents<PhysicsCollider, PhysicsGravityFactor, PhysicsMass, PhysicsVelocity>(prefab);
+				entityManager.RemoveComponents<PhysicsCollider, PhysicsGravityFactor, PhysicsMass, PhysicsVelocity>(prefab);
 			} else {
 				ECS.SetComponents(
-					EntityManager,
+					entityManager,
 					prefab,
 					new PhysicsCollider { Value = LoadCollider(collider.Value, belongsTo, collidesWith), },
 					new PhysicsGravityFactor { Value = 3.0f, },
 					PhysicsMass.CreateDynamic(MassProperties.UnitSphere, 50.0f)
 				);
-				EntityManager.AddSharedComponent(prefab, new PhysicsWorldIndex{ Value = 0, });
+				entityManager.AddSharedComponent(prefab, new PhysicsWorldIndex{ Value = 0, });
 			}
 
 			_characters.Add(info.id, prefab);
@@ -193,7 +219,7 @@ namespace hexegeer.internallib {
 		}
 
 		private BlobAssetReference<Collider> LoadCollider(CharacterColliderInfo collider, int belongsTo, int collidesWith) {
-			if (_colliders.TryGetValue(collider.id, out BlobAssetReference<Collider> asset)) {
+			if (!_colliders.TryGetValue(collider.id, out BlobAssetReference<Collider> asset)) {
 				BlobAssetReference<Collider> capsule = CapsuleCollider.Create(
 					geometry: new CapsuleGeometry {
 						Radius = collider.radius,

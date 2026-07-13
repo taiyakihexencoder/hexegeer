@@ -63,7 +63,9 @@ namespace hexegeer.internallib {
 							instance,
 							new LocalToWorld { Value = float4x4.TRS(request.ValueRO.position, request.ValueRO.rotation, new float3(1f,1f,1f))}
 						);
-						commandBuffer.RemoveComponent<Parent>(sortKey, entity);
+						commandBuffer.RemoveComponent<Parent>(sortKey, instance);
+
+						// requestの破棄
 						commandBuffer.DestroyEntity(sortKey, entity);
 						break;
 					}

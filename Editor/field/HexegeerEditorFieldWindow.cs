@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
@@ -276,7 +277,7 @@ namespace hexegeer.editor {
 		private void OnRequestGenerateScript() {
 			FieldScriptGenerator generator = new FieldScriptGenerator();
 			if (generator.Validation(out List<string> messages)) {
-				generator.Generate("FieldAutoGenerates.cs");
+				generator.Generate($"field{Path.DirectorySeparatorChar}FieldAutoGenerates.cs");
 			} else {
 				EditorUtility.DisplayDialog(
 					title: "Error",

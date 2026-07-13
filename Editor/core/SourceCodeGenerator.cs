@@ -24,16 +24,14 @@ namespace hexegeer.editor {
 		protected IndentScope Class(
 			string name,
 			bool isPartial = false,
-			bool isStatic = false
+			bool isStatic = false,
+			bool isSealed = false
 		) {
 			string header = "";
 			header += "public ";
-			if (isStatic) {
-				header += "static ";
-			}
-			if (isPartial) {
-				header += "partial ";
-			}
+			if (isStatic) { header += "static "; }
+			if (isSealed) { header += "sealed "; }
+			if (isPartial) { header += "partial "; }
 			stream.AppendLine($"{header}class {name} {{");
 			stream.AddIndent();
 			return new IndentScope(() => {

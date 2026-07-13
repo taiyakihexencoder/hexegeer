@@ -43,6 +43,8 @@ namespace hexegeer {
 				}
 			}
 
+			public static EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
+			
 		}
 
 		/// <summary>

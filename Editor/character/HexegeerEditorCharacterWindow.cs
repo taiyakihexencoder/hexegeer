@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
@@ -70,6 +71,14 @@ namespace hexegeer.editor {
 			ClickButton generateScriptButton = ClickButton.Create(Align.FlexStart)
 				.Label("Generate Script")
 				.Margin(vertical:4f, horizontal: 8f);
+			generateScriptButton.OnClicked += () => {
+				CharacterScriptGenerator generator = new CharacterScriptGenerator();
+				if (generator.Validation(out List<string> messages)) {
+					generator.Generate($"character{Path.DirectorySeparatorChar}CharacterId.cs");
+				} else {
+					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, messages), "ok");
+				}
+			};
 
 			ClickButton generateResourceButton = ClickButton.Create(Align.FlexStart)
 				.Label("Generate Resource")

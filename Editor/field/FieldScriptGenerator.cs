@@ -5,7 +5,6 @@ using UnityEditor;
 
 namespace hexegeer.editor {
 	internal sealed class FieldScriptGenerator : SourceCodeGenerator {
-		protected override string autoGeneratePath => base.autoGeneratePath + "field" + Path.DirectorySeparatorChar;
 		public override bool Validation(out List<string> errorMessages) {
 			errorMessages = new List<string>();
 
