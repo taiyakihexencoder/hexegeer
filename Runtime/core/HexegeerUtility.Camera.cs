@@ -92,11 +92,12 @@ namespace hexegeer {
 					entityManager.SetComponentEnabled<CameraBounds>(entity, false);
 				}
 
-				RefRW<FollowCamera> followCamera = _query.GetSingletonRW<FollowCamera>();
-				followCamera.ValueRW.target = target;
-				followCamera.ValueRW.offset = offset;
-				followCamera.ValueRW.direction = direction;
-				followCamera.ValueRW.distance = distance;
+				FollowCamera followCamera = entityManager.GetComponentData<FollowCamera>(entity);
+				followCamera.target = target;
+				followCamera.offset = offset;
+				followCamera.direction = direction;
+				followCamera.distance = distance;
+				entityManager.SetComponentData(entity, followCamera);
 			}
 
 			private static void EnableFollow(EntityManager entityManager, Entity entity, Entity target, float3 offset, quaternion direction, float distance, float3 boundsMin, float3 boundsMax) {
@@ -108,15 +109,17 @@ namespace hexegeer {
 					entityManager.SetComponentEnabled<CameraBounds>(entity, true);
 				}
 
-				RefRW<FollowCamera> followCamera = _query.GetSingletonRW<FollowCamera>();
-				followCamera.ValueRW.target = target;
-				followCamera.ValueRW.offset = offset;
-				followCamera.ValueRW.direction = direction;
-				followCamera.ValueRW.distance = distance;
+				FollowCamera followCamera = entityManager.GetComponentData<FollowCamera>(entity);
+				followCamera.target = target;
+				followCamera.offset = offset;
+				followCamera.direction = direction;
+				followCamera.distance = distance;
+				entityManager.SetComponentData(entity, followCamera);
 
-				RefRW<CameraBounds> bounds = _query.GetSingletonRW<CameraBounds>();
-				bounds.ValueRW.boundsMin = boundsMin;
-				bounds.ValueRW.boundsMax = boundsMax;
+				entityManager.SetComponentData(entity, new CameraBounds{
+					boundsMin = boundsMin,
+					boundsMax = boundsMax,
+				});
 			}
 
 			private static void DisableFollow(EntityManager entityManager, Entity entity) {
@@ -133,10 +136,14 @@ namespace hexegeer {
 				if (!entityManager.IsComponentEnabled<FixedCamera>(entity)) {
 					entityManager.SetComponentEnabled<FixedCamera>(entity, true);
 				}
-				
-				RefRW<FixedCamera> fixedCamera = _query.GetSingletonRW<FixedCamera>();
-				fixedCamera.ValueRW.position = position;
-				fixedCamera.ValueRW.rotation = rotation;
+
+				entityManager.SetComponentData(
+					entity,
+					new FixedCamera {
+						position = position,
+						rotation = rotation,
+					}
+				);
 			}
 
 			private static void DisableFixed(EntityManager entityManager, Entity entity) {
