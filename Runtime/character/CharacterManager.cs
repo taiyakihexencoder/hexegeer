@@ -1,9 +1,20 @@
-﻿using hexegeer.internallib;
+﻿using System.Threading.Tasks;
+using hexegeer.internallib;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
 namespace hexegeer {
 	public static class CharacterManager {
+		private static EntityQuery _characterQuery;
+
+		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]
+		private static void Init() {
+			_characterQuery = new EntityQueryBuilder(Allocator.Temp)
+				.WithAll<CharacterHeader>()
+				.Build(ECS.EntityManager);
+		}
+
 		public static void RequestSpawn(
 			EntityManager entityManager,
 			CharacterId characterId, 
@@ -17,6 +28,26 @@ namespace hexegeer {
 					rotation = rotation,
 				}
 			);
+		}
+
+		public static async Task<Entity> WaitEntitySpawn(CharacterId characterId) {
+			Entity target = Entity.Null;
+			while(target == Entity.Null) {
+				SyncContext.Post(() => {
+					EntityManager entityManager = ECS.EntityManager;
+					NativeArray<Entity> entities = _characterQuery.ToEntityArray(Allocator.Temp);
+					foreach(Entity entity in entities) {
+						CharacterHeader header = entityManager.GetComponentData<CharacterHeader>(entity);
+						if (header.id == characterId.Id) {
+							target = entity;
+							break;
+						}
+					}
+					entities.Dispose();
+				});
+				await Task.Delay(50);
+			}
+			return target;
 		}
 	}
 }

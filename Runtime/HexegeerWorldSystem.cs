@@ -3,6 +3,7 @@ using hexegeer.internallib;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
 using Unity.Physics.Authoring;
 using Unity.Transforms;
 
@@ -16,6 +17,8 @@ namespace hexegeer {
 		private Entity _cameraEntity;
 		private Entity _worldReadyEntity;
 
+		private Entity _physicsStepEntity;
+
 		protected override void OnCreate() {
 			base.OnCreate();
 			_masterDataEntity = Entity.Null;
@@ -24,6 +27,8 @@ namespace hexegeer {
 			_characterTableEntity = Entity.Null;
 			_cameraEntity = Entity.Null;
 			_worldReadyEntity = Entity.Null;
+
+			_physicsStepEntity = Entity.Null;
 		}
 
 		protected override void OnStartRunning() {
@@ -62,6 +67,18 @@ namespace hexegeer {
 			await Task.Yield();
 
 			SyncContext.Send(() => {
+				_physicsStepEntity = EntityManager.Create(
+					new PhysicsStep {
+						SimulationType = SimulationType.UnityPhysics,
+						Gravity = new float3(0.0f, -9.81f, 0.0f),
+						SolverIterationCount = 4,
+						SubstepCount = 1,
+						MultiThreaded = 1,
+						
+					}
+				);
+				ECS.SetEntityName(EntityManager, _physicsStepEntity, "Physics Step");
+
 				_worldReadyEntity = EntityManager.Create(
 					new Parent(),
 					new LocalToWorld{ Value = float4x4.identity, },

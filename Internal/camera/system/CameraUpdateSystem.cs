@@ -1,6 +1,7 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
+using UnityEngine;
 
 namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerCameraSystemGroup)), UpdateAfter(typeof(CameraSystem))]
@@ -17,7 +18,11 @@ namespace hexegeer.internallib {
 
 		protected override void OnUpdate() {
 			LocalToWorld localToWorld = _query.GetSingleton<LocalToWorld>();
-			UnityEngine.Camera.main.transform.SetPositionAndRotation(localToWorld.Position, localToWorld.Rotation);
+			Transform cameraTransform = Camera.main.transform;
+			cameraTransform.SetPositionAndRotation(
+				Vector3.Lerp(cameraTransform.position, localToWorld.Position, 0.2f),
+				Quaternion.Slerp(cameraTransform.rotation, localToWorld.Rotation, 0.2f)
+			);
 		}
 	}
 }

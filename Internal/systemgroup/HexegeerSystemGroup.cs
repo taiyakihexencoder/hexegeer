@@ -19,6 +19,15 @@ namespace hexegeer.internallib {
 		}
 	}
 
+	[UpdateInGroup(typeof(BeforePhysicsSystemGroup))]
+	public partial class HexegeerBeforePhysicsSystemGroup : ComponentSystemGroup {
+		protected override void OnCreate(){
+			base.OnCreate();
+			RequireForUpdate<HexegeerWorldInstance>();
+		}
+	}
+
+
 	[UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
 	public partial class HexegeerAfterPhysicsSystemGroup : ComponentSystemGroup { }
 
@@ -26,7 +35,7 @@ namespace hexegeer.internallib {
 	public partial class HexegeerColliderGroup : ComponentSystemGroup { }
 
 
-	[UpdateInGroup(typeof(PresentationSystemGroup))]
+	[UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
 	public partial class HexegeerPresentationSystemGroup : ComponentSystemGroup { }
 
 	[UpdateInGroup(typeof(HexegeerPresentationSystemGroup))]

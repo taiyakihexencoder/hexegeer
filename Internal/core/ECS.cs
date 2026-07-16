@@ -4,6 +4,8 @@ using Unity.Entities;
 
 namespace hexegeer.internallib {
 	public static class ECS {
+		public static EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
+	
 		[Conditional("UNITY_EDITOR")]
 		public static void SetEntityName(EntityManager manager, Entity entity, FixedString64Bytes name) {
 #if UNITY_EDITOR
@@ -16,6 +18,16 @@ namespace hexegeer.internallib {
 #if UNITY_EDITOR
 			commandBuffer.SetName(entity, name);
 #endif
+		}
+
+		public static void SetComponents<T1>(
+			EntityManager entityManager, 
+			Entity entity, 
+			T1 component1
+		)
+			where T1: unmanaged, IComponentData
+		{
+			entityManager.SetComponentData(entity, component1);
 		}
 
 		/// <summary>

@@ -56,5 +56,10 @@ namespace hexegeer {
 			EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 			HexegeerManager.ShutdownSystem(entityManager);
 		}
+
+		public static void SetFrameRate(int frameRate) {
+			QualitySettings.vSyncCount = 1;
+			Application.targetFrameRate = frameRate;
+		}
 	}
 }

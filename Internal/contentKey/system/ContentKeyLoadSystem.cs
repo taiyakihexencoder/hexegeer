@@ -37,6 +37,8 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<LocalToWorld>(),
 				ComponentType.ReadWrite<Parent>(),
 				ComponentType.ReadWrite<CharacterHeader>(),
+				ComponentType.ReadWrite<CharacterMoveStatus>(),
+				ComponentType.ReadWrite<CharacterGroundedStatus>(),
 				ComponentType.ReadWrite<PhysicsCollider>(),
 				ComponentType.ReadWrite<PhysicsGravityFactor>(),
 				ComponentType.ReadWrite<PhysicsMass>(),
@@ -182,7 +184,7 @@ namespace hexegeer.internallib {
 				LocalTransform.FromPositionRotation(float3.zero, quaternion.identity),
 				new LocalToWorld { Value = float4x4.identity, },
 				new Parent { Value = _characterRootEntity, },
-				new CharacterPrefabEntry{ id = info.id, prefab = prefab, }
+				new CharacterPrefabEntry { id = info.id, prefab = prefab, }
 			);
 
 			ECS.SetComponents(
@@ -198,16 +200,37 @@ namespace hexegeer.internallib {
 				entityManager.AddComponent<FieldObservationPoint>(prefab);
 			}
 
+			// Motion Settings
+			ECS.SetComponents(
+				entityManager,
+				prefab,
+				new CharacterMoveStatus { 
+					lookDirectionThreshold = 0.2f, 
+					correctionSeconds = 0.3f,
+					lookDirection = quaternion.identity,
+				}
+			);
+
 			// Collider
 			if (collider == null) {
-				entityManager.RemoveComponents<PhysicsCollider, PhysicsGravityFactor, PhysicsMass, PhysicsVelocity>(prefab);
+				entityManager.RemoveComponents<PhysicsCollider, PhysicsGravityFactor, CharacterGroundedStatus>(prefab);
 			} else {
+				PhysicsMass mass = PhysicsMass.CreateDynamic(MassProperties.UnitSphere, 50.0f);
+				mass.InverseInertia = new float3(0f, 1f, 0f);
 				ECS.SetComponents(
 					entityManager,
 					prefab,
 					new PhysicsCollider { Value = LoadCollider(collider.Value, belongsTo, collidesWith), },
 					new PhysicsGravityFactor { Value = 3.0f, },
-					PhysicsMass.CreateDynamic(MassProperties.UnitSphere, 50.0f)
+					mass
+				);
+				ECS.SetComponents(
+					entityManager,
+					prefab,
+					new CharacterGroundedStatus {
+						groundThreshold = math.cos(math.radians(35f)),
+						normal = new float3(0f, 1f, 0f),
+					}
 				);
 				entityManager.AddSharedComponent(prefab, new PhysicsWorldIndex{ Value = 0, });
 			}
@@ -218,6 +241,10 @@ namespace hexegeer.internallib {
 
 		private BlobAssetReference<Collider> LoadCollider(CharacterColliderInfo collider, int belongsTo, int collidesWith) {
 			if (!_colliders.TryGetValue(collider.id, out BlobAssetReference<Collider> asset)) {
+				Material physicsMaterial = Material.Default;
+				physicsMaterial.Friction = 0.0f;
+				physicsMaterial.FrictionCombinePolicy = Material.CombinePolicy.Minimum;
+
 				BlobAssetReference<Collider> capsule = CapsuleCollider.Create(
 					geometry: new CapsuleGeometry {
 						Radius = collider.radius,
@@ -228,7 +255,7 @@ namespace hexegeer.internallib {
 						BelongsTo = (uint) belongsTo,
 						CollidesWith = (uint) collidesWith,
 					},
-					material: Material.Default
+					material: physicsMaterial
 				);
 				capsule.Value.SetCollisionResponse(CollisionResponsePolicy.Collide);
 
