@@ -92,10 +92,8 @@ namespace hexegeer {
 		private void CreateDebugView(EntityManager entityManager) {
 			Entity debugViewEntity = entityManager.Create(
 				new PhysicsDebugDisplayData {
-					DrawMassProperties = 0,
-					DrawColliders = 1,
+					DrawColliders = 0,
 					DrawColliderEdges = 1,
-					DrawColliderAabbs = 0,
 				},
 				new Parent(),
 				new AttachHexegeerTree(),
