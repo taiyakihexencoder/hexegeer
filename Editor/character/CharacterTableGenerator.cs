@@ -25,6 +25,7 @@ namespace hexegeer.editor {
 
 				characterProperty.Of("id").intValue = data.id;
 				characterProperty.Of("name").stringValue = data.name;
+				characterProperty.Of("modelAsset").stringValue = data.modelAsset;
 				characterProperty.Of("collider").intValue = data.collider;
 				characterProperty.Of("belongsTo").intValue = 1 << data.layer;
 				characterProperty.Of("collidesWith").intValue = collidesWith;

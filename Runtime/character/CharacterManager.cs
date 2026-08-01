@@ -47,6 +47,18 @@ namespace hexegeer {
 				});
 				await Task.Delay(50);
 			}
+
+			// ビジュアルの作成
+			SyncContext.Post(() => {
+				EntityManager entityManager = ECS.EntityManager;
+				entityManager.Create(
+					new CharacterCreateModelRequest {
+						id = characterId.Id,
+						observeEntity = target,
+					}
+				);
+			});
+
 			return target;
 		}
 	}

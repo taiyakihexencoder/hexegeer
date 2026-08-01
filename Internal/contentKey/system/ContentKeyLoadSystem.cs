@@ -105,18 +105,21 @@ namespace hexegeer.internallib {
 					for (int j = 0; j < characterTable.loadTable.Value.rows[i].list.Length; ++j) {
 						CharacterLoadElement element = characterTable.loadTable.Value.rows[i].list[j];
 						CharacterInfo info = characterTable.character.Value.rows[element.index];
-						LoadCharacterPrefab(
-							entityManager, 
-							info, 
-							FindCollider(characterTable, info.collider),
-							characterTable.physicsObjectLayer,
-							characterTable.physicsObjectCollides
-						);
+						if (!_characters.ContainsKey(info.id)) {
+							LoadCharacterPrefab(
+								entityManager, 
+								info, 
+								FindCollider(characterTable, info.collider),
+								characterTable.physicsObjectLayer,
+								characterTable.physicsObjectCollides
+							);
+						}
 					}
 					break;
 				}
 			}
 
+			// レイアウトテーブル
 			// Globalに対応するレイアウトデータは設定されていない
 			if (!global) {
 				LayoutBlobTable layoutTable = SystemAPI.GetSingleton<LayoutBlobTable>();
@@ -125,15 +128,17 @@ namespace hexegeer.internallib {
 						// Load CharacterPrefabs
 						for (int j = 0; j < layoutTable.asset.Value.rows[i].loadCharacters.Length; ++j) {
 							LayoutLoadCharacterInfo loadInfo = layoutTable.asset.Value.rows[i].loadCharacters[j];
-							CharacterInfo? info = FindCharacter(characterTable, loadInfo.id);
-							if (info != null) {
-								LoadCharacterPrefab(
-									entityManager,
-									info.Value,
-									FindCollider(characterTable, info.Value.collider),
-									characterTable.physicsObjectLayer,
-									characterTable.physicsObjectCollides
-								);
+							if (!_characters.ContainsKey(loadInfo.id)) {
+								CharacterInfo? info = FindCharacter(characterTable, loadInfo.id);
+								if (info != null) {
+									LoadCharacterPrefab(
+										entityManager,
+										info.Value,
+										FindCollider(characterTable, info.Value.collider),
+										characterTable.physicsObjectLayer,
+										characterTable.physicsObjectCollides
+									);
+								}
 							}
 						}
 
@@ -192,7 +197,9 @@ namespace hexegeer.internallib {
 				prefab,
 				LocalTransform.FromPositionRotation(float3.zero, quaternion.identity),
 				new LocalToWorld { Value = float4x4.identity, },
-				new CharacterHeader { id = info.id, },
+				new CharacterHeader { 
+					id = info.id, 
+				},
 				new Parent { Value = entry, }
 			);
 

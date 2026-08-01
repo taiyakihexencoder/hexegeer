@@ -74,7 +74,6 @@ namespace hexegeer {
 						SolverIterationCount = 4,
 						SubstepCount = 1,
 						MultiThreaded = 1,
-						
 					}
 				);
 				ECS.SetEntityName(EntityManager, _physicsStepEntity, "Physics Step");
@@ -237,6 +236,7 @@ namespace hexegeer {
 						rows[i] = new CharacterInfo {
 							id = row.id,
 							name = row.name,
+							modelAsset = row.modelAsset,
 							collider = row.collider,
 							belongsTo = row.belongsTo,
 							collidesWith = row.collidesWith,
