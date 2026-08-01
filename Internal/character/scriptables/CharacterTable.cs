@@ -14,6 +14,16 @@ namespace hexegeer.internallib {
 			public int belongsTo;
 			public int collidesWith;
 			public bool hasObservationPoint;
+
+			public ModelProfile modelProfile;
+		}
+
+		[System.Serializable]
+		public class ModelProfile {
+			public string modelAsset;
+			public List<string> overrideAnimations;
+			public List<string> additiveAnimations;
+			public List<string> baseAnimations;
 		}
 
 		[System.Serializable]

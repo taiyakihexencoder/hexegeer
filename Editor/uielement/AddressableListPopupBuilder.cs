@@ -28,11 +28,13 @@ namespace hexegeer.editor {
 			conversion: (address, asset) => address.Substring(rootPath.Length+1)
 		) { }
 
-		public AddressableListPopupBuilder(System.Type type) : this(
+		public AddressableListPopupBuilder(System.Type type) : this(type, conversion: DefaultConversion) { }
+
+		public AddressableListPopupBuilder(System.Type type, System.Func<string, Object, string> conversion) : this(
 			targetGroup: _ => true,
 			targetAsset: _ => IsTargetType(_, type),
 			targetAddress: _ => true,
-			conversion: DefaultConversion
+			conversion: conversion
 		) { }
 
 		public AddressableListPopupBuilder(System.Type type, string rootPath) : this(
@@ -70,7 +72,7 @@ namespace hexegeer.editor {
 				choices: keys,
 				defaultIndex: keys.FindIndex(_ => _ == defaultValue),
 				formatListItemCallback: _ => _values.TryGetValue(_, out string address) ? address : "-",
-				formatSelectedValueCallback: _ => _
+				formatSelectedValueCallback: _ => string.IsNullOrEmpty(_) ? "" : $"<{_[(_.LastIndexOf('/') + 1)..]}> | {_}"
 			);
 
 			return popup;

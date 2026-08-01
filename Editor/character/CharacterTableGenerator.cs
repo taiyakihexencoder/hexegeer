@@ -30,6 +30,28 @@ namespace hexegeer.editor {
 				characterProperty.Of("belongsTo").intValue = 1 << data.layer;
 				characterProperty.Of("collidesWith").intValue = collidesWith;
 				characterProperty.Of("hasObservationPoint").boolValue = settings.IsObservationPoint(data);
+
+				// model and animations
+				SerializedProperty modelProfileProperty = characterProperty.Of("modelProfile");
+				modelProfileProperty.Of("modelAsset").stringValue = data.modelProfile.modelAsset;
+				
+				SerializedProperty overrideAnimationsProperty = modelProfileProperty.Of("overrideAnimations");
+				overrideAnimationsProperty.arraySize = data.modelProfile.overrideAnimations.Count;
+				for (int j = 0; j < data.modelProfile.overrideAnimations.Count; ++j) {
+					overrideAnimationsProperty.Of(j).stringValue = data.modelProfile.overrideAnimations[j];
+				}
+
+				SerializedProperty additiveAnimationsProperty = modelProfileProperty.Of("additiveAnimations");
+				additiveAnimationsProperty.arraySize = data.modelProfile.additiveAnimations.Count;
+				for (int j = 0; j < data.modelProfile.additiveAnimations.Count; ++j) {
+					additiveAnimationsProperty.Of(j).stringValue = data.modelProfile.additiveAnimations[j];
+				}
+
+				SerializedProperty baseAnimationsProperty = modelProfileProperty.Of("baseAnimations");
+				baseAnimationsProperty.arraySize = data.modelProfile.baseAnimations.Count;
+				for (int j = 0; j < data.modelProfile.baseAnimations.Count; ++j) {
+					baseAnimationsProperty.Of(j).stringValue = data.modelProfile.baseAnimations[j];
+				}
 			}
 
 			SerializedProperty collidersProperty = serializedObject.FindProperty("_colliders");

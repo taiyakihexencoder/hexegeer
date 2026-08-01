@@ -3,6 +3,8 @@ using UnityEngine.UIElements;
 
 namespace hexegeer.internallib {
 	public class Foldout : CommonVisualElement<Foldout> {
+		public event System.Action<bool> onExpandedStateChanged;
+
 		public bool Expanded {
 			get {
 				return _content.style.display == DisplayStyle.Flex;
@@ -10,6 +12,7 @@ namespace hexegeer.internallib {
 			set {
 				_icon.image = EditorGUIUtility.IconContent(value ? "IN foldout on" : "IN foldout").image;
 				_content.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+				onExpandedStateChanged?.Invoke(value);
 			}
 		}
 

@@ -14,6 +14,16 @@ namespace hexegeer.editor {
 			public int[] contentKeys;
 			public string name;
 			public string modelAsset;
+
+			public ModelProfile modelProfile;
+		}
+
+		[System.Serializable]
+		public class ModelProfile {
+			public string modelAsset;
+			public List<string> overrideAnimations;
+			public List<string> additiveAnimations;
+			public List<string> baseAnimations;
 		}
 
 		[SerializeField]
@@ -30,6 +40,42 @@ namespace hexegeer.editor {
 
 		public void SetModelAsset(CharacterData characterData, string modelAsset) {
 			UpdateItem(characterData, character => character.modelAsset = modelAsset);
+		}
+
+		public void SetOverrideAnimation(CharacterData characterData, int index, string address) {
+			UpdateItem(characterData, character => character.modelProfile.overrideAnimations[index] = address);
+		}
+
+		public void SetAdditiveAnimation(CharacterData characterData, int index, string address) {
+			UpdateItem(characterData, character => character.modelProfile.additiveAnimations[index] = address);
+		}
+
+		public void SetBaseAnimation(CharacterData characterData, int index, string address) {
+			UpdateItem(characterData, character => character.modelProfile.baseAnimations[index] = address);
+		}
+
+		public void DeleteOverrideAnimation(CharacterData characterData, int index) {
+			UpdateItem(characterData, character => character.modelProfile.overrideAnimations.RemoveAt(index));
+		}
+
+		public void DeleteAdditiveAnimation(CharacterData characterData, int index) {
+			UpdateItem(characterData, character => character.modelProfile.additiveAnimations.RemoveAt(index));
+		}
+
+		public void DeleteBaseAnimation(CharacterData characterData, int index) {
+			UpdateItem(characterData, character => character.modelProfile.baseAnimations.RemoveAt(index));
+		}
+
+		public void AddOverrideAnimation(CharacterData characterData) {
+			UpdateItem(characterData, character => character.modelProfile.overrideAnimations.Add(""));
+		}
+
+		public void AddAdditiveAnimation(CharacterData characterData) {
+			UpdateItem(characterData, character => character.modelProfile.additiveAnimations.Add(""));
+		}
+
+		public void AddBaseAnimation(CharacterData characterData) {
+			UpdateItem(characterData, character => character.modelProfile.baseAnimations.Add(""));
 		}
 
 		public void SetLayer(CharacterData characterData, int layer) {
@@ -110,6 +156,13 @@ namespace hexegeer.editor {
 					collider = 0,
 					contentKeys = new int[0],
 					name = name,
+					modelAsset = "",
+					modelProfile = new ModelProfile {
+						modelAsset = "",
+						overrideAnimations = new List<string>(),
+						additiveAnimations = new List<string>(),
+						baseAnimations = new List<string>(),
+					}
 				}
 			);
 			Save(true);

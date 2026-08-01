@@ -8,6 +8,7 @@ using UnityEngine.UIElements;
 namespace hexegeer.editor {
 	public sealed class HexegeerEditorCharacterWindow : EditorWindow {
 		private AddressableListPopupBuilder _modelAssetPopupBuilder;
+		private AddressableListPopupBuilder _animationAssetPopupBuilder;
 
 		private LayerSettings _layerSettings;
 		private ListPopupBuilder<int> _layerPopupBuilder;
@@ -19,10 +20,11 @@ namespace hexegeer.editor {
 		private event System.Action _updateListView;
 		private event System.Action _updateDetailView;
 
+		private bool _detailedViewAnimationFoldout = false;
+
 		private void OnEnable() {
-			_modelAssetPopupBuilder = new AddressableListPopupBuilder(
-				type: typeof(HexegeerCharacterBehaviour)
-			);
+			_modelAssetPopupBuilder = new AddressableListPopupBuilder(type: typeof(HexegeerCharacterBehaviour));
+			_animationAssetPopupBuilder = new AddressableListPopupBuilder(type: typeof(AnimationClip));
 
 			_layerSettings = LayerSettings.instance;
 			_layerPopupBuilder = _layerSettings.CreateListPopupBuilder();
@@ -178,6 +180,141 @@ namespace hexegeer.editor {
 				});
 				modelRow.AddChildren(modelLabel, new Spacer(width: 10f), modelPopup);
 				pane.Add(modelRow);
+
+				internallib.Foldout animationFoldout = new internallib.Foldout(Text.Body("Animations"), expanded: _detailedViewAnimationFoldout);
+				animationFoldout.onExpandedStateChanged += expanded => _detailedViewAnimationFoldout = expanded;
+				pane.Add(animationFoldout);
+
+				Row animationRow = new Row();
+				animationFoldout.AddChildren(new Spacer(height: 12f), animationRow);
+
+				animationRow.Add(new Spacer(width: 20f));
+
+				{
+					internallib.Column animationColumn = new internallib.Column()
+						.Weight(1f);
+					Text animationLabel = Text.Body("Base Animation");
+					animationColumn.Add(animationLabel);
+					List<string> animations = character.modelProfile.baseAnimations;
+					for (int i = 0; i < animations.Count; ++i) {
+						int index = i;
+						Row clipRow = new Row();
+						Text indexLabel = Text.Body(index.ToString("00"));
+
+						PopupField<string> clipPopup = _animationAssetPopupBuilder.Generate(animations[i]);
+						clipPopup.style.flexBasis = 0f;
+						clipPopup.style.flexGrow = 1f;
+						clipPopup.RegisterValueChangedCallback(v => {
+							CharacterSettings.instance.SetBaseAnimation(character, index, v.newValue);
+						});
+
+						ClickButton clipButton = ClickButton.Create()
+							.Label("-");
+						clipButton.OnClicked += () => {
+							CharacterSettings.instance.DeleteBaseAnimation(character, index);
+							_updateDetailView.Invoke();
+						};
+						
+						clipRow.AddChildren(indexLabel, clipPopup, clipButton);
+						animationColumn.Add(clipRow);
+					}
+					Row clipAddButtonRow = new Row();
+					ClickButton clipAddButton = ClickButton.Create()
+						.Label("+");
+					clipAddButton.OnClicked += () => {
+						CharacterSettings.instance.AddBaseAnimation(character);
+						_updateDetailView.Invoke();
+					};
+					clipAddButtonRow.AddChildren(new Spacer().Weight(1f), clipAddButton);
+					animationColumn.Add(clipAddButtonRow);
+					animationRow.Add(animationColumn);
+				}
+
+				animationRow.Add(new Spacer(width: 20f));
+
+				{
+					internallib.Column animationColumn = new internallib.Column()
+						.Weight(1f);
+					Text animationLabel = Text.Body("Additive Animation");
+					animationColumn.Add(animationLabel);
+					List<string> animations = character.modelProfile.additiveAnimations;
+					for (int i = 0; i < animations.Count; ++i) {
+						int index = i;
+						Row clipRow = new Row();
+						Text indexLabel = Text.Body(index.ToString("00"));
+
+						PopupField<string> clipPopup = _animationAssetPopupBuilder.Generate(animations[i]);
+						clipPopup.style.flexBasis = 0f;
+						clipPopup.style.flexGrow = 1f;
+						clipPopup.RegisterValueChangedCallback(v => {
+							CharacterSettings.instance.SetAdditiveAnimation(character, index, v.newValue);
+						});
+
+						ClickButton clipButton = ClickButton.Create()
+							.Label("-");
+						clipButton.OnClicked += () => {
+							CharacterSettings.instance.DeleteAdditiveAnimation(character, index);
+							_updateDetailView.Invoke();
+						};
+						
+						clipRow.AddChildren(indexLabel, clipPopup, clipButton);
+						animationColumn.Add(clipRow);
+					}
+					Row clipAddButtonRow = new Row();
+					ClickButton clipAddButton = ClickButton.Create()
+						.Label("+");
+					clipAddButton.OnClicked += () => {
+						CharacterSettings.instance.AddAdditiveAnimation(character);
+						_updateDetailView.Invoke();
+					};
+					clipAddButtonRow.AddChildren(new Spacer().Weight(1f), clipAddButton);
+					animationColumn.Add(clipAddButtonRow);
+					animationRow.Add(animationColumn);
+				}
+
+				animationRow.Add(new Spacer(width: 20f));
+
+				{
+					internallib.Column animationColumn = new internallib.Column()
+						.Weight(1f);
+					Text animationLabel = Text.Body("Override Animation");
+					animationColumn.Add(animationLabel);
+					List<string> animations = character.modelProfile.overrideAnimations;
+					for (int i = 0; i < animations.Count; ++i) {
+						int index = i;
+						Row clipRow = new Row();
+						Text indexLabel = Text.Body(index.ToString("00"));
+
+						PopupField<string> clipPopup = _animationAssetPopupBuilder.Generate(animations[i]);
+						clipPopup.style.flexBasis = 0f;
+						clipPopup.style.flexGrow = 1f;
+						clipPopup.RegisterValueChangedCallback(v => {
+							CharacterSettings.instance.SetOverrideAnimation(character, index, v.newValue);
+						});
+
+						ClickButton clipButton = ClickButton.Create()
+							.Label("-");
+						clipButton.OnClicked += () => {
+							CharacterSettings.instance.DeleteOverrideAnimation(character, index);
+							_updateDetailView.Invoke();
+						};
+						
+						clipRow.AddChildren(indexLabel, clipPopup, clipButton);
+						animationColumn.Add(clipRow);
+					}
+					Row clipAddButtonRow = new Row();
+					ClickButton clipAddButton = ClickButton.Create()
+						.Label("+");
+					clipAddButton.OnClicked += () => {
+						CharacterSettings.instance.AddOverrideAnimation(character);
+						_updateDetailView.Invoke();
+					};
+					clipAddButtonRow.AddChildren(new Spacer().Weight(1f), clipAddButton);
+					animationColumn.Add(clipAddButtonRow);
+					animationRow.Add(animationColumn);
+				}
+
+				pane.Add(new Spacer(height: 20f));
 
 				// Layer
 				Row layerRow = new Row();
