@@ -21,8 +21,7 @@ namespace hexegeer.editor {
 
 		private void OnEnable() {
 			_modelAssetPopupBuilder = new AddressableListPopupBuilder(
-				type: typeof(GameObject),
-				rootPath: "character"
+				type: typeof(HexegeerCharacterBehaviour)
 			);
 
 			_layerSettings = LayerSettings.instance;
