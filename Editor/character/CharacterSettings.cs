@@ -13,6 +13,7 @@ namespace hexegeer.editor {
 			public int collider;
 			public int[] contentKeys;
 			public string name;
+			public string modelAsset;
 		}
 
 		[SerializeField]
@@ -25,6 +26,10 @@ namespace hexegeer.editor {
 
 		public void SetName(CharacterData characterData, string name) {
 			UpdateItem(characterData, character => character.name = name);
+		}
+
+		public void SetModelAsset(CharacterData characterData, string modelAsset) {
+			UpdateItem(characterData, character => character.modelAsset = modelAsset);
 		}
 
 		public void SetLayer(CharacterData characterData, int layer) {

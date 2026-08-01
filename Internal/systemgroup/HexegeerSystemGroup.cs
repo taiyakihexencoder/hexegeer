@@ -34,11 +34,7 @@ namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerAfterPhysicsSystemGroup))]
 	public partial class HexegeerColliderGroup : ComponentSystemGroup { }
 
-
-	[UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
-	public partial class HexegeerPresentationSystemGroup : ComponentSystemGroup { }
-
-	[UpdateInGroup(typeof(HexegeerPresentationSystemGroup))]
+	[UpdateInGroup(typeof(HexegeerAfterPhysicsSystemGroup))]
 	public partial class HexegeerCameraSystemGroup : ComponentSystemGroup {
 		protected override void OnCreate() {
 			base.OnCreate();

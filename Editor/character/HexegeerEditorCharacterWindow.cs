@@ -7,6 +7,8 @@ using UnityEngine.UIElements;
 
 namespace hexegeer.editor {
 	public sealed class HexegeerEditorCharacterWindow : EditorWindow {
+		private AddressableListPopupBuilder _modelAssetPopupBuilder;
+
 		private LayerSettings _layerSettings;
 		private ListPopupBuilder<int> _layerPopupBuilder;
 
@@ -18,6 +20,11 @@ namespace hexegeer.editor {
 		private event System.Action _updateDetailView;
 
 		private void OnEnable() {
+			_modelAssetPopupBuilder = new AddressableListPopupBuilder(
+				type: typeof(GameObject),
+				rootPath: "character"
+			);
+
 			_layerSettings = LayerSettings.instance;
 			_layerPopupBuilder = _layerSettings.CreateListPopupBuilder();
 
@@ -159,6 +166,19 @@ namespace hexegeer.editor {
 				});
 				nameRow.AddChildren(nameLabel, new Spacer(width: 10f), nameField);
 				pane.Add(nameRow);
+
+				// Character Model
+				Row modelRow = new Row();
+				Text modelLabel = Text.Body("Model")
+					.Weight(1f);
+				PopupField<string> modelPopup = _modelAssetPopupBuilder.Generate(character.modelAsset);
+				modelPopup.style.flexBasis = 0f;
+				modelPopup.style.flexGrow = 3f;
+				modelPopup.RegisterValueChangedCallback(v => {
+					CharacterSettings.instance.SetModelAsset(character, v.newValue);
+				});
+				modelRow.AddChildren(modelLabel, new Spacer(width: 10f), modelPopup);
+				pane.Add(modelRow);
 
 				// Layer
 				Row layerRow = new Row();
