@@ -56,7 +56,13 @@ namespace hexegeer.internallib {
 				SyncContext.Post(
 					() => {
 						if (go.TryGetComponent(out HexegeerCharacterBehaviour behaviour)) {
-							behaviour.OnSpawn(observeEntity, profile);
+							behaviour.OnSpawn(
+								observeEntity, 
+								profile,
+								overrideClips,
+								additiveClips,
+								baseClips
+							);
 						}
 					}
 				);
