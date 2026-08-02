@@ -231,10 +231,11 @@ namespace hexegeer {
 					BlobBuilderArray<CharacterInfo> rows = characterBuilder.Allocate(ref asset.rows, table.Characters.Count);
 					for (int i = 0; i < table.Characters.Count; ++i) {
 						CharacterTable.Character row = table.Characters[i];
+						CharacterModelLookup.Register(row);
+
 						rows[i] = new CharacterInfo {
 							id = row.id,
 							name = row.name,
-							modelAsset = row.modelAsset,
 							collider = row.collider,
 							belongsTo = row.belongsTo,
 							collidesWith = row.collidesWith,

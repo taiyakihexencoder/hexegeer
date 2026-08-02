@@ -172,7 +172,7 @@ namespace hexegeer.editor {
 				Row modelRow = new Row();
 				Text modelLabel = Text.Body("Model")
 					.Weight(1f);
-				PopupField<string> modelPopup = _modelAssetPopupBuilder.Generate(character.modelAsset);
+				PopupField<string> modelPopup = _modelAssetPopupBuilder.Generate(character.modelProfile.modelAsset);
 				modelPopup.style.flexBasis = 0f;
 				modelPopup.style.flexGrow = 3f;
 				modelPopup.RegisterValueChangedCallback(v => {

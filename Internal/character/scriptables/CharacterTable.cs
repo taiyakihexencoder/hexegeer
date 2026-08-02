@@ -9,7 +9,6 @@ namespace hexegeer.internallib {
 		public class Character {
 			public int id;
 			public string name;
-			public string modelAsset;
 			public int collider;
 			public int belongsTo;
 			public int collidesWith;

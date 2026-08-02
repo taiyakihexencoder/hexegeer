@@ -129,12 +129,12 @@ namespace hexegeer.internallib {
 						for (int j = 0; j < layoutTable.asset.Value.rows[i].loadCharacters.Length; ++j) {
 							LayoutLoadCharacterInfo loadInfo = layoutTable.asset.Value.rows[i].loadCharacters[j];
 							if (!_characters.ContainsKey(loadInfo.id)) {
-								CharacterInfo? info = FindCharacter(characterTable, loadInfo.id);
-								if (info != null) {
+								if (TryGetCharacter(characterTable, loadInfo.id, out int index)) {
+									CharacterInfo info = characterTable.character.Value.rows[index];
 									LoadCharacterPrefab(
 										entityManager,
-										info.Value,
-										FindCollider(characterTable, info.Value.collider),
+										info,
+										FindCollider(characterTable, info.collider),
 										characterTable.physicsObjectLayer,
 										characterTable.physicsObjectCollides
 									);
@@ -152,13 +152,15 @@ namespace hexegeer.internallib {
 			}
 		}
 
-		private CharacterInfo? FindCharacter(in CharacterBlobTable table, int id) {
+		private bool TryGetCharacter(in CharacterBlobTable table, int id, out int index) {
 			for (int i = 0; i < table.character.Value.rows.Length; ++i) {
 				if (table.character.Value.rows[i].id == id) {
-					return table.character.Value.rows[i];
+					index = i;
+					return true;
 				}
 			}
-			return null;
+			index = -1;
+			return false;
 		}
 
 		private CharacterColliderInfo? FindCollider(in CharacterBlobTable table, int id) {

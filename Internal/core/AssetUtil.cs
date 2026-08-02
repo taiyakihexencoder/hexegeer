@@ -36,7 +36,11 @@ namespace hexegeer.internallib {
 			}
 
 			holder.IncrementReferenceCount();
-			return SyncContext.Send(() => Object.Instantiate(original));
+			return SyncContext.Send(() => {
+				T instance = Object.Instantiate(original);
+				instance.name = original.name;
+				return instance;
+			});
 		}
 
 		public static void Release(string address) {

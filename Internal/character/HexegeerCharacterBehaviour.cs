@@ -1,22 +1,23 @@
-﻿using Unity.Entities;
+﻿using System.Net;
+using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
 namespace hexegeer.internallib {
 	public sealed class HexegeerCharacterBehaviour : MonoBehaviour {
-		private Entity observeEntity;
-		private string resourceAddress;
+		private Entity _observeEntity;
+		private CharacterTable.ModelProfile _profile;
 
-		public void OnSpawn(Entity observeEntity, string resourceAddress) {
-			this.observeEntity = observeEntity;
-			this.resourceAddress = resourceAddress;
+		public void OnSpawn(Entity observeEntity, in CharacterTable.ModelProfile profile) {
+			_observeEntity = observeEntity;
+			_profile = profile;
 		}
 
 		private void LateUpdate() {
-			if (observeEntity != Entity.Null) {
+			if (_observeEntity != Entity.Null) {
 				EntityManager entityManager = ECS.EntityManager;
-				if (entityManager.Exists(observeEntity)) {
-					LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(observeEntity);
+				if (entityManager.Exists(_observeEntity)) {
+					LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(_observeEntity);
 					transform.SetPositionAndRotation(localToWorld.Position, localToWorld.Rotation);
 				} else {
 					Destroy(gameObject);
@@ -26,7 +27,16 @@ namespace hexegeer.internallib {
 		}
 
 		private void OnDestroy() {
-			AssetUtil.Release(resourceAddress);
+			foreach(string clipAddress in _profile.overrideAnimations) {
+				AssetUtil.Release(clipAddress);
+			}
+			foreach(string clipAddress in _profile.additiveAnimations) {
+				AssetUtil.Release(clipAddress);
+			}
+			foreach(string clipAddress in _profile.baseAnimations) {
+				AssetUtil.Release(clipAddress);
+			}
+			AssetUtil.Release(_profile.modelAsset);
 		}
 	}
 }

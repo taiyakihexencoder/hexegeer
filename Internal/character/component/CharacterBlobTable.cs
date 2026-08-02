@@ -31,7 +31,6 @@ public struct CharacterLoadListAsset {
 public struct CharacterInfo {
 	public int id;
 	public FixedString64Bytes name;
-	public FixedString128Bytes modelAsset;
 	public int collider;
 	public int belongsTo;
 	public int collidesWith;

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Unity.Collections;
 using Unity.Entities;
@@ -13,27 +14,12 @@ namespace hexegeer.internallib {
 	public partial class CharacterCreateModelSystem : SystemBase {
 		private EntityQuery _query;
 
-		private Dictionary<int, string> _addressTable;
-
 		protected override void OnCreate() {
 			base.OnCreate();
 			_query = new EntityQueryBuilder(Allocator.Temp)
 				.WithAll<CharacterCreateModelRequest>()
 				.Build(EntityManager);
 			CheckedStateRef.RequireForUpdate(_query);
-
-			_addressTable = new Dictionary<int, string>();
-		}
-
-		protected override void OnStartRunning() {
-			base.OnStartRunning();
-			// 読み込みテーブル作成
-			if (_addressTable.Count == 0) {
-				CharacterBlobTable characterTable = SystemAPI.GetSingleton<CharacterBlobTable>();
-				for (int i = 0; i < characterTable.character.Value.rows.Length; ++i) {
-					_addressTable.Add(characterTable.character.Value.rows[i].id, characterTable.character.Value.rows[i].modelAsset.ConvertToString());
-				}
-			}
 		}
 
 		protected override void OnUpdate() {
@@ -41,23 +27,41 @@ namespace hexegeer.internallib {
 			for(int i = 0; i < requests.Length; ++i) {
 				Entity observeEntity = requests[i].observeEntity;
 				int id = requests[i].id;
-				if (_addressTable.TryGetValue(id, out string address) && address.Length > 0) {
-					Task.Run(async () => await CreateGameObject(address, observeEntity));
+				if (CharacterModelLookup.TryGetProfile(id, out CharacterTable.ModelProfile profile)) {
+					Task.Run(async () => await CreateGameObject(profile, observeEntity));
 				}
 			}
 			requests.Dispose();
 			EntityManager.DestroyEntity(_query);
 		}
 
-		private async Task CreateGameObject(string address, Entity observeEntity) {
-			GameObject go = await AssetUtil.RequestLoad<GameObject>(address);
-			SyncContext.Post(
-				() => {
-					if (go.TryGetComponent(out HexegeerCharacterBehaviour behaviour)) {
-						behaviour.OnSpawn(observeEntity, address);
-					}
+		private async Task CreateGameObject(CharacterTable.ModelProfile profile, Entity observeEntity) {
+			if (! string.IsNullOrEmpty(profile.modelAsset)) {
+				AnimationClip[] overrideClips = new AnimationClip[profile.overrideAnimations.Count];
+				for (int i = 0; i < overrideClips.Length; ++i) {
+					overrideClips[i] = await AssetUtil.RequestLoad<AnimationClip>(profile.overrideAnimations[i]);
 				}
-			);
+
+				AnimationClip[] additiveClips = new AnimationClip[profile.additiveAnimations.Count];
+				for (int i = 0; i < additiveClips.Length; ++i) {
+					additiveClips[i] = await AssetUtil.RequestLoad<AnimationClip>(profile.additiveAnimations[i]);
+				}
+
+				AnimationClip[] baseClips = new AnimationClip[profile.baseAnimations.Count];
+				for (int i = 0; i < baseClips.Length; ++i) {
+					baseClips[i] = await AssetUtil.RequestLoad<AnimationClip>(profile.baseAnimations[i]);
+				}
+
+				GameObject go = await AssetUtil.RequestLoad<GameObject>(profile.modelAsset);
+				SyncContext.Post(
+					() => {
+						if (go.TryGetComponent(out HexegeerCharacterBehaviour behaviour)) {
+							behaviour.OnSpawn(observeEntity, profile);
+						}
+					}
+				);
+
+			}
 		}
 	}
 

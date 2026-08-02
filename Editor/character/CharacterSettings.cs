@@ -13,7 +13,6 @@ namespace hexegeer.editor {
 			public int collider;
 			public int[] contentKeys;
 			public string name;
-			public string modelAsset;
 
 			public ModelProfile modelProfile;
 		}
@@ -39,7 +38,7 @@ namespace hexegeer.editor {
 		}
 
 		public void SetModelAsset(CharacterData characterData, string modelAsset) {
-			UpdateItem(characterData, character => character.modelAsset = modelAsset);
+			UpdateItem(characterData, character => character.modelProfile.modelAsset = modelAsset);
 		}
 
 		public void SetOverrideAnimation(CharacterData characterData, int index, string address) {
@@ -156,7 +155,6 @@ namespace hexegeer.editor {
 					collider = 0,
 					contentKeys = new int[0],
 					name = name,
-					modelAsset = "",
 					modelProfile = new ModelProfile {
 						modelAsset = "",
 						overrideAnimations = new List<string>(),
