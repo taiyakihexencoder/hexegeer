@@ -9,9 +9,6 @@ namespace hexegeer {
 		private Entity _inputEntity;
 
 		override protected void OnCreate() {
-			_input = new InputControl();
-			_input.Enable();
-
 			_inputEntity = EntityManager.CreateEntity(
 				EntityManager.CreateArchetype(
 					new ComponentType[] {
@@ -29,6 +26,23 @@ namespace hexegeer {
 				)
 			);
 			ECS.SetEntityName(EntityManager, _inputEntity, "Input@Hexegeer");
+		}
+
+		protected override void OnStartRunning() {
+			base.OnStartRunning();
+
+			// リリースビルドの際は、
+			// InputSystemが初期化されていないため、
+			// OnCreate()でEnable()を実行しても入力を受け付けない。
+			if (_input == null) {
+				_input = new InputControl();
+			}
+			_input.Enable();
+		}
+
+		protected override void OnStopRunning() {
+			_input?.Disable();
+			base.OnStopRunning();
 		}
 
 		override protected void OnUpdate() {
@@ -86,6 +100,7 @@ namespace hexegeer {
 			if (_inputEntity != Entity.Null && EntityManager.Exists(_inputEntity)) {
 				EntityManager.DestroyEntity(_inputEntity);
 			}
+			_input?.Dispose();
 		}
 	}
 }
