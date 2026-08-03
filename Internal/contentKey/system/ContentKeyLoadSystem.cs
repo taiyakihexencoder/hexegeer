@@ -266,7 +266,7 @@ namespace hexegeer.internallib {
 					},
 					material: physicsMaterial
 				);
-				capsule.Value.SetCollisionResponse(CollisionResponsePolicy.Collide);
+				capsule.Value.SetCollisionResponse(CollisionResponsePolicy.CollideRaiseCollisionEvents);
 
 				_colliders.TryAdd(collider.id, capsule);
 				asset = capsule;

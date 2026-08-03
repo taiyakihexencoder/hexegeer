@@ -92,7 +92,6 @@ namespace hexegeer {
 				CollisionWorld collisionWorld = physicsWorld.CollisionWorld;
 
 				// -- 接地情報の更新 -- //
-
 				if (!_groundedQuery.IsEmpty && !_snapToGroundQuery.IsEmpty) {
 					// 状態を上書き制御する
 					if (!_overwriteSnapToGroundQuery.IsEmpty) {
