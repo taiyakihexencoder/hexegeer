@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ namespace hexegeer.editor {
 			public SaveParameterType type;
 			public string name;
 			public string defaultValue;
+			public Version version;
 		}
 
 		public enum SaveParameterType {

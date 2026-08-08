@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace hexegeer.editor {
 	public sealed class SaveScriptGenerator : SourceCodeGenerator {
@@ -83,10 +84,13 @@ namespace hexegeer.editor {
 
 					using (Class("Serializer : PersistentData.ISerializer<UserSaveParameter>", isSealed: true, visibility: "private")) {
 						using (Function("byte[] PersistentData.ISerializer<UserSaveParameter>.Serialize(in UserSaveParameter data)")) {
-							AppendLine($"int length = 0;");
+							AppendLine($"int length = 3;");
 							AppendLine($"Dictionary<string, byte[]> strTable = new Dictionary<string, byte[]>();");
 
-							foreach(SaveSettings.SaveParameter parameter in settings.User.parameters) {
+							List<SaveSettings.SaveParameter> parameters = settings.User.parameters;
+							parameters.Sort(SortByVersion);
+
+							foreach(SaveSettings.SaveParameter parameter in parameters) {
 								if (parameter.type == SaveSettings.SaveParameterType.String) {
 									AppendLine($"strTable.Add(\"{parameter.name}\", System.Text.Encoding.UTF8.GetBytes(data.{parameter.name}.ToString()));");
 									AppendLine($"length += strTable[\"{parameter.name}\"].Length+1; // {parameter.name}");
@@ -95,9 +99,13 @@ namespace hexegeer.editor {
 								}
 							}
 							AppendLine($"byte[] raw = new byte[length];");
-							AppendLine($"int offset = 0;");
+							AppendLine($"string[] currentVersion = UnityEngine.Application.version.Split('.');");
+							AppendLine($"raw[0] = byte.Parse(currentVersion[0]);");
+							AppendLine($"raw[1] = byte.Parse(currentVersion[1]);");
+							AppendLine($"raw[2] = byte.Parse(currentVersion[2]);");
+							AppendLine($"int offset = 3;");
 							AppendLine();
-							foreach(SaveSettings.SaveParameter parameter in settings.User.parameters) {
+							foreach(SaveSettings.SaveParameter parameter in parameters) {
 								AppendLine($"// {parameter.name} ({TypeNameUser(parameter.type)})");
 								switch(parameter.type) {
 									case SaveSettings.SaveParameterType.Int: {
@@ -162,58 +170,98 @@ namespace hexegeer.editor {
 
 					using (Class("Deserializer : PersistentData.IDeserializer<UserSaveParameter>", isSealed: true, visibility: "private")) {
 						using (Function("UserSaveParameter PersistentData.IDeserializer<UserSaveParameter>.Deserialize(in byte[] raw)")) {
+							AppendLine($"Version version = new Version {{");
+							using (Indent) {
+								AppendLine($"major = raw[0],");
+								AppendLine($"minor = raw[1],");
+								AppendLine($"patch = raw[2],");
+							}
+							AppendLine($"}};");
+
 							AppendLine("UserSaveParameter data = UserSaveParameter.defaultValue;");
-							AppendLine($"int offset = 0;");
-							foreach(SaveSettings.SaveParameter parameter in settings.User.parameters) {
+							AppendLine($"int offset = 3;");
+							List<SaveSettings.SaveParameter> parameters = settings.User.parameters;
+							parameters.Sort(SortByVersion);
+
+
+							int currentMajor = 0;
+							int currentMinor = 0;
+							int currentPatch = 0;
+							string indent = "";
+							foreach(SaveSettings.SaveParameter parameter in parameters) {
+								if (parameter.version.major > currentMajor || parameter.version.minor > currentMinor || parameter.version.patch > currentPatch) {
+									if (currentMajor > 0 || currentMinor > 0) {
+										AppendLine($"}}");
+									} else {
+										indent = "\t";
+									}
+
+									currentMajor = parameter.version.major;
+									currentMinor = parameter.version.minor;
+									currentPatch = parameter.version.patch;
+
+									AppendLine($"if (version.major > {currentMajor} || (version.major == {currentMajor} && version.minor > {currentMinor}) || (version.major == {currentMajor} && version.minor == {currentMinor} && version.patch >= {currentPatch})) {{");
+								}
 								switch(parameter.type) {
 									case SaveSettings.SaveParameterType.Int: {
-										AppendLine($"data.{parameter.name} = System.BitConverter.ToInt32(raw, offset);");
-										AppendLine($"offset += {sizeof(int)};");
+										AppendLine($"{indent}data.{parameter.name} = System.BitConverter.ToInt32(raw, offset);");
+										AppendLine($"{indent}offset += {sizeof(int)};");
 										break;
 									}
 									case SaveSettings.SaveParameterType.Long: {
-										AppendLine($"data.{parameter.name} = System.BitConverter.ToInt64(raw, offset);");
-										AppendLine($"offset += {sizeof(long)};");
+										AppendLine($"{indent}data.{parameter.name} = System.BitConverter.ToInt64(raw, offset);");
+										AppendLine($"{indent}offset += {sizeof(long)};");
 										break;
 									}
 									case SaveSettings.SaveParameterType.Boolean: {
-										AppendLine($"data.{parameter.name} = System.BitConverter.ToBoolean(raw, offset);");
-										AppendLine($"offset += {sizeof(bool)};");
+										AppendLine($"{indent}data.{parameter.name} = System.BitConverter.ToBoolean(raw, offset);");
+										AppendLine($"{indent}offset += {sizeof(bool)};");
 										break;
 									}
 									case SaveSettings.SaveParameterType.String: {
-										AppendLine($"data.{parameter.name} = new FixedString64Bytes(System.Text.Encoding.UTF8.GetString(raw, offset+1, raw[offset]));");
-										AppendLine($"offset += 1 + raw[offset];");
+										AppendLine($"{indent}data.{parameter.name} = new FixedString64Bytes(System.Text.Encoding.UTF8.GetString(raw, offset+1, raw[offset]));");
+										AppendLine($"{indent}offset += 1 + raw[offset];");
 										break;
 									}
 									case SaveSettings.SaveParameterType.Float: {
-										AppendLine($"data.{parameter.name} = System.BitConverter.ToSingle(raw, offset);");
-										AppendLine($"offset += {sizeof(float)};");
+										AppendLine($"{indent}data.{parameter.name} = System.BitConverter.ToSingle(raw, offset);");
+										AppendLine($"{indent}offset += {sizeof(float)};");
 										break;
 									}
 									case SaveSettings.SaveParameterType.Vector2: {
-										AppendLine($"data.{parameter.name} = new float2(System.BitConverter.ToSingle(raw, offset), System.BitConverter.ToSingle(raw, offset + {sizeof(float)}));");
-										AppendLine($"offset += {sizeof(float)*2};");
+										AppendLine($"{indent}data.{parameter.name} = new float2(System.BitConverter.ToSingle(raw, offset), System.BitConverter.ToSingle(raw, offset + {sizeof(float)}));");
+										AppendLine($"{indent}offset += {sizeof(float)*2};");
 										break;
 									}
 									case SaveSettings.SaveParameterType.Vector3: {
-										AppendLine($"data.{parameter.name} = new float3(System.BitConverter.ToSingle(raw, offset), System.BitConverter.ToSingle(raw, offset + {sizeof(float)}), System.BitConverter.ToSingle(raw, offset + {sizeof(float)*2}));");
-										AppendLine($"offset += {sizeof(float)*3};");
+										AppendLine($"{indent}data.{parameter.name} = new float3(System.BitConverter.ToSingle(raw, offset), System.BitConverter.ToSingle(raw, offset + {sizeof(float)}), System.BitConverter.ToSingle(raw, offset + {sizeof(float)*2}));");
+										AppendLine($"{indent}offset += {sizeof(float)*3};");
 										break;
 									}
 									case SaveSettings.SaveParameterType.Color: {
-										AppendLine($"data.{parameter.name} = new float4(System.BitConverter.ToSingle(raw, offset), System.BitConverter.ToSingle(raw, offset + {sizeof(float)}), System.BitConverter.ToSingle(raw, offset + {sizeof(float)*2}), System.BitConverter.ToSingle(raw, offset + {sizeof(float)*3}));");
-										AppendLine($"offset += {sizeof(float)*4};");
+										AppendLine($"{indent}data.{parameter.name} = new float4(System.BitConverter.ToSingle(raw, offset), System.BitConverter.ToSingle(raw, offset + {sizeof(float)}), System.BitConverter.ToSingle(raw, offset + {sizeof(float)*2}), System.BitConverter.ToSingle(raw, offset + {sizeof(float)*3}));");
+										AppendLine($"{indent}offset += {sizeof(float)*4};");
 										break;
 									}
 								}
 								AppendLine();
+							}
+							if (currentMajor > 0 || currentMinor > 0) {
+								AppendLine($"}}");
 							}
 							AppendLine($"return data;");
 						}
 					}
 				}
 			}
+		}
+
+		private int SortByVersion(SaveSettings.SaveParameter a, SaveSettings.SaveParameter b) {
+			int major = a.version.major.CompareTo(b.version.major);
+			if (major != 0) return major;
+			int minor = a.version.minor.CompareTo(b.version.minor);
+			if (minor != 0) return minor;
+			return a.version.patch.CompareTo(b.version.patch);
 		}
 
 		private string TypeNameGlobal(SaveSettings.SaveParameterType type) {

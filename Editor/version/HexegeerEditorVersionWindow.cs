@@ -24,33 +24,33 @@ namespace hexegeer.editor {
 
 			VersionSettings settings = VersionSettings.instance;
 
-			List<VersionSettings.Version> versions = settings.Versions ?? new List<VersionSettings.Version>();
+			List<VersionSettings.VersionInfo> versions = settings.Versions ?? new List<VersionSettings.VersionInfo>();
 			int major = -1;
 			int minor = -1;
 			internallib.Foldout parent = null;
 			for (int i = 0; i < versions.Count; ++i) {
 				int index = i;
-				if (major != versions[i].major) {
+				if (major != versions[i].version.major) {
 					if (parent != null) { pane.Add(parent); }
 
-					parent = new internallib.Foldout(Text.H3($"version {versions[i].major}.{versions[i].minor}"), currentOpenIndex == index)
+					parent = new internallib.Foldout(Text.H3($"version {versions[i].version.major}.{versions[i].version.minor}"), currentOpenIndex == index)
 						.Margin(horizontal: 16f);
 					parent.onExpandedStateChanged += expand => { currentOpenIndex = expand ? index : -1; };
 					parent.Add(VersionButtons(i, () => CreateView(pane)));
-					major = versions[i].major;
-					minor = versions[i].minor;
-				} else if (minor != versions[i].minor) {
+					major = versions[i].version.major;
+					minor = versions[i].version.minor;
+				} else if (minor != versions[i].version.minor) {
 					if (parent != null) { pane.Add(parent); }
 
-					parent = new internallib.Foldout(Text.H3($"version {versions[i].major}.{versions[i].minor}"), currentOpenIndex == index)
+					parent = new internallib.Foldout(Text.H3($"version {versions[i].version.major}.{versions[i].version.minor}"), currentOpenIndex == index)
 						.Margin(horizontal: 16f);
 					parent.onExpandedStateChanged += expand => { currentOpenIndex = expand ? index : -1; };
 					parent.Add(VersionButtons(i, () => CreateView(pane)));
 
-					minor = versions[i].minor;
+					minor = versions[i].version.minor;
 				}
 
-				Text text = Text.Body($" - {versions[i].major}.{versions[i].minor}.{versions[i].patch}")
+				Text text = Text.Body($" - {versions[i].version.major}.{versions[i].version.minor}.{versions[i].version.patch}")
 					.Margin(left:32);
 
 				Text lengthText = Text.Body("")
@@ -107,10 +107,10 @@ namespace hexegeer.editor {
 					settings.AddPatchVersion(settings.Versions[settings.Versions.Count-1]);
 					replace();
 				} else {
-					VersionSettings.Version version = settings.Versions[index];
+					VersionSettings.VersionInfo version = settings.Versions[index];
 					for (int i = index+1; i < settings.Versions.Count; ++i) {
-						VersionSettings.Version v = settings.Versions[i];
-						if (v.major != version.major || v.minor != version.minor) {
+						VersionSettings.VersionInfo v = settings.Versions[i];
+						if (v.version.major != version.version.major || v.version.minor != version.version.minor) {
 							settings.AddPatchVersion(settings.Versions[i-1]);
 							replace();
 							return;
@@ -128,9 +128,9 @@ namespace hexegeer.editor {
 					settings.RemoveVersion(index);
 					replace();
 				} else {
-					VersionSettings.Version v = settings.Versions[index];
+					VersionSettings.VersionInfo v = settings.Versions[index];
 					for (int i = index+1; i < settings.Versions.Count; ++i) {
-						if (settings.Versions[i].major != v.major || settings.Versions[i].minor != v.minor) {
+						if (settings.Versions[i].version.major != v.version.major || settings.Versions[i].version.minor != v.version.minor) {
 							settings.RemoveVersion(i-1);
 							replace();
 							return;
@@ -147,11 +147,11 @@ namespace hexegeer.editor {
 
 		private int NextMinorVersion(int index) {
 			VersionSettings settings = VersionSettings.instance;
-			int major = settings.Versions[index].major;
-			int minor = settings.Versions[index].minor;
+			int major = settings.Versions[index].version.major;
+			int minor = settings.Versions[index].version.minor;
 			for (int i = index+1; i < settings.Versions.Count; ++i) {
-				if (settings.Versions[i].major != major || settings.Versions[i].minor != minor) {
-					return settings.Versions[i].minor;
+				if (settings.Versions[i].version.major != major || settings.Versions[i].version.minor != minor) {
+					return settings.Versions[i].version.minor;
 				}
 			}
 			return 0;

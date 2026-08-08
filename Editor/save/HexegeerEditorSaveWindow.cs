@@ -15,6 +15,7 @@ namespace hexegeer.editor {
 		}
 
 		private Mode mode;
+		private ListPopupBuilder<Version> versionPopupBuilder;
 
 		private void OnEnable() {
 			titleContent = new GUIContent("Save");
@@ -22,6 +23,7 @@ namespace hexegeer.editor {
 				.Padding(16f);
 
 			mode = Mode.Global;
+			versionPopupBuilder = VersionSettings.instance.GetPopupBuilder();
 
 			CreateView(pane);
 			rootVisualElement.Add(pane);
@@ -89,6 +91,7 @@ namespace hexegeer.editor {
 					parameter: parameters[i],
 					index: i,
 					isLast: i == parameters.Count-1,
+					version: false,
 					update: (parameter, index) => settings.UpdateGlobalParameter(index, parameter),
 					remove: (index) => settings.RemoveGlobalParameter(index),
 					refresh: () => CreateGlobalParameterView(pane),
@@ -120,6 +123,7 @@ namespace hexegeer.editor {
 					parameter: parameters[i],
 					index: i,
 					isLast: i == parameters.Count-1,
+					version: true,
 					update: (parameter, index) => settings.UpdateUserParameter(index, parameter),
 					remove: (index) => settings.RemoveUserParameter(index),
 					refresh: () => CreateUserParameterView(pane),
@@ -142,6 +146,7 @@ namespace hexegeer.editor {
 			SaveSettings.SaveParameter parameter, 
 			int index,
 			bool isLast,
+			bool version,
 			System.Action<SaveSettings.SaveParameter, int> update,
 			System.Action<int> remove,
 			System.Action refresh,
@@ -181,6 +186,17 @@ namespace hexegeer.editor {
 			parameterField.style.flexBasis = 0f;
 			parameterField.style.flexGrow = 2f;
 
+			row.AddChildren(nameField, typeField, parameterField);
+
+			if (version) {
+				PopupField<Version> versionPopup = versionPopupBuilder.Generate(parameter.version);
+				versionPopup.RegisterValueChangedCallback(v => {
+					parameter.version = v.newValue;
+					update(parameter, index);
+				});
+				row.Add(versionPopup);
+			}
+
 			ClickButton moveUpButton = ClickButton.Create()
 				.Label("↑");
 			moveUpButton.enabledSelf = index > 0;
@@ -203,7 +219,7 @@ namespace hexegeer.editor {
 				refresh();
 			};
 
-			row.AddChildren(nameField, typeField, parameterField, moveUpButton, moveDownButton, removeButton);
+			row.AddChildren(moveUpButton, moveDownButton, removeButton);
 
 			return row;
 		}
