@@ -21,14 +21,16 @@ namespace hexegeer.editor {
 				return new IndentScope(() => stream.RemoveIndent());
 			}
 		}
+
 		protected IndentScope Class(
 			string name,
 			bool isPartial = false,
 			bool isStatic = false,
-			bool isSealed = false
+			bool isSealed = false,
+			string visibility = "public"
 		) {
 			string header = "";
-			header += "public ";
+			header += $"{visibility} ";
 			if (isStatic) { header += "static "; }
 			if (isSealed) { header += "sealed "; }
 			if (isPartial) { header += "partial "; }

@@ -61,5 +61,45 @@ namespace hexegeer {
 			QualitySettings.vSyncCount = 1;
 			Application.targetFrameRate = frameRate;
 		}
+
+		// -- Save -- //
+		public static UserSaveParameter GetDefaultSaveData() {
+			return UserSaveParameter.defaultValue;
+		}
+
+		/// <summary>
+		/// セーブデータの読込
+		/// </summary>
+		public async static Task LoadUserData(IUserSaveAccessor accessor, string path, System.Action<UserSaveParameter> callback, System.Action<System.Exception> onError) {
+			await PersistentData.Load(
+				path, 
+				accessor.deserializer, 
+				(data,e) => {
+					if (e != null) {
+						onError(e);
+					} else {
+						callback(data);
+					}
+				}
+			);
+		}
+
+		/// <summary>
+		/// セーブデータの書込
+		/// </summary>
+		public async static Task SaveUserData(IUserSaveAccessor accessor, UserSaveParameter data, string path, System.Action callback, System.Action<System.Exception> onError) {
+			await PersistentData.Save(
+				path,
+				data,
+				accessor.serializer,
+				(e) => {
+					if (e != null) {
+						onError(e);
+					} else {
+						callback();
+					}
+				}
+			);
+		}
 	}
 }
