@@ -4,6 +4,7 @@ using Unity.Entities;
 using UnityEngine;
 
 namespace hexegeer {
+	using System.IO;
 	using internallib;
 
 	public static class HexegeerRuntimeManager {
@@ -67,12 +68,16 @@ namespace hexegeer {
 			return UserSaveParameter.defaultValue;
 		}
 
+		public static bool ExistsUserData(string path) {
+			return PersistentData.Exists($"save{Path.DirectorySeparatorChar}{path}");
+		}
+
 		/// <summary>
 		/// セーブデータの読込
 		/// </summary>
 		public async static Task LoadUserData(IUserSaveAccessor accessor, string path, System.Action<UserSaveParameter> callback, System.Action<System.Exception> onError) {
 			await PersistentData.Load(
-				path, 
+				$"save{Path.DirectorySeparatorChar}{path}",
 				accessor.deserializer, 
 				(data,e) => {
 					if (e != null) {
@@ -89,7 +94,7 @@ namespace hexegeer {
 		/// </summary>
 		public async static Task SaveUserData(IUserSaveAccessor accessor, UserSaveParameter data, string path, System.Action callback, System.Action<System.Exception> onError) {
 			await PersistentData.Save(
-				path,
+				$"save{Path.DirectorySeparatorChar}{path}",
 				data,
 				accessor.serializer,
 				(e) => {

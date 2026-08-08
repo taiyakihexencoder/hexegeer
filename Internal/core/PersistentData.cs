@@ -13,12 +13,18 @@ namespace hexegeer.internallib {
 			rootPath = Application.persistentDataPath;
 		}
 
+		public static bool Exists(string path) {
+			return File.Exists($"{rootPath}{separator}{path}");
+		}
+
 		public async static Task Save<T>(string path, T data, ISerializer<T> serializer, System.Action<System.Exception> callback = null) {
 			byte[] raw = SyncContext.Send(() => serializer.Serialize(data));
 			System.Exception error = null;
 
 			await Task.Run(() => {
 				try {
+					CreateDirectoryIfNotExists(path);
+
 					string absPath = $"{rootPath}{separator}{path}"; 
 
 					using (FileStream stream = new FileStream(absPath, FileMode.OpenOrCreate, FileAccess.Write)) {
@@ -65,6 +71,18 @@ namespace hexegeer.internallib {
 				}
 			});
 		}
+
+		private static void CreateDirectoryIfNotExists(string path) {
+			string[] split = path.Split(separator);
+			string currentPath = rootPath;
+			for (int i = 0; i < split.Length-1; ++i) {
+				currentPath += $"{separator}{split[i]}";
+				if (!Directory.Exists(currentPath)) {
+					Directory.CreateDirectory(currentPath);
+				}
+			}
+		}
+
 
 		public interface ISerializer<T> {
 			byte[] Serialize(in T data);

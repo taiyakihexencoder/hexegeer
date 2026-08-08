@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 namespace hexegeer.editor {
@@ -14,6 +15,16 @@ namespace hexegeer.editor {
 			HexegeerEditorLayoutWindow layout = EditorWindow.CreateWindow<HexegeerEditorLayoutWindow>(windowType);
 			HexegeerEditorSaveWindow save = EditorWindow.CreateWindow<HexegeerEditorSaveWindow>(windowType);
 			general.Focus();
+		}
+
+		[MenuItem("Hexegeer/Paths/Open Persistent Data Folder")]
+		private static void OpenPersistentDataFolder() {
+			EditorUtility.RevealInFinder(Application.persistentDataPath + Path.DirectorySeparatorChar);
+		}
+
+		[MenuItem("Hexegeer/Paths/Open Streaming Asset Folder")]
+		private static void OpenStreamingAssetFolder() {
+			EditorUtility.RevealInFinder(Application.streamingAssetsPath + Path.DirectorySeparatorChar);
 		}
 	}
 }
