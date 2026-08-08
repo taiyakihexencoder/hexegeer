@@ -27,7 +27,7 @@ namespace hexegeer.editor {
 			rootVisualElement.Add(pane);
 		}
 
-		private void CreateView(VisualElement pane) {
+		private void CreateView(ScrollPane pane) {
 			pane.Clear();
 
 			ClickButton generateButton = ClickButton.Create()

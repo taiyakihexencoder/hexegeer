@@ -28,5 +28,9 @@ namespace hexegeer.internallib {
 		public new void Insert(int index, VisualElement element) {
 			_scrollView.Insert(index, element);
 		}
+
+		public new void Clear() {
+			_scrollView.Clear();
+		}
 	}
 }

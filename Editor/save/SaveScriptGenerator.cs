@@ -162,7 +162,7 @@ namespace hexegeer.editor {
 
 					using (Class("Deserializer : PersistentData.IDeserializer<UserSaveParameter>", isSealed: true, visibility: "private")) {
 						using (Function("UserSaveParameter PersistentData.IDeserializer<UserSaveParameter>.Deserialize(in byte[] raw)")) {
-							AppendLine("UserSaveParameter data = new UserSaveParameter();");
+							AppendLine("UserSaveParameter data = UserSaveParameter.defaultValue;");
 							AppendLine($"int offset = 0;");
 							foreach(SaveSettings.SaveParameter parameter in settings.User.parameters) {
 								switch(parameter.type) {
