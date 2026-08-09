@@ -1,5 +1,4 @@
-﻿using hexegeer.internallib;
-using Unity.Entities;
+﻿using Unity.Entities;
 
 namespace hexegeer {
 	public partial struct UserSaveParameter : IComponentData {

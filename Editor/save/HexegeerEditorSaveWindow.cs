@@ -12,6 +12,7 @@ namespace hexegeer.editor {
 			Unselected = -1,
 			Global,
 			User,
+			Progress,
 		}
 
 		private Mode mode;
@@ -45,16 +46,20 @@ namespace hexegeer.editor {
 			};
 			pane.Add(generateButton);
 
-			ScrollPane mainPane = new ScrollPane();
+			internallib.Column mainPane = new internallib.Column();
 
 			Tabs tabs = new Tabs((int)mode);
 			pane.Add(tabs);
-			tabs.Add("GLOBAL", "USER");
+			tabs.Add("GLOBAL", "USER", "PROGRESS");
 			tabs.SelectedIndexChanged += (index) => {
 				Mode updatedMode;
-				if (index == (int) Mode.Global) { updatedMode = Mode.Global; }
-				else if (index == (int) Mode.User) { updatedMode = Mode.User; }
-				else { updatedMode = Mode.Unselected; }
+				switch((Mode)index) {
+					case Mode.Global: { updatedMode = Mode.Global; break; }
+					case Mode.User: { updatedMode = Mode.User; break; }
+					case Mode.Progress: {updatedMode = Mode.Progress; break; }
+					default: { updatedMode = Mode.Unselected; break; }
+				}
+
 				if (updatedMode != mode) {
 					mode = updatedMode;
 					UpdateMainPane(mainPane);
@@ -65,7 +70,7 @@ namespace hexegeer.editor {
 			UpdateMainPane(mainPane);
 		}
 
-		private void UpdateMainPane(VisualElement mainPane) {
+		private void UpdateMainPane(internallib.Column mainPane) {
 			switch(mode) {
 				case Mode.Global: {
 					CreateGlobalParameterView(mainPane);
@@ -75,10 +80,14 @@ namespace hexegeer.editor {
 					CreateUserParameterView(mainPane);
 					break;
 				}
+				case Mode.Progress: {
+					CreateProgressView(mainPane);
+					break;
+				}
 			}
 		}
 
-		private void CreateGlobalParameterView(VisualElement pane) {
+		private void CreateGlobalParameterView(internallib.Column pane) {
 			pane.Clear();
 			SaveSettings settings = SaveSettings.instance;
 			List<SaveSettings.SaveParameter> parameters = settings.Global.parameters;
@@ -110,7 +119,7 @@ namespace hexegeer.editor {
 			pane.Add(addButton);
 		}
 
-		private void CreateUserParameterView(VisualElement pane) {
+		private void CreateUserParameterView(internallib.Column pane) {
 			pane.Clear();
 			SaveSettings settings = SaveSettings.instance;
 			List<SaveSettings.SaveParameter> parameters = settings.User.parameters;
@@ -326,6 +335,88 @@ namespace hexegeer.editor {
 			}
 
 			return element;
+		}
+
+		private void CreateProgressView(internallib.Column pane) {
+			pane.Clear();
+
+			pane.Add(Text.H3("Progress"));
+
+			SaveSettings settings = SaveSettings.instance;
+
+			Row header = new Row();
+			header.AddChildren(
+				Text.Body("key").Weight(1f),
+				Text.Body("value").Width(80f),
+				Text.Body("version").Width(80f),
+				new Spacer(150f)
+			);
+			pane.Add(header);
+
+			for (int i = 0; i < settings.ProgressFlags.Count; ++i) {
+				int index = i;
+				Row progressRow = new Row();
+
+				TextField keyField = new TextField();
+				keyField.style.flexBasis = 0f;
+				keyField.style.flexGrow = 1f;
+				keyField.SetValueWithoutNotify(settings.ProgressFlags[i].key);
+				keyField.RegisterValueChangedCallback(v => {
+					settings.UpdateProgressFlagKey(index, v.newValue);
+				});
+
+				IntegerField valueField = new IntegerField();
+				valueField.SetValueWithoutNotify(settings.ProgressFlags[i].value);
+				valueField.RegisterValueChangedCallback(v => {
+					byte value = (byte) Mathf.Clamp(v.newValue, 0, 127);
+					settings.UpdateProgressFlagValue(index, value);
+					valueField.SetValueWithoutNotify(value);
+				});
+				valueField.style.width = 80f;
+
+				PopupField<Version> versionPopup = versionPopupBuilder.Generate(settings.ProgressFlags[index].version);
+				versionPopup.style.width = 80.0f;
+				versionPopup.RegisterValueChangedCallback(v => {
+					settings.UpdateProgressFlagVersion(index, v.newValue);
+				});
+
+				ClickButton moveUpButton = ClickButton.Create()
+					.Label("↑")
+					.Width(50f);
+				moveUpButton.SetEnabled(index > 0);
+				moveUpButton.OnClicked += () => {
+					settings.MoveUpProgressFlag(index);
+					CreateProgressView(pane);
+				};
+
+				ClickButton moveDownButton = ClickButton.Create()
+					.Label("↓")
+					.Width(50f);
+				moveDownButton.SetEnabled(index < settings.ProgressFlags.Count-1);
+				moveDownButton.OnClicked += () => {
+					settings.MoveDownProgressFlag(index);
+					CreateProgressView(pane);
+				};
+
+				ClickButton deleteButton = ClickButton.Create()
+					.Label("-")
+					.Width(50f);
+				deleteButton.OnClicked += () => {
+					settings.RemoveProgressFlag(index);
+					CreateProgressView(pane);
+				};
+
+				progressRow.AddChildren(keyField, valueField, versionPopup, moveUpButton, moveDownButton, deleteButton);
+				pane.Add(progressRow);
+			}
+
+			ClickButton addButton = ClickButton.Create()
+				.Label("Add");
+			addButton.OnClicked += () => {
+				settings.AddProgressFlag("NEW_KEY");
+				CreateProgressView(pane);
+			};
+			pane.AddChildren(new Spacer(height: 16), addButton);
 		}
 	}
 }

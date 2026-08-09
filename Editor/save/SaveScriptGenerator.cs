@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using UnityEngine;
 
 namespace hexegeer.editor {
 	public sealed class SaveScriptGenerator : SourceCodeGenerator {
+		private const string PROGRESS_FLAGS_NAME = "progressFlags";
+
 		public override bool Validation(out List<string> errorMessages) {
 			errorMessages = new List<string>();
 
 			Regex regex = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$");
+			Regex constRegex = new Regex(@"^[A-Z_][A-Z0-9_]*$");
 
 			SaveSettings settings = SaveSettings.instance;
 
@@ -32,10 +34,25 @@ namespace hexegeer.editor {
 					errorMessages.Add($"User - Invalid name: {parameter.name}");
 				} else if (names.Contains(parameter.name)) {
 					errorMessages.Add($"User - Duplicated name: {parameter.name}");
+				} else if (parameter.name == PROGRESS_FLAGS_NAME) {
+					errorMessages.Add($"User - Cannot use parameter name: {PROGRESS_FLAGS_NAME}");
 				} else {
 					names.Add(parameter.name);
 				}
 			}
+
+			names.Clear();
+			foreach(SaveSettings.Progress progress in settings.ProgressFlags) {
+				if (string.IsNullOrEmpty(progress.key)) {
+					errorMessages.Add($"Progress - Empty name");
+				} else if (!constRegex.IsMatch(progress.key)) {
+					errorMessages.Add($"Progress - Invalid pattern: {progress.key} (Valid pattern is \"^[A-Z_][A-Z0-9_]*?\")");
+				} else if (names.Contains(progress.key)) {
+					errorMessages.Add($"Progress - Duplicated name: {progress.key}");
+				} else {
+					names.Add(progress.key);
+				}
+ 			}
 
 			return errorMessages.Count == 0;
 		}
@@ -45,6 +62,7 @@ namespace hexegeer.editor {
 			AppendLine($"using hexegeer.internallib;");
 			AppendLine($"using System.Collections.Generic;");
 			AppendLine($"using Unity.Collections;");
+			AppendLine($"using Unity.Collections.LowLevel.Unsafe;");
 			AppendLine($"using Unity.Mathematics;");
 			AppendLine();
 			using (Namespace("hexegeer")) {
@@ -66,12 +84,26 @@ namespace hexegeer.editor {
 					foreach(SaveSettings.SaveParameter parameter in settings.User.parameters) {
 						AppendLine($"public {TypeNameUser(parameter.type)} {parameter.name};");
 					}
+					// fixed byteはサイズ0を指定できない
+					if (settings.ProgressFlags.Count > 0) {
+						AppendLine($"public unsafe fixed byte {PROGRESS_FLAGS_NAME}[{(settings.ProgressFlags.Count)}];");
+					}
 
 					AppendLine();
 
 					using (Function("partial void SetDefault()")) {
 						foreach(SaveSettings.SaveParameter parameter in settings.User.parameters) {
 							AppendLine($"{parameter.name} = {ValueUser(parameter.type, parameter.defaultValue)};");
+						}
+
+						if (settings.ProgressFlags.Count > 0) {
+							AppendLine($"unsafe {{");
+							using (Indent) {
+								foreach(SaveSettings.Progress progress in settings.ProgressFlags) {
+									AppendLine($"{PROGRESS_FLAGS_NAME}[ProgressFlag.{progress.key}] = {progress.value};");
+								}
+							}
+							AppendLine($"}}");
 						}
 					}
 				}
@@ -98,6 +130,11 @@ namespace hexegeer.editor {
 									AppendLine($"length += {TypeSize(parameter.type)}; // {parameter.name}");
 								}
 							}
+
+							if (settings.ProgressFlags.Count > 0) {
+								AppendLine($"length += {settings.ProgressFlags.Count+sizeof(int)}; // Progress flags");
+							}
+
 							AppendLine($"byte[] raw = new byte[length];");
 							AppendLine($"string[] currentVersion = UnityEngine.Application.version.Split('.');");
 							AppendLine($"raw[0] = byte.Parse(currentVersion[0]);");
@@ -162,6 +199,27 @@ namespace hexegeer.editor {
 										break;
 									}
 								}
+								AppendLine();
+							}
+							if (settings.ProgressFlags.Count > 0) {
+								AppendLine($"// Flags");
+								AppendLine($"System.Array.Copy(System.BitConverter.GetBytes({settings.ProgressFlags.Count}), 0, raw, offset, {sizeof(int)});");
+								AppendLine($"offset += {sizeof(int)};");
+
+								AppendLine($"unsafe {{");
+								using (Indent) {
+									AppendLine($"fixed (byte* rawPtr = raw) {{");
+									using (Indent) {
+										AppendLine($"fixed (byte* {PROGRESS_FLAGS_NAME}Ptr = data.{PROGRESS_FLAGS_NAME}) {{");
+										using (Indent) {
+											AppendLine($"byte* offsetRawPtr = rawPtr + offset;");
+											AppendLine($"UnsafeUtility.MemCpy(offsetRawPtr, {PROGRESS_FLAGS_NAME}Ptr, {settings.ProgressFlags.Count});");
+										}
+										AppendLine($"}}");
+									}
+									AppendLine($"}}");
+								}
+								AppendLine($"}}");
 								AppendLine();
 							}
 							AppendLine($"return raw;");
@@ -249,8 +307,33 @@ namespace hexegeer.editor {
 							if (currentMajor > 0 || currentMinor > 0) {
 								AppendLine($"}}");
 							}
+
+							if (settings.ProgressFlags.Count > 0) {
+								AppendLine();
+								AppendLine($"// Flags");
+								AppendLine($"int flagCount = System.BitConverter.ToInt32(raw, offset);");
+								AppendLine($"offset += {sizeof(int)};");
+								AppendLine($"unsafe {{");
+								using (Indent) {
+									AppendLine($"for (int i = 0; i < flagCount; ++i) {{");
+									using (Indent) {
+										AppendLine($"data.{PROGRESS_FLAGS_NAME}[i] = raw[offset + i];");
+									}
+									AppendLine($"}}");
+								}
+								AppendLine($"}}");
+							}
+
 							AppendLine($"return data;");
 						}
+					}
+				}
+
+				AppendLine();
+
+				using (Class("ProgressFlag", isPartial: true, isStatic: true)) {
+					foreach(SaveSettings.Progress progress in settings.ProgressFlags) {
+						AppendLine($"public const int {progress.key} = {progress.flagIndex};");
 					}
 				}
 			}

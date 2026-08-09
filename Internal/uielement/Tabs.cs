@@ -64,6 +64,7 @@ namespace hexegeer.internallib {
 			Add(tabView);
 			tabView.style.flexDirection = FlexDirection.Row;
 			tabView.style.flexGrow = 1f;
+			tabView.style.height = 24f;
 			tabView.style.translate = new Translate(_tabScroll, 0.0f);
 
 			for (int i = 0; i < _tabEntities.Count; ++i) {
