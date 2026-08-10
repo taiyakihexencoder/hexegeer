@@ -14,7 +14,22 @@ namespace hexegeer.editor {
 			public int[] contentKeys;
 			public string name;
 
+			public List<HitArea> hitAreas;
+
 			public ModelProfile modelProfile;
+		}
+
+		[System.Serializable]
+		public class HitArea {
+			public Vector3 position;
+			public Quaternion rotation;
+			public Vector3 extent;
+			public HitAreaShape shape;
+		}
+
+		public enum HitAreaShape {
+			Sphere,
+			Box,
 		}
 
 		[System.Serializable]
@@ -83,6 +98,10 @@ namespace hexegeer.editor {
 
 		public void SetCollider(CharacterData characterData, int collider) {
 			UpdateItem(characterData, character => character.collider = collider);
+		}
+
+		public void SetHitArea(CharacterData characterData, List<HitArea> areas) {
+			UpdateItem(characterData, character => character.hitAreas = areas);
 		}
 
 		private void UpdateItem(CharacterData characterData, System.Action<CharacterData> action) {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using hexegeer.internallib;
+using Unity.ProjectAuditor.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -354,6 +355,13 @@ namespace hexegeer.editor {
 
 				pane.Add(new Spacer(height: 24f));
 
+				// Hit Area
+				VisualElement hitAreaView = new VisualElement();
+				SetHitAreaItem(hitAreaView, character);
+				pane.Add(hitAreaView);
+
+				pane.Add(new Spacer(height: 24f));
+
 				// Content Keys
 
 				Text contentHeader = Text.H3("Content Group")
@@ -547,6 +555,132 @@ namespace hexegeer.editor {
 			colliderRow.AddChildren(headerColumn, colliderColumn);
 
 			parent.Add(colliderRow);
+		}
+
+		private void SetHitAreaItem(VisualElement parent, CharacterSettings.CharacterData character, bool expanded = false) {
+			parent.Clear();
+
+			internallib.Foldout foldout = new internallib.Foldout(Text.Body("Hit Area"), expanded);
+			parent.Add(foldout);
+
+			List<CharacterSettings.HitArea> areaList = new List<CharacterSettings.HitArea>(character.hitAreas);
+			for (int i = 0; i < areaList.Count; ++i) {
+				Row row = new Row()
+					.Margin(left: 16f, top:8f);
+				foldout.Add(row);
+
+				int index = i;
+
+				// shape
+				EnumField shapeField = new EnumField(character.hitAreas[i].shape);
+				shapeField.RegisterValueChangedCallback(v => {
+					CharacterSettings.HitArea area = areaList[index];
+					area.shape = (CharacterSettings.HitAreaShape)v.newValue;
+					areaList[index] = area;
+					CharacterSettings.instance.SetHitArea(character, areaList);
+					SetHitAreaItem(parent, character, true);
+				});
+				shapeField.style.width = 100f;
+				row.Add(shapeField);
+
+				internallib.Column column = new internallib.Column();
+				column.style.flexBasis = 0f;
+				column.style.flexGrow = 1f;
+				row.Add(column);
+
+				// extent
+				switch (character.hitAreas[i].shape) {
+					case CharacterSettings.HitAreaShape.Box: {
+						Vector3Field extentField = new Vector3Field();
+						extentField.SetValueWithoutNotify(character.hitAreas[i].extent);
+						extentField.RegisterValueChangedCallback(v => {
+							CharacterSettings.HitArea area = character.hitAreas[i];
+							area.extent = v.newValue;
+							character.hitAreas[i] = area;
+							CharacterSettings.instance.SetHitArea(character, areaList);
+						});
+						extentField.style.flexBasis = 0f;
+						extentField.style.flexGrow = 1f;
+
+						Row extentRow = new Row();
+						extentRow.AddChildren(Text.Body("Extent").Margin(right:8f), extentField);
+						column.Add(extentRow);
+						break;
+					}
+
+					case CharacterSettings.HitAreaShape.Sphere: {
+						FloatField extentField = new FloatField();
+						extentField.SetValueWithoutNotify(character.hitAreas[i].extent.x);
+						extentField.RegisterValueChangedCallback(v => {
+							CharacterSettings.HitArea area = character.hitAreas[i];
+							area.extent = new Vector3(v.newValue, v.newValue, v.newValue);
+							character.hitAreas[i] = area;
+							CharacterSettings.instance.SetHitArea(character, areaList);
+						});
+						extentField.style.flexBasis = 0f;
+						extentField.style.flexGrow = 1f;
+						Row extentRow = new Row();
+						extentRow.AddChildren(Text.Body("Extent").Margin(right:8f), Text.Body("R").Margin(2f), extentField);
+						column.Add(extentRow);
+						break;
+					}
+				}
+
+				// position
+				Vector3Field positionField = new Vector3Field();
+				positionField.SetValueWithoutNotify(character.hitAreas[i].position);
+				positionField.RegisterValueChangedCallback(v => {
+					CharacterSettings.HitArea area = character.hitAreas[i];
+					area.position = v.newValue;
+					character.hitAreas[i] = area;
+					CharacterSettings.instance.SetHitArea(character, areaList);
+				});
+				positionField.style.flexBasis = 0f;
+				positionField.style.flexGrow = 1f;
+				Row positionRow = new Row();
+				positionRow.AddChildren(Text.Body("Position"), positionField);
+				column.Add(positionRow);
+
+				// rotation
+				Vector3Field rotationField = new Vector3Field();
+				rotationField.SetValueWithoutNotify(character.hitAreas[i].rotation.eulerAngles);
+				rotationField.RegisterValueChangedCallback(v => {
+					CharacterSettings.HitArea area = character.hitAreas[i];
+					area.rotation = Quaternion.Euler(v.newValue);
+					character.hitAreas[i] = area;
+					CharacterSettings.instance.SetHitArea(character, areaList);
+				});
+				rotationField.style.flexBasis = 0f;
+				rotationField.style.flexGrow = 1f;
+				Row rotationRow = new Row();
+				rotationRow.AddChildren(Text.Body("Rotation"), rotationField);
+				column.Add(rotationRow);
+
+				// delete button
+				ClickButton deleteButton = ClickButton.Create()
+					.Label("-")
+					.Margin(left: 24f);
+				deleteButton.OnClicked += () => {
+					areaList.RemoveAt(index);
+					CharacterSettings.instance.SetHitArea(character, areaList);
+					SetHitAreaItem(parent, character, true);
+				};
+				row.Add(deleteButton);
+			}
+			ClickButton addButton = ClickButton.Create()
+				.Label("+")
+				.Margin(left: 32f, top: 12f);
+			addButton.OnClicked += () => {
+				areaList.Add(new CharacterSettings.HitArea {
+					extent = Vector3.one,
+					position = Vector3.zero,
+					rotation = Quaternion.identity,
+					shape = CharacterSettings.HitAreaShape.Box,
+				});
+				CharacterSettings.instance.SetHitArea(character, areaList);
+				SetHitAreaItem(parent, character, true);
+			};
+			foldout.Add(addButton);
 		}
 
 		private void DeleteDialog() {
