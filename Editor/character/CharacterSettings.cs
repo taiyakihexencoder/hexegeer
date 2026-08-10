@@ -27,11 +27,6 @@ namespace hexegeer.editor {
 			public HitAreaShape shape;
 		}
 
-		public enum HitAreaShape {
-			Sphere,
-			Box,
-		}
-
 		[System.Serializable]
 		public class ModelProfile {
 			public string modelAsset;

@@ -13,8 +13,16 @@ namespace hexegeer.internallib {
 			public int belongsTo;
 			public int collidesWith;
 			public bool hasObservationPoint;
-
+			public List<HitArea> hitAreas;
 			public ModelProfile modelProfile;
+		}
+
+		[System.Serializable]
+		public class HitArea {
+			public HitAreaShape shape;
+			public Vector3 extent;
+			public Vector3 position;
+			public Quaternion rotation;
 		}
 
 		[System.Serializable]

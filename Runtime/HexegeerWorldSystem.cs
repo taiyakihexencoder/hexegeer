@@ -243,6 +243,20 @@ namespace hexegeer {
 						};
 					}
 					
+					BlobBuilderArray<CharacterHitAreaListAsset> hitArea = characterBuilder.Allocate(ref asset.hitArea, table.Characters.Count);
+					for (int i = 0; i < table.Characters.Count; ++i) {
+						BlobBuilderArray<CharacterHitArea> area = characterBuilder.Allocate(ref hitArea[i].list, table.Characters[i].hitAreas.Count);
+						for (int j = 0; j < table.Characters[i].hitAreas.Count; ++j) {
+							CharacterTable.HitArea areaInfo = table.Characters[i].hitAreas[j];
+							area[j] = new CharacterHitArea {
+								shape = areaInfo.shape,
+								extent = areaInfo.extent,
+								position = areaInfo.position,
+								rotation = areaInfo.rotation,
+							};
+						}
+					}
+
 					blobTable.character = characterBuilder.CreateBlobAssetReference<CharacterBlobAsset>(Allocator.Persistent);
 
 				}

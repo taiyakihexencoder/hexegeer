@@ -1,6 +1,8 @@
 ﻿
+using hexegeer.internallib;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 
 public struct CharacterBlobTable : IComponentData {
 	public int physicsObjectLayer;
@@ -13,6 +15,7 @@ public struct CharacterBlobTable : IComponentData {
 
 public struct CharacterBlobAsset {
 	public BlobArray<CharacterInfo> rows;
+	public BlobArray<CharacterHitAreaListAsset> hitArea;
 }
 
 public struct CharacterColliderBlobAsset {
@@ -35,6 +38,17 @@ public struct CharacterInfo {
 	public int belongsTo;
 	public int collidesWith;
 	public bool hasObservationPoint;
+}
+
+public struct CharacterHitAreaListAsset {
+	public BlobArray<CharacterHitArea> list;
+}
+
+public struct CharacterHitArea {
+	public HitAreaShape shape;
+	public float3 extent;
+	public float3 position;
+	public quaternion rotation;
 }
 
 public struct CharacterColliderInfo {

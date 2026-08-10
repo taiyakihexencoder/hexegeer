@@ -30,6 +30,17 @@ namespace hexegeer.editor {
 				characterProperty.Of("collidesWith").intValue = collidesWith;
 				characterProperty.Of("hasObservationPoint").boolValue = settings.IsObservationPoint(data);
 
+				// hitArea
+				SerializedProperty hitAreasProperty = characterProperty.Of("hitAreas");
+				hitAreasProperty.arraySize = data.hitAreas.Count;
+				for (int j = 0; j < data.hitAreas.Count; ++j) {
+					SerializedProperty hitAreaProperty = hitAreasProperty.Of(j);
+					hitAreaProperty.Of("shape").intValue = (int)data.hitAreas[j].shape;
+					hitAreaProperty.Of("extent").vector3Value = data.hitAreas[j].extent;
+					hitAreaProperty.Of("position").vector3Value = data.hitAreas[j].position;
+					hitAreaProperty.Of("rotation").quaternionValue = data.hitAreas[j].rotation;
+				}
+
 				// model and animations
 				SerializedProperty modelProfileProperty = characterProperty.Of("modelProfile");
 				modelProfileProperty.Of("modelAsset").stringValue = data.modelProfile.modelAsset;

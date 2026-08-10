@@ -105,10 +105,12 @@ namespace hexegeer.internallib {
 					for (int j = 0; j < characterTable.loadTable.Value.rows[i].list.Length; ++j) {
 						CharacterLoadElement element = characterTable.loadTable.Value.rows[i].list[j];
 						CharacterInfo info = characterTable.character.Value.rows[element.index];
+						ref BlobArray<CharacterHitArea> hitAreaArray = ref characterTable.character.Value.hitArea[element.index].list;
 						if (!_characters.ContainsKey(info.id)) {
 							LoadCharacterPrefab(
 								entityManager, 
 								info, 
+								ref hitAreaArray,
 								FindCollider(characterTable, info.collider),
 								characterTable.physicsObjectLayer,
 								characterTable.physicsObjectCollides
@@ -131,9 +133,11 @@ namespace hexegeer.internallib {
 							if (!_characters.ContainsKey(loadInfo.id)) {
 								if (TryGetCharacter(characterTable, loadInfo.id, out int index)) {
 									CharacterInfo info = characterTable.character.Value.rows[index];
+									ref BlobArray<CharacterHitArea> hitAreaArray = ref characterTable.character.Value.hitArea[index].list;
 									LoadCharacterPrefab(
 										entityManager,
 										info,
+										ref hitAreaArray,
 										FindCollider(characterTable, info.collider),
 										characterTable.physicsObjectLayer,
 										characterTable.physicsObjectCollides
@@ -175,10 +179,15 @@ namespace hexegeer.internallib {
 		private void LoadCharacterPrefab(
 			EntityManager entityManager, 
 			in CharacterInfo info, 
+			ref BlobArray<CharacterHitArea> hitAreaArray,
 			in CharacterColliderInfo? collider,
 			int belongsTo,
 			int collidesWith
 		) {
+			for (int i = 0; i < hitAreaArray.Length; ++i) {
+				D.Log($"HitArea:{UnityEngine.JsonUtility.ToJson(hitAreaArray[i], true)}");
+			}
+
 			Entity entry = entityManager.CreateEntity(_characterEntryArchetype);
 			ECS.SetEntityName(entityManager, entry, $"Prefab Entry - {info.name}");
 
