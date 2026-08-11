@@ -28,14 +28,14 @@ namespace hexegeer.internallib {
 				Entity observeEntity = requests[i].observeEntity;
 				int id = requests[i].id;
 				if (CharacterModelLookup.TryGetProfile(id, out CharacterTable.ModelProfile profile)) {
-					Task.Run(async () => await CreateGameObject(profile, observeEntity));
+					Task.Run(async () => await CreateGameObject(id, profile, observeEntity));
 				}
 			}
 			requests.Dispose();
 			EntityManager.DestroyEntity(_query);
 		}
 
-		private async Task CreateGameObject(CharacterTable.ModelProfile profile, Entity observeEntity) {
+		private async Task CreateGameObject(int id, CharacterTable.ModelProfile profile, Entity observeEntity) {
 			if (! string.IsNullOrEmpty(profile.modelAsset)) {
 				AnimationClip[] overrideClips = new AnimationClip[profile.overrideAnimations.Count];
 				for (int i = 0; i < overrideClips.Length; ++i) {
@@ -58,7 +58,7 @@ namespace hexegeer.internallib {
 						if (go.TryGetComponent(out HexegeerCharacterBehaviour behaviour)) {
 							behaviour.OnSpawn(
 								observeEntity, 
-								profile,
+								id,
 								overrideClips,
 								additiveClips,
 								baseClips

@@ -1,12 +1,11 @@
-﻿using System.Net;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
 namespace hexegeer.internallib {
 	public sealed class HexegeerCharacterBehaviour : MonoBehaviour {
 		private Entity _observeEntity;
-		private CharacterTable.ModelProfile _profile;
+		private int _id;
 		private ICharacterAnimationControl _animationControl;
 
 		private void Awake() {
@@ -15,13 +14,13 @@ namespace hexegeer.internallib {
 
 		public void OnSpawn(
 			Entity observeEntity, 
-			in CharacterTable.ModelProfile profile,
+			int id,
 			in AnimationClip[] overrideClips,
 			in AnimationClip[] additiveClips,
 			in AnimationClip[] baseClips
 		) {
 			_observeEntity = observeEntity;
-			_profile = profile;
+			_id = id;
 
 			_animationControl?.OnSpawn(overrideClips, additiveClips, baseClips);
 		}
@@ -42,16 +41,18 @@ namespace hexegeer.internallib {
 		}
 
 		private void OnDestroy() {
-			foreach(string clipAddress in _profile.overrideAnimations) {
-				AssetUtil.Release(clipAddress);
+			if (CharacterModelLookup.TryGetProfile(_id, out CharacterTable.ModelProfile profile)) {
+				foreach(string clipAddress in profile.overrideAnimations) {
+					AssetUtil.Release(clipAddress);
+				}
+				foreach(string clipAddress in profile.additiveAnimations) {
+					AssetUtil.Release(clipAddress);
+				}
+				foreach(string clipAddress in profile.baseAnimations) {
+					AssetUtil.Release(clipAddress);
+				}
+				AssetUtil.Release(profile.modelAsset);
 			}
-			foreach(string clipAddress in _profile.additiveAnimations) {
-				AssetUtil.Release(clipAddress);
-			}
-			foreach(string clipAddress in _profile.baseAnimations) {
-				AssetUtil.Release(clipAddress);
-			}
-			AssetUtil.Release(_profile.modelAsset);
 		}
 	}
 }
