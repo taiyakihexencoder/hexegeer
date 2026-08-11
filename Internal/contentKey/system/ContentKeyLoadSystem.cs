@@ -20,6 +20,7 @@ namespace hexegeer.internallib {
 
 		private EntityArchetype _characterEntryArchetype;
 		private EntityArchetype _characterArchetype;
+		private EntityArchetype _characterHitAreaArchetype;
 
 		override protected void OnCreate() {
 			_initialized = false;
@@ -44,7 +45,20 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<PhysicsMass>(),
 				ComponentType.ReadWrite<PhysicsVelocity>(),
 				ComponentType.ReadWrite<ColliderCollisionEvent>(),
-				ComponentType.ReadWrite<ColliderCollisionStayEvent>()
+				ComponentType.ReadWrite<ColliderCollisionStayEvent>(),
+				ComponentType.ReadWrite<LinkedEntityGroup>(),
+				ComponentType.ReadOnly<PhysicsWorldIndex>()
+			);
+
+			_characterHitAreaArchetype = EntityManager.CreateArchetype(
+				ComponentType.ReadWrite<LocalTransform>(),
+				ComponentType.ReadWrite<LocalToWorld>(),
+				ComponentType.ReadWrite<Parent>(),
+				ComponentType.ReadWrite<PhysicsCollider>(),
+				ComponentType.ReadOnly<GeometryCleanup>(),
+				ComponentType.ReadWrite<ColliderTriggerEvent>(),
+				ComponentType.ReadWrite<ColliderTriggerEnterEvent>(),
+				ComponentType.ReadOnly<PhysicsWorldIndex>()
 			);
 
 			_query = new EntityQueryBuilder(Allocator.Temp)
@@ -184,10 +198,6 @@ namespace hexegeer.internallib {
 			int belongsTo,
 			int collidesWith
 		) {
-			for (int i = 0; i < hitAreaArray.Length; ++i) {
-				D.Log($"HitArea:{UnityEngine.JsonUtility.ToJson(hitAreaArray[i], true)}");
-			}
-
 			Entity entry = entityManager.CreateEntity(_characterEntryArchetype);
 			ECS.SetEntityName(entityManager, entry, $"Prefab Entry - {info.name}");
 
@@ -250,7 +260,27 @@ namespace hexegeer.internallib {
 						normal = new float3(0f, 1f, 0f),
 					}
 				);
-				entityManager.AddSharedComponent(prefab, new PhysicsWorldIndex{ Value = 0, });
+				entityManager.SetSharedComponentManaged(prefab, new PhysicsWorldIndex{ Value = 0, });
+			}
+
+			// HitArea
+			List<Entity> hitAreaList = new List<Entity>();
+			for (int i = 0; i < hitAreaArray.Length; ++i) {
+				Entity hitAreaEntity = entityManager.CreateEntity(_characterHitAreaArchetype);
+				ECS.SetEntityName(entityManager, hitAreaEntity, $"HitArea {i+1}");
+				entityManager.SetComponentData(hitAreaEntity, new Parent{ Value = prefab, });
+				entityManager.SetComponentData(hitAreaEntity, LocalTransform.Identity);
+				BlobAssetReference<Collider> hitAreaCollider = CreateHitArea(info, hitAreaArray[i]);
+				entityManager.SetComponentData(hitAreaEntity, new PhysicsCollider { Value = hitAreaCollider, });
+				entityManager.SetComponentData(hitAreaEntity, new GeometryCleanup { geometry = hitAreaCollider, });
+				entityManager.SetSharedComponentManaged(hitAreaEntity, new PhysicsWorldIndex{ Value = 0, });
+				hitAreaList.Add(hitAreaEntity);
+			}
+
+			DynamicBuffer<LinkedEntityGroup> links = entityManager.GetBuffer<LinkedEntityGroup>(prefab);
+			links.Add(new LinkedEntityGroup{ Value = prefab, });
+			foreach(Entity hitAreaEntity in hitAreaList) {
+				links.Add(hitAreaEntity);
 			}
 
 			_characters.Add(info.id, prefab);
@@ -281,6 +311,51 @@ namespace hexegeer.internallib {
 				asset = capsule;
 			}
 			return asset;
+		}
+
+		private BlobAssetReference<Collider> CreateHitArea(in CharacterInfo info, in CharacterHitArea area) {
+			Material physicsMaterial = Material.Default;
+			physicsMaterial.Friction = 0.0f;
+			physicsMaterial.FrictionCombinePolicy = Material.CombinePolicy.Minimum;
+
+			CollisionFilter filter = new CollisionFilter {
+				BelongsTo = (uint)info.belongsTo,
+				CollidesWith = (uint)info.collidesWith,
+			};
+
+			switch(area.shape) {
+				case HitAreaShape.Sphere: {
+					BlobAssetReference<Collider> sphere = SphereCollider.Create(
+						geometry: new SphereGeometry {
+							Radius = area.extent.x,
+							Center = area.position,
+						},
+						filter: filter,
+						material: physicsMaterial
+					);
+					sphere.Value.SetCollisionResponse(CollisionResponsePolicy.RaiseTriggerEvents);
+					return sphere;
+				}
+
+				case HitAreaShape.Box: {
+					BlobAssetReference<Collider> box = BoxCollider.Create(
+						geometry: new BoxGeometry {
+							BevelRadius = 0f,
+							Size = area.extent,
+							Center = area.position,
+							Orientation = area.rotation,
+						},
+						filter: filter,
+						material: physicsMaterial
+					);
+					box.Value.SetCollisionResponse(CollisionResponsePolicy.RaiseTriggerEvents);
+					return box;
+				}
+
+				default: {
+					return default;
+				}
+			}
 		}
 
 		private void SpawnCharacter(int characterId, float3 position, quaternion rotation) {
