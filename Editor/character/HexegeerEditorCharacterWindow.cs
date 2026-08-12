@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using hexegeer.internallib;
-using Unity.ProjectAuditor.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -533,7 +532,7 @@ namespace hexegeer.editor {
 
 			ClickButton deleteButton = ClickButton.Create(Align.FlexEnd)
 				.Label("Delete Collider")
-				.Margin(8f);
+				.Margin(horizontal: 8f);
 			deleteButton.OnClicked += () => {
 				if (currentCollider != null && currentCollider?.id != 0) {
 					if (EditorUtility.DisplayDialog("Confirm", "Delete Collider ?", "Yes", "No")) {

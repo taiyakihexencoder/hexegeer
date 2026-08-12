@@ -8,13 +8,14 @@ namespace hexegeer.editor {
 		private static void Open() {
 			HexegeerEditorGeneralWindow general = EditorWindow.CreateWindow<HexegeerEditorGeneralWindow>();
 			System.Type windowType = general.GetType();
-			HexegeerEditorCharacterWindow character = EditorWindow.CreateWindow<HexegeerEditorCharacterWindow>(windowType);
-			HexegeerEditorContentKeyWindow contentKey = EditorWindow.CreateWindow<HexegeerEditorContentKeyWindow>(windowType);
-			HexegeerEditorFieldWindow field = EditorWindow.CreateWindow<HexegeerEditorFieldWindow>(windowType);
-			HexegeerEditorLayerWindow layer = EditorWindow.CreateWindow<HexegeerEditorLayerWindow>(windowType);
-			HexegeerEditorLayoutWindow layout = EditorWindow.CreateWindow<HexegeerEditorLayoutWindow>(windowType);
-			HexegeerEditorSaveWindow save = EditorWindow.CreateWindow<HexegeerEditorSaveWindow>(windowType);
-			HexegeerEditorVersionWindow version = EditorWindow.CreateWindow<HexegeerEditorVersionWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorCharacterWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorContentKeyWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorDamageObjectWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorFieldWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorLayerWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorLayoutWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorSaveWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorVersionWindow>(windowType);
 			general.Focus();
 		}
 

@@ -70,12 +70,8 @@ namespace hexegeer.editor {
 		}
 
 		internal ListPopupBuilder<int> UpdateKeys(ListPopupBuilder<int> builder) {
-			List<int> list = new List<int>();
-			list.Add(0);
-			foreach(PhysicsCollider collider in PhysicsColliders) {
-				list.Add(collider.id);
-			}
-
+			List<int> list = new List<int>{ 0 };
+			list.AddRange(PhysicsColliders.ConvertAll(_ => _.id));
 			return builder.SetKeys(list);
 		}
 	}
