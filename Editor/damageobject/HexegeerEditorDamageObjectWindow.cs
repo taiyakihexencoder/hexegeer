@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
@@ -37,7 +36,15 @@ namespace hexegeer.editor {
 		private void UpdatePane() {
 			_pane.Clear();
 
-			_pane.AddChildren(new Spacer(height: 16f), Text.H2("Damage Object"));
+			Row titleRow = new Row();
+			ClickButton generatorButton = ClickButton.Create()
+				.Label("Generate Resource");
+			generatorButton.OnClicked += () => {
+			};
+
+			titleRow.AddChildren(Text.H2("Damage Object"), new Spacer(width: 64f), generatorButton);
+
+			_pane.AddChildren(new Spacer(height: 16f), titleRow);
 
 			List<DamageObjectSettings.DamageObjectData> rows = DamageObjectSettings.instance.Rows;
 			for (int i = 0; i < rows.Count; ++i) {
@@ -67,7 +74,7 @@ namespace hexegeer.editor {
 			internallib.Column column = new internallib.Column()
 				.Padding(horizontal:24f, vertical:8f);
 			
-			Row row = new Row();
+			Row nameRow = new Row();
 
 			TextField nameField = new TextField();
 			nameField.style.flexBasis = 0f;
@@ -88,15 +95,38 @@ namespace hexegeer.editor {
 			};
 
 
-			row.AddChildren(
+			nameRow.AddChildren(
 				Text.Body("Name"), 
 				nameField, 
-				new Spacer(), 
+				new Spacer(width: 24f),
 				removeButton
 			);
 
+			Row contentKeyRow = new Row();
+			List<ContentKeySetting.Key> contentKeys = ContentKeySetting.instance.Keys;
+			Dictionary<ContentKeySetting.Key, bool> keySelectList = new Dictionary<ContentKeySetting.Key, bool>();
+			keySelectList.Add(new ContentKeySetting.Key{ id = ContentKey.Global.value, name = nameof(ContentKey.Global)}, data.contentKeys.Contains(ContentKey.Global.value));
+			foreach(ContentKeySetting.Key key in contentKeys) {
+				keySelectList.Add(key, data.contentKeys.Contains(key.id));
+			}
+			MultiSelectDropdown<ContentKeySetting.Key> contentKeyDropdown = new MultiSelectDropdown<ContentKeySetting.Key>()
+				.Weight(1f)
+				.SetKeys(keySelectList, key => key.name);
+			contentKeyDropdown.style.maxWidth = 400f;
 
-			column.AddChildren(row, ColliderLayout(index, data));
+			contentKeyRow.AddChildren(
+				Text.Body("Content Keys"),
+				contentKeyDropdown,
+				new Spacer(width: 100f)
+			);
+
+			column.AddChildren(
+				nameRow, 
+				new Spacer(height: 8f),
+				contentKeyRow, 
+				new Spacer(height: 8f),
+				ColliderLayout(index, data)
+			);
 			foldout.Add(column);
 			return foldout;
 		}
