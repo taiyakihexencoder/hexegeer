@@ -50,7 +50,7 @@ namespace hexegeer.editor {
 				new Geometry {
 					id = newId,
 					name = "newCollider",
-					layer = 0,
+					layer = LayerSettings.GetSelectableFirstLayer(),
 					shape = GeometryShape.Sphere,
 					extent = Vector3.one,
 				}

@@ -562,7 +562,7 @@ namespace hexegeer.editor {
 			internallib.Foldout foldout = new internallib.Foldout(Text.Body("Hit Area"), expanded);
 			parent.Add(foldout);
 
-			List<CharacterSettings.HitArea> areaList = new List<CharacterSettings.HitArea>(character.hitAreas);
+			List<CharacterSettings.HitArea> areaList = new List<CharacterSettings.HitArea>(character.hitAreas ?? new List<CharacterSettings.HitArea>());
 			for (int i = 0; i < areaList.Count; ++i) {
 				Row row = new Row()
 					.Margin(left: 16f, top:8f);
@@ -571,7 +571,7 @@ namespace hexegeer.editor {
 				int index = i;
 
 				// shape
-				EnumField shapeField = new EnumField(character.hitAreas[i].shape);
+				EnumField shapeField = new EnumField(areaList[i].shape);
 				shapeField.RegisterValueChangedCallback(v => {
 					CharacterSettings.HitArea area = areaList[index];
 					area.shape = (HitAreaShape)v.newValue;
@@ -588,14 +588,14 @@ namespace hexegeer.editor {
 				row.Add(column);
 
 				// extent
-				switch (character.hitAreas[i].shape) {
+				switch (areaList[i].shape) {
 					case HitAreaShape.Box: {
 						Vector3Field extentField = new Vector3Field();
-						extentField.SetValueWithoutNotify(character.hitAreas[i].extent);
+						extentField.SetValueWithoutNotify(areaList[i].extent);
 						extentField.RegisterValueChangedCallback(v => {
-							CharacterSettings.HitArea area = character.hitAreas[index];
+							CharacterSettings.HitArea area = areaList[index];
 							area.extent = v.newValue;
-							character.hitAreas[index] = area;
+							areaList[index] = area;
 							CharacterSettings.instance.SetHitArea(character, areaList);
 						});
 						extentField.style.flexBasis = 0f;
@@ -609,11 +609,11 @@ namespace hexegeer.editor {
 
 					case HitAreaShape.Sphere: {
 						FloatField extentField = new FloatField();
-						extentField.SetValueWithoutNotify(character.hitAreas[i].extent.x);
+						extentField.SetValueWithoutNotify(areaList[i].extent.x);
 						extentField.RegisterValueChangedCallback(v => {
-							CharacterSettings.HitArea area = character.hitAreas[index];
+							CharacterSettings.HitArea area = areaList[index];
 							area.extent = new Vector3(v.newValue, v.newValue, v.newValue);
-							character.hitAreas[index] = area;
+							areaList[index] = area;
 							CharacterSettings.instance.SetHitArea(character, areaList);
 						});
 						extentField.style.flexBasis = 0f;
@@ -627,11 +627,11 @@ namespace hexegeer.editor {
 
 				// position
 				Vector3Field positionField = new Vector3Field();
-				positionField.SetValueWithoutNotify(character.hitAreas[i].position);
+				positionField.SetValueWithoutNotify(areaList[i].position);
 				positionField.RegisterValueChangedCallback(v => {
-					CharacterSettings.HitArea area = character.hitAreas[index];
+					CharacterSettings.HitArea area = areaList[index];
 					area.position = v.newValue;
-					character.hitAreas[index] = area;
+					areaList[index] = area;
 					CharacterSettings.instance.SetHitArea(character, areaList);
 				});
 				positionField.style.flexBasis = 0f;
@@ -642,11 +642,11 @@ namespace hexegeer.editor {
 
 				// rotation
 				Vector3Field rotationField = new Vector3Field();
-				rotationField.SetValueWithoutNotify(character.hitAreas[i].rotation.eulerAngles);
+				rotationField.SetValueWithoutNotify(areaList[i].rotation.eulerAngles);
 				rotationField.RegisterValueChangedCallback(v => {
-					CharacterSettings.HitArea area = character.hitAreas[index];
+					CharacterSettings.HitArea area = areaList[index];
 					area.rotation = Quaternion.Euler(v.newValue);
-					character.hitAreas[index] = area;
+					areaList[index] = area;
 					CharacterSettings.instance.SetHitArea(character, areaList);
 				});
 				rotationField.style.flexBasis = 0f;

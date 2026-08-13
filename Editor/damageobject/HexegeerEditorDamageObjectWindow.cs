@@ -40,6 +40,8 @@ namespace hexegeer.editor {
 			ClickButton generatorButton = ClickButton.Create()
 				.Label("Generate Resource");
 			generatorButton.OnClicked += () => {
+				DamageObjectGenerator generator = new DamageObjectGenerator();
+				generator.Generate("DamageObjectTable.asset");
 			};
 
 			titleRow.AddChildren(Text.H2("Damage Object"), new Spacer(width: 64f), generatorButton);
@@ -113,6 +115,13 @@ namespace hexegeer.editor {
 				.Weight(1f)
 				.SetKeys(keySelectList, key => key.name);
 			contentKeyDropdown.style.maxWidth = 400f;
+			contentKeyDropdown.OnSelectionChanged += (key, load) => {
+				if (load) {
+					data.contentKeys.Add(key.id);
+				} else {
+					data.contentKeys.Remove(key.id);
+				}
+			};
 
 			contentKeyRow.AddChildren(
 				Text.Body("Content Keys"),

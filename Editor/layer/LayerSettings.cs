@@ -121,5 +121,18 @@ namespace hexegeer.editor {
 
 			return builder.SetKeys(keys);
 		}
+
+		/// <summary>
+		/// デフォルトで用意されていないレイヤーの先頭。
+		/// レイヤーを選択する場合に使用。
+		/// </summary>
+		internal static int GetSelectableFirstLayer() {
+			int defaultLayerCount = System.Enum.GetValues(typeof(DefaultLayer)).Length;
+			if (defaultLayerCount < instance.LayerIndices.Length) {
+				return instance.LayerIndices[defaultLayerCount];
+			} else {
+				return -1;
+			}
+		}
 	}
 }

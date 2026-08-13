@@ -159,13 +159,10 @@ namespace hexegeer.editor {
 				id = ids[i] + 1;
 			}
 
-
-			int defaultLayerCount = System.Enum.GetValues(typeof(DefaultLayer)).Length;
-			LayerSettings layerSettings = LayerSettings.instance;
 			_characters.Add( 
 				new CharacterData {
 					id = id,
-					layer = layerSettings.LayerIndices[defaultLayerCount],
+					layer = LayerSettings.GetSelectableFirstLayer(),
 					collider = 0,
 					contentKeys = new int[0],
 					name = name,
