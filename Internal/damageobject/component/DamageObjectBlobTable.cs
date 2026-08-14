@@ -4,8 +4,8 @@ using Unity.Mathematics;
 
 namespace hexegeer.internallib {
 	public struct DamageObjectBlobTable : IComponentData {
-		public DamageObjectBlobAsset damageObject;
-		public DamageObjectKeyListBlobAsset keyTable;
+		public BlobAssetReference<DamageObjectBlobAsset> damageObject;
+		public BlobAssetReference<DamageObjectKeyListBlobAsset> keyTable;
 	}
 
 	// Damage Object Blob Asset
@@ -32,8 +32,12 @@ namespace hexegeer.internallib {
 	// Damage Object Key List Blob Asset
 
 	public struct DamageObjectKeyListBlobAsset {
+		public BlobArray<DamageObjectKeyList> list;
+	}
+
+	public struct DamageObjectKeyList {
 		public int key;
-		public BlobArray<DamageObjectLoadElement> list;
+		public BlobArray<DamageObjectLoadElement> elements;
 	}
 
 	public struct DamageObjectLoadElement {

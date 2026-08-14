@@ -3,7 +3,7 @@ using hexegeer.internallib;
 using UnityEditor;
 
 namespace hexegeer.editor {
-	internal sealed class DamageObjectGenerator : ResourceGenerator<DamageObjectTable> {
+	internal sealed class DamageObjectTableGenerator : ResourceGenerator<DamageObjectTable> {
 		protected override void Edit(SerializedObject serializedObject) {
 			DamageObjectSettings settings = DamageObjectSettings.instance;
 			DamageObjectColliderSettings colliderSettings = DamageObjectColliderSettings.instance;
@@ -60,6 +60,8 @@ namespace hexegeer.editor {
 				colliderProperty.Of("shape").intValue = (int) colliderSettings.Colliders[i].shape;
 				colliderProperty.Of("extent").vector3Value = colliderSettings.Colliders[i].extent;
 			}
+
+			SetAddress(serializedObject, DamageObjectTable.RESOURCE_ADDRESS);
 		}
 	}
 }

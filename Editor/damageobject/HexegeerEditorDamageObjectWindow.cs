@@ -40,7 +40,7 @@ namespace hexegeer.editor {
 			ClickButton generatorButton = ClickButton.Create()
 				.Label("Generate Resource");
 			generatorButton.OnClicked += () => {
-				DamageObjectGenerator generator = new DamageObjectGenerator();
+				DamageObjectTableGenerator generator = new DamageObjectTableGenerator();
 				generator.Generate("DamageObjectTable.asset");
 			};
 

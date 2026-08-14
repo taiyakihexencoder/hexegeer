@@ -14,6 +14,7 @@ namespace hexegeer {
 		private Entity _fieldTableEntity;
 		private Entity _layoutTableEntity;
 		private Entity _characterTableEntity;
+		private Entity _damageObjectTableEntity;
 		private Entity _cameraEntity;
 		private Entity _worldReadyEntity;
 
@@ -25,6 +26,7 @@ namespace hexegeer {
 			_fieldTableEntity = Entity.Null;
 			_layoutTableEntity = Entity.Null;
 			_characterTableEntity = Entity.Null;
+			_damageObjectTableEntity = Entity.Null;
 			_cameraEntity = Entity.Null;
 			_worldReadyEntity = Entity.Null;
 
@@ -63,6 +65,9 @@ namespace hexegeer {
 
 			// Character Setting
 			await LoadCharacterTable();
+
+			// Damage Object Setting
+			await LoadDamageObjectTable();
 
 			await Task.Yield();
 
@@ -304,6 +309,67 @@ namespace hexegeer {
 			});
 		}
 
+		private async Task LoadDamageObjectTable() {
+			DamageObjectTable table = await AssetUtil.RequestLoad<DamageObjectTable>(DamageObjectTable.RESOURCE_ADDRESS);
+			SyncContext.Post(() => {
+				using (BlobBuilder builder = new BlobBuilder(Allocator.Temp)) {
+					ref DamageObjectBlobAsset damageObject = ref builder.ConstructRoot<DamageObjectBlobAsset>();
+					BlobBuilderArray<DamageObjectInfo> objectList = builder.Allocate(ref damageObject.objectList, table.DamageObjects.Count);
+					for (int i = 0; i < table.DamageObjects.Count; ++i) {
+						DamageObjectTable.DamageObject row = table.DamageObjects[i];
+						objectList[i] = new DamageObjectInfo {
+							id = row.id,
+							name = new FixedString64Bytes(row.name),
+							collider = row.collider,
+							collidesWith = row.collidesWith,
+							belongsTo = row.belongsTo,
+						};
+					}
+
+					BlobBuilderArray<DamageObjectColliderInfo> colliderList = builder.Allocate(ref damageObject.colliderList, table.Colliders.Count);
+					for (int i = 0; i < table.Colliders.Count; ++i) {
+						DamageObjectTable.DamageObjectCollider collider = table.Colliders[i];
+						colliderList[i] = new DamageObjectColliderInfo {
+							id = collider.id,
+							extent = collider.extent,
+							shape = collider.shape,
+						};
+					}
+
+					ref DamageObjectKeyListBlobAsset keyTable = ref builder.ConstructRoot<DamageObjectKeyListBlobAsset>();
+					BlobBuilderArray<DamageObjectKeyList> damageObjectKeyList = builder.Allocate(ref keyTable.list, table.ContentKeyTable.Length);
+					for (int i = 0; i < table.ContentKeyTable.Length; ++i) {
+						DamageObjectTable.KeyTable damageObjectKeyTable = table.ContentKeyTable[i];
+						damageObjectKeyList[i] = new DamageObjectKeyList {
+							key = damageObjectKeyTable.key,
+						};
+
+						BlobBuilderArray<DamageObjectLoadElement> elements = builder.Allocate(ref damageObjectKeyList[i].elements, damageObjectKeyTable.indices.Count);
+						for (int j = 0; j < damageObjectKeyTable.indices.Count; ++j) {
+							elements[j] = new DamageObjectLoadElement {
+								index = damageObjectKeyTable.indices[j],
+							};
+						}
+					}
+
+					DamageObjectBlobTable blobTable = new DamageObjectBlobTable {
+						damageObject = builder.CreateBlobAssetReference<DamageObjectBlobAsset>(Allocator.Persistent),
+						keyTable = builder.CreateBlobAssetReference<DamageObjectKeyListBlobAsset>(Allocator.Persistent),
+					};
+
+					_damageObjectTableEntity = EntityManager.Create(
+						blobTable,
+						new Parent{ Value = _masterDataEntity, },
+						new LocalToWorld{ Value = float4x4.identity, },
+						LocalTransform.Identity
+					);
+					ECS.SetEntityName(EntityManager, _damageObjectTableEntity, "Damage Object Table@Hexegeer");
+
+					AssetUtil.Release(DamageObjectTable.RESOURCE_ADDRESS);
+				}
+			});
+		}
+
 		private void CreateGlobalContentKeyRequest(EntityManager entityManager) {
 			// FieldLoadingSystemを起動してFieldHeaderを配置するために、
 			// ダミーのリクエストを投げる
@@ -342,6 +408,14 @@ namespace hexegeer {
 				table.loadTable.Dispose();
 				EntityManager.DestroyEntity(_characterTableEntity);
 				_characterTableEntity = Entity.Null;
+			}
+
+			if (_damageObjectTableEntity != Entity.Null) {
+				DamageObjectBlobTable table = EntityManager.GetComponentData<DamageObjectBlobTable>(_damageObjectTableEntity);
+				table.damageObject.Dispose();
+				table.keyTable.Dispose();
+				EntityManager.DestroyEntity(_damageObjectTableEntity);
+				_damageObjectTableEntity = Entity.Null;
 			}
 
 			if (SystemAPI.TryGetSingletonEntity<FieldSetting>(out Entity singleton)) {

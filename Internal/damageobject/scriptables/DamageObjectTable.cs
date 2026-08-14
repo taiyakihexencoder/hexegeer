@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace hexegeer.internallib {
 	public sealed class DamageObjectTable : ScriptableObject {
+		public const string RESOURCE_ADDRESS = "damage_object_table";
+		
 		[System.Serializable]
 		public class DamageObject {
 			public int id;
@@ -16,14 +18,8 @@ namespace hexegeer.internallib {
 		public class DamageObjectCollider {
 			public int id;
 			public string name;
-			public Shape shape;
+			public HitAreaShape shape;
 			public Vector3 extent;
-		}
-
-		public enum Shape {
-			Sphere,
-			Box,
-			Cylinder,
 		}
 
 		[System.Serializable]
