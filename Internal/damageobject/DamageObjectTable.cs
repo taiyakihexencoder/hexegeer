@@ -8,6 +8,8 @@ namespace hexegeer.internallib {
 			public int id;
 			public string name;
 			public int collider;
+			public int belongsTo;
+			public int collidesWith;
 		}
 
 		[System.Serializable]
@@ -16,8 +18,6 @@ namespace hexegeer.internallib {
 			public string name;
 			public Shape shape;
 			public Vector3 extent;
-			public int belongsTo;
-			public int collidesWith;
 		}
 
 		public enum Shape {

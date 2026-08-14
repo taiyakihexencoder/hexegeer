@@ -2,5 +2,6 @@
 	public enum HitAreaShape {
 		Sphere,
 		Box,
+		Cylinder,
 	}
 }

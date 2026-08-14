@@ -9,7 +9,7 @@ namespace hexegeer.editor {
 			DamageObjectColliderSettings colliderSettings = DamageObjectColliderSettings.instance;
 			ContentKeySetting contentKeySettings = ContentKeySetting.instance;
 			LayerSettings layerSettings = LayerSettings.instance;
-			Dictionary<int, int> collideTable = new Dictionary<int, int>();
+			Dictionary<int, int> layerTable = new Dictionary<int, int>();
 			foreach(int a in layerSettings.LayerIndices) {
 				int flags = 0;
 				foreach(int b in layerSettings.LayerIndices) {
@@ -17,7 +17,7 @@ namespace hexegeer.editor {
 						flags |= (1 << b);
 					}
 				}
-				collideTable.Add(a, flags);
+				layerTable.Add(a, flags);
 			}
 
 			SerializedProperty damageObjectsProperty = serializedObject.FindProperty("_damageObjects");
@@ -49,6 +49,8 @@ namespace hexegeer.editor {
 					SerializedProperty indicesProperty = contentKeyTableProperty.Of(index).Of("indices");
 					indicesProperty.Add(p => p.intValue = i);
 				}
+				damageObjectProperty.Of("belongsTo").intValue = 1 << settings.Rows[i].layer;
+				damageObjectProperty.Of("collidesWith").intValue = layerTable.TryGetValue(settings.Rows[i].layer, out int flags) ? flags : 0;
 			}
 
 			for (int i = 0; i < colliderSettings.Colliders.Count; ++i) {
@@ -57,8 +59,6 @@ namespace hexegeer.editor {
 				colliderProperty.Of("name").stringValue = colliderSettings.Colliders[i].name;
 				colliderProperty.Of("shape").intValue = (int) colliderSettings.Colliders[i].shape;
 				colliderProperty.Of("extent").vector3Value = colliderSettings.Colliders[i].extent;
-				colliderProperty.Of("belongsTo").intValue = 1 << colliderSettings.Colliders[i].layer;
-				colliderProperty.Of("collidesWith").intValue = collideTable.TryGetValue(colliderSettings.Colliders[i].layer, out int flags) ? flags : 0;
 			}
 		}
 	}
