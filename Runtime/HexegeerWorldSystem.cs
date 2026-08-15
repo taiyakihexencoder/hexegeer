@@ -312,6 +312,8 @@ namespace hexegeer {
 		private async Task LoadDamageObjectTable() {
 			DamageObjectTable table = await AssetUtil.RequestLoad<DamageObjectTable>(DamageObjectTable.RESOURCE_ADDRESS);
 			SyncContext.Post(() => {
+				DamageObjectBlobTable blobTable = new DamageObjectBlobTable();
+
 				using (BlobBuilder builder = new BlobBuilder(Allocator.Temp)) {
 					ref DamageObjectBlobAsset damageObject = ref builder.ConstructRoot<DamageObjectBlobAsset>();
 					BlobBuilderArray<DamageObjectInfo> objectList = builder.Allocate(ref damageObject.objectList, table.DamageObjects.Count);
@@ -321,8 +323,6 @@ namespace hexegeer {
 							id = row.id,
 							name = new FixedString64Bytes(row.name),
 							collider = row.collider,
-							collidesWith = row.collidesWith,
-							belongsTo = row.belongsTo,
 						};
 					}
 
@@ -331,11 +331,16 @@ namespace hexegeer {
 						DamageObjectTable.DamageObjectCollider collider = table.Colliders[i];
 						colliderList[i] = new DamageObjectColliderInfo {
 							id = collider.id,
+							collidesWith = collider.collidesWith,
+							belongsTo = collider.belongsTo,
 							extent = collider.extent,
 							shape = collider.shape,
 						};
 					}
+					blobTable.damageObject = builder.CreateBlobAssetReference<DamageObjectBlobAsset>(Allocator.Persistent);
+				}
 
+				using (BlobBuilder builder = new BlobBuilder(Allocator.Temp)) {
 					ref DamageObjectKeyListBlobAsset keyTable = ref builder.ConstructRoot<DamageObjectKeyListBlobAsset>();
 					BlobBuilderArray<DamageObjectKeyList> damageObjectKeyList = builder.Allocate(ref keyTable.list, table.ContentKeyTable.Length);
 					for (int i = 0; i < table.ContentKeyTable.Length; ++i) {
@@ -344,29 +349,25 @@ namespace hexegeer {
 							key = damageObjectKeyTable.key,
 						};
 
-						BlobBuilderArray<DamageObjectLoadElement> elements = builder.Allocate(ref damageObjectKeyList[i].elements, damageObjectKeyTable.indices.Count);
-						for (int j = 0; j < damageObjectKeyTable.indices.Count; ++j) {
+						BlobBuilderArray<DamageObjectLoadElement> elements = builder.Allocate(ref damageObjectKeyList[i].elements, table.ContentKeyTable[i].indices.Count);
+						for (int j = 0; j < table.ContentKeyTable[i].indices.Count; ++j) {
 							elements[j] = new DamageObjectLoadElement {
 								index = damageObjectKeyTable.indices[j],
 							};
 						}
 					}
-
-					DamageObjectBlobTable blobTable = new DamageObjectBlobTable {
-						damageObject = builder.CreateBlobAssetReference<DamageObjectBlobAsset>(Allocator.Persistent),
-						keyTable = builder.CreateBlobAssetReference<DamageObjectKeyListBlobAsset>(Allocator.Persistent),
-					};
-
-					_damageObjectTableEntity = EntityManager.Create(
-						blobTable,
-						new Parent{ Value = _masterDataEntity, },
-						new LocalToWorld{ Value = float4x4.identity, },
-						LocalTransform.Identity
-					);
-					ECS.SetEntityName(EntityManager, _damageObjectTableEntity, "Damage Object Table@Hexegeer");
-
-					AssetUtil.Release(DamageObjectTable.RESOURCE_ADDRESS);
+					blobTable.keyTable = builder.CreateBlobAssetReference<DamageObjectKeyListBlobAsset>(Allocator.Persistent);
 				}
+
+				_damageObjectTableEntity = EntityManager.Create(
+					blobTable,
+					new Parent{ Value = _masterDataEntity, },
+					new LocalToWorld{ Value = float4x4.identity, },
+					LocalTransform.Identity
+				);
+				ECS.SetEntityName(EntityManager, _damageObjectTableEntity, "Damage Object Table@Hexegeer");
+
+				AssetUtil.Release(DamageObjectTable.RESOURCE_ADDRESS);
 			});
 		}
 

@@ -19,12 +19,12 @@ namespace hexegeer.internallib {
 		public int id;
 		public FixedString64Bytes name;
 		public int collider;
-		public int belongsTo;
-		public int collidesWith;
 	}
 
 	public struct DamageObjectColliderInfo {
 		public int id;
+		public int belongsTo;
+		public int collidesWith;
 		public HitAreaShape shape;
 		public float3 extent;
 	}

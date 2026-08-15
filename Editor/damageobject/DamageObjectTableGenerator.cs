@@ -49,14 +49,14 @@ namespace hexegeer.editor {
 					SerializedProperty indicesProperty = contentKeyTableProperty.Of(index).Of("indices");
 					indicesProperty.Add(p => p.intValue = i);
 				}
-				damageObjectProperty.Of("belongsTo").intValue = 1 << settings.Rows[i].layer;
-				damageObjectProperty.Of("collidesWith").intValue = layerTable.TryGetValue(settings.Rows[i].layer, out int flags) ? flags : 0;
 			}
 
 			for (int i = 0; i < colliderSettings.Colliders.Count; ++i) {
 				SerializedProperty colliderProperty = collidersProperty.Of(i);
 				colliderProperty.Of("id").intValue = colliderSettings.Colliders[i].id;
 				colliderProperty.Of("name").stringValue = colliderSettings.Colliders[i].name;
+				colliderProperty.Of("belongsTo").intValue = 1 << colliderSettings.Colliders[i].layer;
+				colliderProperty.Of("collidesWith").intValue = layerTable.TryGetValue(colliderSettings.Colliders[i].layer, out int flags) ? flags : 0;
 				colliderProperty.Of("shape").intValue = (int) colliderSettings.Colliders[i].shape;
 				colliderProperty.Of("extent").vector3Value = colliderSettings.Colliders[i].extent;
 			}

@@ -10,7 +10,6 @@ namespace hexegeer.editor {
 			public int id;
 			public string name;
 			public List<int> contentKeys;
-			public int layer;
 			public int collider;
 		}
 
@@ -44,7 +43,6 @@ namespace hexegeer.editor {
 					id = newId,
 					name = "newDamageObject",
 					contentKeys = new List<int>(),
-					layer = LayerSettings.GetSelectableFirstLayer(),
 					collider = 0,
 				}
 			);

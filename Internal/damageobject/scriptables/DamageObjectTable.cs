@@ -10,14 +10,14 @@ namespace hexegeer.internallib {
 			public int id;
 			public string name;
 			public int collider;
-			public int belongsTo;
-			public int collidesWith;
 		}
 
 		[System.Serializable]
 		public class DamageObjectCollider {
 			public int id;
 			public string name;
+			public int belongsTo;
+			public int collidesWith;
 			public HitAreaShape shape;
 			public Vector3 extent;
 		}

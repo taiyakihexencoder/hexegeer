@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using UnityEngine.UIElements;
 
 namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerContentKeySystemGroup))]
@@ -15,12 +16,19 @@ namespace hexegeer.internallib {
 		private bool _initialized;
 
 		private Entity _characterRootEntity;
-		private ConcurrentDictionary<int, BlobAssetReference<Collider>> _colliders;
+		private ConcurrentDictionary<int, BlobAssetReference<Collider>> _characterColliders;
 		private Dictionary<int, Entity> _characters;
+
+		private Entity _damageObjectRootEntity;
+		private ConcurrentDictionary<int, BlobAssetReference<Collider>> _damageObjectColliders;
+		private Dictionary<int, Entity> _damageObjects;
 
 		private EntityArchetype _characterEntryArchetype;
 		private EntityArchetype _characterArchetype;
 		private EntityArchetype _characterHitAreaArchetype;
+
+		private EntityArchetype _damageObjectEntryArchetype;
+		private EntityArchetype _damageObjectArchetype;
 
 		override protected void OnCreate() {
 			_initialized = false;
@@ -61,6 +69,25 @@ namespace hexegeer.internallib {
 				ComponentType.ReadOnly<PhysicsWorldIndex>()
 			);
 
+			_damageObjectEntryArchetype = EntityManager.CreateArchetype(
+				ComponentType.ReadWrite<DamageObjectPrefabEntry>(),
+				ComponentType.ReadWrite<Parent>(),
+				ComponentType.ReadWrite<LocalTransform>(),
+				ComponentType.ReadWrite<LocalToWorld>()
+			);
+
+			_damageObjectArchetype = EntityManager.CreateArchetype(
+				ComponentType.ReadOnly<Prefab>(),
+				ComponentType.ReadWrite<LocalTransform>(),
+				ComponentType.ReadWrite<LocalToWorld>(),
+				ComponentType.ReadWrite<Parent>(),
+				ComponentType.ReadWrite<PhysicsCollider>(),
+				ComponentType.ReadWrite<PhysicsVelocity>(),
+				ComponentType.ReadWrite<ColliderTriggerEvent>(),
+				ComponentType.ReadWrite<ColliderTriggerEnterEvent>(),
+				ComponentType.ReadOnly<PhysicsWorldIndex>()
+			);
+
 			_query = new EntityQueryBuilder(Allocator.Temp)
 				.WithAll<ContentKeyLoadRequest>()
 				.Build(EntityManager);
@@ -68,6 +95,7 @@ namespace hexegeer.internallib {
 
 			RequireForUpdate<LayoutBlobTable>();
 			RequireForUpdate<CharacterBlobTable>();
+			RequireForUpdate<DamageObjectBlobTable>();
 		}
 
 		protected override void OnStartRunning() {
@@ -80,15 +108,30 @@ namespace hexegeer.internallib {
 				);
 				ECS.SetEntityName(EntityManager, _characterRootEntity, "CharacterPrefabs@Hexegeer");
 
-				_colliders = new ConcurrentDictionary<int, BlobAssetReference<Collider>>();
+				_characterColliders = new ConcurrentDictionary<int, BlobAssetReference<Collider>>();
 				_characters = new Dictionary<int, Entity>();
+
+				_damageObjectRootEntity = EntityManager.Create(
+					new LocalToWorld { Value = float4x4.identity, },
+					LocalTransform.FromPosition(float3.zero),
+					new Parent(),
+					new AttachHexegeerTree()
+				);
+				ECS.SetEntityName(EntityManager, _damageObjectRootEntity, "DamageObjectPrefabs@Hexegeer");
+
+				_damageObjectColliders = new ConcurrentDictionary<int, BlobAssetReference<Collider>>();
+				_damageObjects = new Dictionary<int, Entity>();
 
 				_initialized = true;
 			}
 		}
 
 		protected override void OnDestroy() {
-			foreach(KeyValuePair<int, BlobAssetReference<Collider>> collider in _colliders) {
+			foreach(KeyValuePair<int, BlobAssetReference<Collider>> collider in _characterColliders) {
+				collider.Value.Dispose();
+			}
+
+			foreach(KeyValuePair<int, BlobAssetReference<Collider>> collider in _damageObjectColliders) {
 				collider.Value.Dispose();
 			}
 		}
@@ -114,7 +157,7 @@ namespace hexegeer.internallib {
 			CharacterBlobTable characterTable = SystemAPI.GetSingleton<CharacterBlobTable>();
 
 			// Character Table
-			for(int i = 0; i < characterTable.loadTable.Value.rows.Length; ++i) {
+			for (int i = 0; i < characterTable.loadTable.Value.rows.Length; ++i) {
 				if (characterTable.loadTable.Value.rows[i].key == contentKey) {
 					for (int j = 0; j < characterTable.loadTable.Value.rows[i].list.Length; ++j) {
 						CharacterLoadElement element = characterTable.loadTable.Value.rows[i].list[j];
@@ -132,6 +175,21 @@ namespace hexegeer.internallib {
 						}
 					}
 					break;
+				}
+			}
+
+			DamageObjectBlobTable damageObjectTable = SystemAPI.GetSingleton<DamageObjectBlobTable>();
+			
+			// Damage Object Table
+			for (int i = 0; i < damageObjectTable.keyTable.Value.list.Length; ++i) {
+				if (damageObjectTable.keyTable.Value.list[i].key == contentKey) {
+					ref BlobArray<DamageObjectLoadElement> array = ref damageObjectTable.keyTable.Value.list[i].elements;
+					for (int j = 0; j < array.Length; ++j) {
+						DamageObjectInfo info = damageObjectTable.damageObject.Value.objectList[array[j].index];
+						if (!_damageObjects.ContainsKey(info.id)) {
+							LoadDamageObjectPrefab(entityManager, info, FindCollider(damageObjectTable, info.collider));
+						}
+					}
 				}
 			}
 
@@ -288,7 +346,7 @@ namespace hexegeer.internallib {
 		}
 
 		private BlobAssetReference<Collider> LoadCollider(CharacterColliderInfo collider, int belongsTo, int collidesWith) {
-			if (!_colliders.TryGetValue(collider.id, out BlobAssetReference<Collider> asset)) {
+			if (!_characterColliders.TryGetValue(collider.id, out BlobAssetReference<Collider> asset)) {
 				Material physicsMaterial = Material.Default;
 				physicsMaterial.Friction = 0.0f;
 				physicsMaterial.FrictionCombinePolicy = Material.CombinePolicy.Minimum;
@@ -307,7 +365,7 @@ namespace hexegeer.internallib {
 				);
 				capsule.Value.SetCollisionResponse(CollisionResponsePolicy.CollideRaiseCollisionEvents);
 
-				_colliders.TryAdd(collider.id, capsule);
+				_characterColliders.TryAdd(collider.id, capsule);
 				asset = capsule;
 			}
 			return asset;
@@ -364,6 +422,123 @@ namespace hexegeer.internallib {
 				EntityManager.SetComponentData(instance, LocalTransform.FromPositionRotation(position, rotation));
 				EntityManager.RemoveComponent<Parent>(instance);
 			}
+		}
+
+		private DamageObjectColliderInfo? FindCollider(in DamageObjectBlobTable table, int id) {
+			for (int i = 0; i < table.damageObject.Value.colliderList.Length; ++i) {
+				if (table.damageObject.Value.colliderList[i].id == id) {
+					return table.damageObject.Value.colliderList[i];
+				}
+			}
+			return null;
+		}
+
+		private void LoadDamageObjectPrefab(
+			EntityManager entityManager,
+			in DamageObjectInfo info,
+			in DamageObjectColliderInfo? colliderInfo
+		) {
+			Entity entry = entityManager.CreateEntity(_damageObjectEntryArchetype);
+			ECS.SetEntityName(entityManager, entry, $"Prefab Entry - {info.name}");
+
+			Entity prefab = entityManager.CreateEntity(_damageObjectArchetype);
+			ECS.SetEntityName(entityManager, prefab, info.name);
+	
+			ECS.SetComponents(
+				entityManager,
+				entry,
+				LocalTransform.FromPositionRotation(float3.zero, quaternion.identity),
+				new LocalToWorld { Value = float4x4.identity, },
+				new Parent { Value = _damageObjectRootEntity, },
+				new DamageObjectPrefabEntry { id = info.id, prefab = prefab, }
+			);
+
+			ECS.SetComponents(
+				entityManager,
+				prefab,
+				LocalTransform.FromPositionRotation(float3.zero, quaternion.identity),
+				new LocalToWorld { Value = float4x4.identity, },
+				new Parent { Value = entry, }
+			);
+
+			if (colliderInfo == null) {
+				entityManager.RemoveComponent<PhysicsCollider>(prefab);
+			} else {
+				ECS.SetComponents(
+					entityManager,
+					prefab,
+					new PhysicsCollider { Value = LoadDamageObjectCollider(info, colliderInfo.Value), }
+				);
+			}
+			entityManager.SetSharedComponentManaged(prefab, new PhysicsWorldIndex{ Value = 0, });
+		}
+
+		private BlobAssetReference<Collider> LoadDamageObjectCollider(in DamageObjectInfo info, in DamageObjectColliderInfo collider) {
+			if (!_damageObjectColliders.TryGetValue(info.collider, out BlobAssetReference<Collider> asset)) {
+
+				// なければ作成
+				Material physicsMaterial = Material.Default;
+				physicsMaterial.Friction = 0.0f;
+				physicsMaterial.FrictionCombinePolicy = Material.CombinePolicy.Minimum;
+
+				CollisionFilter filter = new CollisionFilter {
+					BelongsTo = (uint)collider.belongsTo,
+					CollidesWith = (uint)collider.collidesWith,
+				};
+
+				switch(collider.shape) {
+					case HitAreaShape.Sphere: {
+						asset = SphereCollider.Create(
+							geometry: new SphereGeometry {
+								Radius = collider.extent.x,
+								Center = float3.zero,
+							},
+							filter: filter,
+							material: physicsMaterial
+						);
+						break;
+					}
+
+					case HitAreaShape.Box: {
+						asset = BoxCollider.Create(
+							geometry: new BoxGeometry {
+								BevelRadius = 0f,
+								Size = collider.extent,
+								Center = float3.zero,
+								Orientation = quaternion.identity,
+							},
+							filter: filter,
+							material: physicsMaterial
+						);
+						break;
+					}
+
+					case HitAreaShape.Cylinder: {
+						asset = CylinderCollider.Create(
+							geometry: new CylinderGeometry {
+								BevelRadius = 0f,
+								Radius = collider.extent.x,
+								Height = collider.extent.y,
+								Center = float3.zero,
+								Orientation = quaternion.identity,
+								SideCount = 12,
+							},
+							filter: filter,
+							material: physicsMaterial
+						);
+						break;
+					}
+
+					default: {
+						return default;
+					}
+
+				}
+
+				_damageObjectColliders.TryAdd(info.collider, asset);
+			}
+			asset.Value.SetCollisionResponse(CollisionResponsePolicy.RaiseTriggerEvents);
+			return asset;
 		}
 	}
 }

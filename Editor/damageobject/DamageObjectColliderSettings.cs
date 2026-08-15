@@ -10,6 +10,7 @@ namespace hexegeer.editor {
 		public struct Geometry {
 			public int id;
 			public string name;
+			public int layer;
 			public GeometryShape shape;
 			public Vector3 extent;
 		}
@@ -49,6 +50,7 @@ namespace hexegeer.editor {
 				new Geometry {
 					id = newId,
 					name = "newCollider",
+					layer = LayerSettings.GetSelectableFirstLayer(),
 					shape = GeometryShape.Sphere,
 					extent = Vector3.one,
 				}

@@ -104,18 +104,6 @@ namespace hexegeer.editor {
 				removeButton
 			);
 
-			Row layerRow = new Row();
-			PopupField<int> layerPopup = _layerPopupBuilder.Generate(data.layer);
-			layerPopup.style.flexBasis = 0f;
-			layerPopup.style.flexGrow = 1f;
-			layerPopup.RegisterValueChangedCallback(v => {
-				data.layer = v.newValue;
-				DamageObjectSettings.instance.UpdateRow(index, data);
-			});
-
-			layerRow.AddChildren(Text.Body("Layer"), new Spacer(width:8f), layerPopup, new Spacer().Weight(1f));
-
-
 			Row contentKeyRow = new Row();
 			List<ContentKeySetting.Key> contentKeys = ContentKeySetting.instance.Keys;
 			Dictionary<ContentKeySetting.Key, bool> keySelectList = new Dictionary<ContentKeySetting.Key, bool>();
@@ -143,8 +131,6 @@ namespace hexegeer.editor {
 
 			column.AddChildren(
 				nameRow, 
-				new Spacer(height: 8f),
-				layerRow,
 				new Spacer(height: 8f),
 				contentKeyRow, 
 				new Spacer(height: 8f),
@@ -207,7 +193,7 @@ namespace hexegeer.editor {
 				nameField.style.flexBasis = 0f;
 				nameField.style.flexGrow = 2f;
 
-				EnumField shapeField = new EnumField(geometry.Value.shape);
+				EnumField shapeField = new EnumField(geom.shape);
 				shapeField.style.flexBasis = 0f;
 				shapeField.style.flexGrow = 1f;
 				shapeField.RegisterValueChangedCallback(v => {
@@ -215,9 +201,19 @@ namespace hexegeer.editor {
 					DamageObjectColliderSettings.instance.UpdateCollider(geom);
 					ColliderInternalLayout(column, index, newData);
 				});
+
+				PopupField<int> layerPopup = _layerPopupBuilder.Generate(geom.layer);
+				layerPopup.style.flexBasis = 0f;
+				layerPopup.style.flexGrow = 1f;
+				layerPopup.RegisterValueChangedCallback(v => {
+					geom.layer = v.newValue;
+					DamageObjectColliderSettings.instance.UpdateCollider(geom);
+				});
 				
 				propertyRow.AddChildren(
 					Text.Body("Name"), nameField,
+					new Spacer(width: 24f),
+					Text.Body("Layer"), layerPopup,
 					new Spacer(width: 24f),
 					Text.Body("Shape"), shapeField
 				);
