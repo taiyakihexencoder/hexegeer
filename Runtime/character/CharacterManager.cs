@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using hexegeer.internallib;
 using Unity.Collections;
 using Unity.Entities;
@@ -7,11 +8,15 @@ using Unity.Mathematics;
 namespace hexegeer {
 	public static class CharacterManager {
 		private static EntityQuery _characterQuery;
+		private static EntityQuery _requestQuery;
 
 		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]
 		private static void Init() {
 			_characterQuery = new EntityQueryBuilder(Allocator.Temp)
 				.WithAll<CharacterHeader>()
+				.Build(ECS.EntityManager);
+			_requestQuery = new EntityQueryBuilder(Allocator.Temp)
+				.WithAll<CharacterSpawnRequest>()
 				.Build(ECS.EntityManager);
 		}
 
@@ -32,7 +37,8 @@ namespace hexegeer {
 
 		public static async Task<Entity> WaitEntitySpawn(CharacterId characterId) {
 			Entity target = Entity.Null;
-			while(target == Entity.Null) {
+			bool continueWait = true;
+			while(target == Entity.Null && continueWait) {
 				SyncContext.Post(() => {
 					EntityManager entityManager = ECS.EntityManager;
 					NativeArray<Entity> entities = _characterQuery.ToEntityArray(Allocator.Temp);
@@ -44,20 +50,28 @@ namespace hexegeer {
 						}
 					}
 					entities.Dispose();
+
+					// もしリクエストがなければ待っても仕方ないので中断する
+					if (continueWait && _requestQuery.IsEmpty) {
+						continueWait = false;
+					}
 				});
 				await Task.Delay(50);
+
 			}
 
-			// ビジュアルの作成
-			SyncContext.Post(() => {
-				EntityManager entityManager = ECS.EntityManager;
-				entityManager.Create(
-					new CharacterCreateModelRequest {
-						id = characterId.Id,
-						observeEntity = target,
-					}
-				);
-			});
+			if (target != Entity.Null) {
+				// ビジュアルの作成
+				SyncContext.Post(() => {
+					EntityManager entityManager = ECS.EntityManager;
+					entityManager.Create(
+						new CharacterCreateModelRequest {
+							id = characterId.Id,
+							observeEntity = target,
+						}
+					);
+				});
+			}
 
 			return target;
 		}
