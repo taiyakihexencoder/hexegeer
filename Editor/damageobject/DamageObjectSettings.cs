@@ -11,6 +11,7 @@ namespace hexegeer.editor {
 			public string name;
 			public List<int> contentKeys;
 			public int collider;
+			public float limitedLifeTime;
 		}
 
 		[SerializeField]

@@ -10,6 +10,7 @@ namespace hexegeer.internallib {
 			public int id;
 			public string name;
 			public int collider;
+			public float limitedLifeTime;
 		}
 
 		[System.Serializable]

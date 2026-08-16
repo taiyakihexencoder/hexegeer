@@ -86,7 +86,8 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<ColliderTriggerEvent>(),
 				ComponentType.ReadWrite<ColliderTriggerEnterEvent>(),
 				ComponentType.ReadOnly<PhysicsWorldIndex>(),
-				ComponentType.ReadWrite<EntityOwner>()
+				ComponentType.ReadWrite<EntityOwner>(),
+				ComponentType.ReadWrite<LimitedLifeTime>()
 			);
 
 			_query = new EntityQueryBuilder(Allocator.Temp)
@@ -471,6 +472,17 @@ namespace hexegeer.internallib {
 					new PhysicsCollider { Value = LoadDamageObjectCollider(info, colliderInfo.Value), }
 				);
 			}
+
+			if (info.limitedLifeTime > 0.0f) {
+				ECS.SetComponents(
+					entityManager,
+					prefab,
+					new LimitedLifeTime { seconds = info.limitedLifeTime, }
+				);
+			} else {
+				EntityManager.RemoveComponent<LimitedLifeTime>(prefab);
+			}
+
 			entityManager.SetSharedComponentManaged(prefab, new PhysicsWorldIndex{ Value = 0, });
 			_damageObjects.Add(info.id, prefab);
 		}
