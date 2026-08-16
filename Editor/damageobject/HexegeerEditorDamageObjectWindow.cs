@@ -216,6 +216,9 @@ namespace hexegeer.editor {
 				shapeField.style.flexGrow = 1f;
 				shapeField.RegisterValueChangedCallback(v => {
 					geom.shape = (DamageObjectColliderSettings.GeometryShape)v.newValue;
+					if (geom.shape == DamageObjectColliderSettings.GeometryShape.Sphere) {
+						geom.rotation = Quaternion.identity;
+					}
 					DamageObjectColliderSettings.instance.UpdateCollider(geom);
 					ColliderInternalLayout(column, index, newData);
 				});
@@ -299,6 +302,29 @@ namespace hexegeer.editor {
 					}
 				}
 
+				VisualElement rotationElement = new VisualElement();
+				if (geom.shape != DamageObjectColliderSettings.GeometryShape.Sphere) {
+					Row rotationRow = new Row().Margin(bottom: 8f);
+
+					Vector3Field rotationField = new Vector3Field();
+					rotationField.style.flexBasis = 0f;
+					rotationField.style.flexGrow = 1f;
+					rotationField.SetValueWithoutNotify(geom.rotation.eulerAngles);
+					rotationField.RegisterValueChangedCallback(v => {
+						geom.rotation = Quaternion.Euler(v.newValue);
+						DamageObjectColliderSettings.instance.UpdateCollider(geom);
+					});
+
+					rotationRow.AddChildren(
+						Text.Body("Rotation"),
+						new Spacer(width: 12f),
+						rotationField
+					);
+
+					rotationElement = rotationRow;
+				}
+
+
 				ClickButton deleteButton = ClickButton.Create(Align.FlexEnd)
 					.Label("Delete Collider")
 					.Margin(horizontal: 8f);
@@ -319,6 +345,7 @@ namespace hexegeer.editor {
 					propertyRow, 
 					new Spacer(height: 8f),
 					extentRow, 
+					rotationElement,
 					new Spacer(height: 8f),
 					deleteButton
 				);

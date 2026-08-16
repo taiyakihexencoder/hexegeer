@@ -13,6 +13,7 @@ namespace hexegeer.editor {
 			public int layer;
 			public GeometryShape shape;
 			public Vector3 extent;
+			public Quaternion rotation;
 		}
 
 		public enum GeometryShape {
@@ -53,6 +54,7 @@ namespace hexegeer.editor {
 					layer = LayerSettings.GetSelectableFirstLayer(),
 					shape = GeometryShape.Sphere,
 					extent = Vector3.one,
+					rotation = Quaternion.identity,
 				}
 			);
 			Save(true);

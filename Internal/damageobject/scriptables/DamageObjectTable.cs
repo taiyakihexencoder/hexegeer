@@ -20,6 +20,7 @@ namespace hexegeer.internallib {
 			public int collidesWith;
 			public HitAreaShape shape;
 			public Vector3 extent;
+			public Quaternion rotation;
 		}
 
 		[System.Serializable]

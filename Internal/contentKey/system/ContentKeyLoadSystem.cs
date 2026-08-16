@@ -507,7 +507,7 @@ namespace hexegeer.internallib {
 								BevelRadius = 0f,
 								Size = collider.extent,
 								Center = float3.zero,
-								Orientation = quaternion.identity,
+								Orientation = collider.rotation,
 							},
 							filter: filter,
 							material: physicsMaterial
@@ -522,7 +522,7 @@ namespace hexegeer.internallib {
 								Radius = collider.extent.x,
 								Height = collider.extent.y,
 								Center = float3.zero,
-								Orientation = quaternion.identity,
+								Orientation = collider.rotation,
 								SideCount = 12,
 							},
 							filter: filter,

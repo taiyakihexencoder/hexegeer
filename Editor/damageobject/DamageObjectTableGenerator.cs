@@ -59,6 +59,7 @@ namespace hexegeer.editor {
 				colliderProperty.Of("collidesWith").intValue = layerTable.TryGetValue(colliderSettings.Colliders[i].layer, out int flags) ? flags : 0;
 				colliderProperty.Of("shape").intValue = (int) colliderSettings.Colliders[i].shape;
 				colliderProperty.Of("extent").vector3Value = colliderSettings.Colliders[i].extent;
+				colliderProperty.Of("rotation").quaternionValue = colliderSettings.Colliders[i].rotation;
 			}
 
 			SetAddress(serializedObject, DamageObjectTable.RESOURCE_ADDRESS);

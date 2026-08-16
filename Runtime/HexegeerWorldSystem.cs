@@ -334,6 +334,7 @@ namespace hexegeer {
 							collidesWith = collider.collidesWith,
 							belongsTo = collider.belongsTo,
 							extent = collider.extent,
+							rotation = collider.rotation,
 							shape = collider.shape,
 						};
 					}

@@ -27,6 +27,7 @@ namespace hexegeer.internallib {
 		public int collidesWith;
 		public HitAreaShape shape;
 		public float3 extent;
+		public quaternion rotation;
 	}
 
 	// Damage Object Key List Blob Asset
