@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
@@ -37,14 +38,31 @@ namespace hexegeer.editor {
 			_pane.Clear();
 
 			Row titleRow = new Row();
-			ClickButton generatorButton = ClickButton.Create()
-				.Label("Generate Resource");
-			generatorButton.OnClicked += () => {
-				DamageObjectTableGenerator generator = new DamageObjectTableGenerator();
-				generator.Generate("DamageObjectTable.asset");
+
+			ClickButton scriptGeneratorButton = ClickButton.Create()
+				.Label("Generate Script");
+			scriptGeneratorButton.OnClicked += () => {
+				DamageObjectScriptGenerator generator = new DamageObjectScriptGenerator();
+				if (generator.Validation(out List<string> errors)) {
+					generator.Generate($"damageobject{Path.DirectorySeparatorChar}DamageObjectId.cs");
+				} else {
+					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, errors), "ok");
+				}
 			};
 
-			titleRow.AddChildren(Text.H2("Damage Object"), new Spacer(width: 64f), generatorButton);
+			ClickButton resourceGeneratorButton = ClickButton.Create()
+				.Label("Generate Resource");
+			resourceGeneratorButton.OnClicked += () => {
+				DamageObjectScriptGenerator scriptGenerator = new DamageObjectScriptGenerator();
+				if (scriptGenerator.Validation(out List<string> errors)) {
+					DamageObjectTableGenerator generator = new DamageObjectTableGenerator();
+					generator.Generate("DamageObjectTable.asset");
+				} else {
+					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, errors), "ok");
+				}
+			};
+
+			titleRow.AddChildren(Text.H2("Damage Object"), new Spacer(width: 64f), scriptGeneratorButton, new Spacer(16f), resourceGeneratorButton);
 
 			_pane.AddChildren(new Spacer(height: 16f), titleRow);
 

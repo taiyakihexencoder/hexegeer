@@ -4,31 +4,26 @@ using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace hexegeer.internallib {
-	[UpdateInGroup(typeof(HexegeerCharacterSystemGroup))]
-	public partial struct CharacterSpawnSystem : ISystem {
+	[UpdateInGroup(typeof(HexegeerDamageObjectSystemGroup))]
+	public partial struct DamageObjectSpawnSystem : ISystem {
 		private EntityQuery _requestQuery;
-		private EntityQuery _prefabQuery;
+		private EntityQuery _entryQuery;
 
 		void ISystem.OnCreate(ref SystemState state) {
 			_requestQuery = new EntityQueryBuilder(Allocator.Temp)
-				.WithAll<CharacterSpawnRequest>()
+				.WithAll<DamageObjectSpawnRequest>()
 				.Build(ref state);
 			state.RequireForUpdate(_requestQuery);
 
-			_prefabQuery = new EntityQueryBuilder(Allocator.Temp)
-				.WithAll<CharacterPrefabEntry>()
+			_entryQuery = new EntityQueryBuilder(Allocator.Temp)
+				.WithAll<DamageObjectPrefabEntry>()
 				.Build(ref state);
-			state.RequireForUpdate(_prefabQuery);
+			state.RequireForUpdate(_entryQuery);
 		}
 
 		void ISystem.OnUpdate(ref SystemState state) {
 			EntityCommandBuffer.ParallelWriter commandBuffer = CreateCommandBuffer(ref state).AsParallelWriter();
-			NativeArray<CharacterPrefabEntry> entries = _prefabQuery.ToComponentDataArray<CharacterPrefabEntry>(Allocator.TempJob);
-
-			state.Dependency = new SpawnJob {
-				commandBuffer = commandBuffer,
-				entries = entries,
-			}.ScheduleParallel(_requestQuery, state.Dependency);
+			NativeArray<DamageObjectPrefabEntry> entries = _entryQuery.ToComponentDataArray<DamageObjectPrefabEntry>(Allocator.TempJob);
 
 			state.Dependency = entries.Dispose(state.Dependency);
 		}
@@ -46,15 +41,15 @@ namespace hexegeer.internallib {
 			public EntityCommandBuffer.ParallelWriter commandBuffer;
 
 			[ReadOnly]
-			public NativeArray<CharacterPrefabEntry> entries;
+			public NativeArray<DamageObjectPrefabEntry> entries;
 
-			void Execute([EntityIndexInQuery]int sortKey, in Entity entity, RefRO<CharacterSpawnRequest> request) {
+			void Execute([EntityIndexInQuery] int sortKey, in Entity entity, RefRO<DamageObjectSpawnRequest> request) {
 				for (int i = 0; i < entries.Length; ++i) {
 					if (entries[i].id == request.ValueRO.id) {
 						Entity instance = commandBuffer.Instantiate(sortKey, entries[i].prefab);
 						commandBuffer.SetComponent(
-							sortKey, 
-							instance, 
+							sortKey,
+							instance,
 							LocalTransform.FromPositionRotation(request.ValueRO.position, request.ValueRO.rotation)
 						);
 						commandBuffer.SetComponent(
@@ -64,7 +59,12 @@ namespace hexegeer.internallib {
 						);
 						commandBuffer.RemoveComponent<Parent>(sortKey, instance);
 
-						// requestの破棄
+						if (request.ValueRO.owner == Entity.Null) {
+							commandBuffer.RemoveComponent<EntityOwner>(sortKey, instance);
+						} else {
+							commandBuffer.SetComponent(sortKey, instance, new EntityOwner { owner = request.ValueRO.owner });
+						}
+
 						commandBuffer.DestroyEntity(sortKey, entity);
 						break;
 					}

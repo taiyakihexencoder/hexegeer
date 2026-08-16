@@ -85,7 +85,8 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<PhysicsVelocity>(),
 				ComponentType.ReadWrite<ColliderTriggerEvent>(),
 				ComponentType.ReadWrite<ColliderTriggerEnterEvent>(),
-				ComponentType.ReadOnly<PhysicsWorldIndex>()
+				ComponentType.ReadOnly<PhysicsWorldIndex>(),
+				ComponentType.ReadWrite<EntityOwner>()
 			);
 
 			_query = new EntityQueryBuilder(Allocator.Temp)
@@ -471,6 +472,7 @@ namespace hexegeer.internallib {
 				);
 			}
 			entityManager.SetSharedComponentManaged(prefab, new PhysicsWorldIndex{ Value = 0, });
+			_damageObjects.Add(info.id, prefab);
 		}
 
 		private BlobAssetReference<Collider> LoadDamageObjectCollider(in DamageObjectInfo info, in DamageObjectColliderInfo collider) {
