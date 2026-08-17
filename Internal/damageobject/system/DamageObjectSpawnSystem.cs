@@ -25,6 +25,11 @@ namespace hexegeer.internallib {
 			EntityCommandBuffer.ParallelWriter commandBuffer = CreateCommandBuffer(ref state).AsParallelWriter();
 			NativeArray<DamageObjectPrefabEntry> entries = _entryQuery.ToComponentDataArray<DamageObjectPrefabEntry>(Allocator.TempJob);
 
+			state.Dependency = new SpawnJob {
+				commandBuffer = commandBuffer,
+				entries = entries,
+			}.ScheduleParallel(_requestQuery, state.Dependency);
+
 			state.Dependency = entries.Dispose(state.Dependency);
 		}
 	
@@ -67,6 +72,17 @@ namespace hexegeer.internallib {
 								sortKey,
 								instance,
 								new LimitedLifeTime { seconds = definitions[i].limitedLifeTime, }
+							);
+							commandBuffer.SetComponent(
+								sortKey,
+								instance,
+								new DamageObjectControl { 
+									damageObjectId = request.ValueRO.id, 
+									entityIndex = i, 
+									startPosition = definitions[i].position,
+									startRotation = definitions[i].rotation,
+									extra = request.ValueRO.extra,
+								}
 							);
 							commandBuffer.RemoveComponent<Parent>(sortKey, instance);
 

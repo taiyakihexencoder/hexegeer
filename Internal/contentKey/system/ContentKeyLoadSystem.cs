@@ -5,7 +5,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
-using UnityEngine.UIElements;
 
 namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerContentKeySystemGroup))]
@@ -87,7 +86,8 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<ColliderTriggerEnterEvent>(),
 				ComponentType.ReadOnly<PhysicsWorldIndex>(),
 				ComponentType.ReadWrite<EntityOwner>(),
-				ComponentType.ReadWrite<LimitedLifeTime>()
+				ComponentType.ReadWrite<LimitedLifeTime>(),
+				ComponentType.ReadWrite<DamageObjectControl>()
 			);
 
 			_query = new EntityQueryBuilder(Allocator.Temp)
