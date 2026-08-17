@@ -473,16 +473,6 @@ namespace hexegeer.internallib {
 				);
 			}
 
-			if (info.limitedLifeTime > 0.0f) {
-				ECS.SetComponents(
-					entityManager,
-					prefab,
-					new LimitedLifeTime { seconds = info.limitedLifeTime, }
-				);
-			} else {
-				EntityManager.RemoveComponent<LimitedLifeTime>(prefab);
-			}
-
 			entityManager.SetSharedComponentManaged(prefab, new PhysicsWorldIndex{ Value = 0, });
 			_damageObjects.Add(info.id, prefab);
 		}

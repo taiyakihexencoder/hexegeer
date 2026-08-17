@@ -148,28 +148,10 @@ namespace hexegeer.editor {
 				new Spacer(width: 100f)
 			);
 
-			Row lifeTimeRow = new Row();
-			FloatField limitedLifeTimeField = new FloatField();
-			limitedLifeTimeField.SetValueWithoutNotify(data.limitedLifeTime);
-			limitedLifeTimeField.RegisterValueChangedCallback(v => {
-				data.limitedLifeTime = v.newValue;
-				DamageObjectSettings.instance.UpdateRow(index, data);
-			});
-			limitedLifeTimeField.style.flexBasis = 0f;
-			limitedLifeTimeField.style.flexGrow = 1f;
-
-			lifeTimeRow.AddChildren(
-				Text.Body("Life Time"),
-				limitedLifeTimeField,
-				new Spacer(width: 50f)
-			);
-
 			column.AddChildren(
 				nameRow, 
 				new Spacer(height: 8f),
 				contentKeyRow, 
-				new Spacer(height: 8f),
-				lifeTimeRow, 
 				new Spacer(height: 8f),
 				ColliderLayout(index, data)
 			);

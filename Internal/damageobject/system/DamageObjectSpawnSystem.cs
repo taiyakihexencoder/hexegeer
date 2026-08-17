@@ -11,7 +11,7 @@ namespace hexegeer.internallib {
 
 		void ISystem.OnCreate(ref SystemState state) {
 			_requestQuery = new EntityQueryBuilder(Allocator.Temp)
-				.WithAll<DamageObjectSpawnRequest>()
+				.WithAll<DamageObjectSpawnRequest, DamageObjectTrailDefinition>()
 				.Build(ref state);
 			state.RequireForUpdate(_requestQuery);
 
@@ -43,26 +43,38 @@ namespace hexegeer.internallib {
 			[ReadOnly]
 			public NativeArray<DamageObjectPrefabEntry> entries;
 
-			void Execute([EntityIndexInQuery] int sortKey, in Entity entity, RefRO<DamageObjectSpawnRequest> request) {
+			void Execute(
+				[EntityIndexInQuery] int sortKey, 
+				in Entity entity, 
+				RefRO<DamageObjectSpawnRequest> request,
+				ref DynamicBuffer<DamageObjectTrailDefinition> definitions
+			) {
 				for (int i = 0; i < entries.Length; ++i) {
 					if (entries[i].id == request.ValueRO.id) {
-						Entity instance = commandBuffer.Instantiate(sortKey, entries[i].prefab);
-						commandBuffer.SetComponent(
-							sortKey,
-							instance,
-							LocalTransform.FromPositionRotation(request.ValueRO.position, request.ValueRO.rotation)
-						);
-						commandBuffer.SetComponent(
-							sortKey,
-							instance,
-							new LocalToWorld { Value = float4x4.TRS(request.ValueRO.position, request.ValueRO.rotation, new float3(1f,1f,1f))}
-						);
-						commandBuffer.RemoveComponent<Parent>(sortKey, instance);
+						for (int n = 0; n < definitions.Length; ++n) {
+							Entity instance = commandBuffer.Instantiate(sortKey, entries[i].prefab);
+							commandBuffer.SetComponent(
+								sortKey,
+								instance,
+								LocalTransform.FromPositionRotation(definitions[i].position, definitions[i].rotation)
+							);
+							commandBuffer.SetComponent(
+								sortKey,
+								instance,
+								new LocalToWorld { Value = float4x4.TRS(definitions[i].position, definitions[i].rotation, new float3(1f,1f,1f)) }
+							);
+							commandBuffer.SetComponent(
+								sortKey,
+								instance,
+								new LimitedLifeTime { seconds = definitions[i].limitedLifeTime, }
+							);
+							commandBuffer.RemoveComponent<Parent>(sortKey, instance);
 
-						if (request.ValueRO.owner == Entity.Null) {
-							commandBuffer.RemoveComponent<EntityOwner>(sortKey, instance);
-						} else {
-							commandBuffer.SetComponent(sortKey, instance, new EntityOwner { owner = request.ValueRO.owner });
+							if (request.ValueRO.owner == Entity.Null) {
+								commandBuffer.RemoveComponent<EntityOwner>(sortKey, instance);
+							} else {
+								commandBuffer.SetComponent(sortKey, instance, new EntityOwner { owner = request.ValueRO.owner });
+							}
 						}
 
 						commandBuffer.DestroyEntity(sortKey, entity);

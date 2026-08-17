@@ -19,7 +19,6 @@ namespace hexegeer.internallib {
 		public int id;
 		public FixedString64Bytes name;
 		public int collider;
-		public float limitedLifeTime;
 	}
 
 	public struct DamageObjectColliderInfo {

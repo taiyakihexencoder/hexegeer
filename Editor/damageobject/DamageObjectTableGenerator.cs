@@ -44,7 +44,6 @@ namespace hexegeer.editor {
 				damageObjectProperty.Of("id").intValue = settings.Rows[i].id;
 				damageObjectProperty.Of("name").stringValue = settings.Rows[i].name;
 				damageObjectProperty.Of("collider").intValue = settings.Rows[i].collider;
-				damageObjectProperty.Of("limitedLifeTime").floatValue = settings.Rows[i].limitedLifeTime;
 				foreach (int contentKey in settings.Rows[i].contentKeys) {
 					int index = contentKeyIdToIndex[contentKey];
 					SerializedProperty indicesProperty = contentKeyTableProperty.Of(index).Of("indices");

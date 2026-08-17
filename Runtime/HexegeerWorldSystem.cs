@@ -323,7 +323,6 @@ namespace hexegeer {
 							id = row.id,
 							name = new FixedString64Bytes(row.name),
 							collider = row.collider,
-							limitedLifeTime = row.limitedLifeTime,
 						};
 					}
 
