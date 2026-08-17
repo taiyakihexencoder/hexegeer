@@ -9,6 +9,7 @@ namespace hexegeer.editor {
 		public struct DamageObjectData {
 			public int id;
 			public string name;
+			public string asset;
 			public List<int> contentKeys;
 			public int collider;
 		}

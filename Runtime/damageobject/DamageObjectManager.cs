@@ -21,7 +21,7 @@ namespace hexegeer {
 			);
 			DynamicBuffer<DamageObjectTrailDefinition> trails = commandBuffer.AddBuffer<DamageObjectTrailDefinition>(entity);
 			trails.Add(
-				new DamageObjectTrailDefinition{
+				new DamageObjectTrailDefinition {
 					position = position,
 					rotation = rotation,
 					limitedLifeTime = 100f,

@@ -319,6 +319,8 @@ namespace hexegeer {
 					BlobBuilderArray<DamageObjectInfo> objectList = builder.Allocate(ref damageObject.objectList, table.DamageObjects.Count);
 					for (int i = 0; i < table.DamageObjects.Count; ++i) {
 						DamageObjectTable.DamageObject row = table.DamageObjects[i];
+						DamageObjectModelLookup.Register(row);
+
 						objectList[i] = new DamageObjectInfo {
 							id = row.id,
 							name = new FixedString64Bytes(row.name),

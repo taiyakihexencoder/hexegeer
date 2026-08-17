@@ -9,7 +9,7 @@ namespace hexegeer.internallib {
 			_table = new Dictionary<int, CharacterTable.ModelProfile>();
 		}
 
-		public static void Register(CharacterTable.Character character) {
+		public static void Register(in CharacterTable.Character character) {
 			lock (_lockHandle) {
 				if (!_table.ContainsKey(character.id)) {
 					_table.Add(

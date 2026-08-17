@@ -11,10 +11,14 @@ namespace hexegeer.editor {
 		private ListPopupBuilder<int> _layerPopupBuilder;
 		private ListPopupBuilder<int> _colliderPopupBuilder;
 
+		private AddressableListPopupBuilder _assetPopupBuilder;
+
 		private ScrollPane _pane;
 		private int _selectedIndex;
 
 		private void OnEnable() {
+			_assetPopupBuilder = new AddressableListPopupBuilder(type: typeof(HexegeerDamageObjectBehaviour));
+
 			_pane = new ScrollPane()
 				.Padding(horizontal:24f);
 
@@ -28,7 +32,9 @@ namespace hexegeer.editor {
 		}
 
 		private void OnFocus() {
-			_layerPopupBuilder = LayerSettings.instance.UpdateKeys(_layerPopupBuilder);
+			if (_layerPopupBuilder != null) {
+				_layerPopupBuilder = LayerSettings.instance.UpdateKeys(_layerPopupBuilder);
+			}
 			_colliderPopupBuilder = DamageObjectColliderSettings.instance.UpdateKeys(_colliderPopupBuilder);
 			_selectedIndex = -1;
 			UpdatePane();
@@ -122,6 +128,22 @@ namespace hexegeer.editor {
 				removeButton
 			);
 
+			// Asset
+			Row assetRow = new Row();
+			PopupField<string> assetPopup = _assetPopupBuilder.Generate(data.asset);
+			assetPopup.style.flexBasis = 0f;
+			assetPopup.style.flexGrow = 1f;
+			assetPopup.RegisterValueChangedCallback(v => {
+				data.asset = v.newValue;
+				DamageObjectSettings.instance.UpdateRow(index, data);
+			});
+			assetRow.AddChildren(
+				Text.Body("Asset"),
+				assetPopup,
+				new Spacer(width: 100f)
+			);
+
+			// Content Key
 			Row contentKeyRow = new Row();
 			List<ContentKeySetting.Key> contentKeys = ContentKeySetting.instance.Keys;
 			Dictionary<ContentKeySetting.Key, bool> keySelectList = new Dictionary<ContentKeySetting.Key, bool>();
@@ -149,9 +171,11 @@ namespace hexegeer.editor {
 			);
 
 			column.AddChildren(
-				nameRow, 
+				nameRow,
 				new Spacer(height: 8f),
-				contentKeyRow, 
+				assetRow,
+				new Spacer(height: 8f),
+				contentKeyRow,
 				new Spacer(height: 8f),
 				ColliderLayout(index, data)
 			);

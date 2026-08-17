@@ -56,6 +56,10 @@ namespace hexegeer.internallib {
 			) {
 				for (int i = 0; i < entries.Length; ++i) {
 					if (entries[i].id == request.ValueRO.id) {
+						DamageObjectCreateModelRequest modelRequest = new DamageObjectCreateModelRequest {
+							id = request.ValueRO.id,
+						};
+
 						for (int n = 0; n < definitions.Length; ++n) {
 							Entity instance = commandBuffer.Instantiate(sortKey, entries[i].prefab);
 							commandBuffer.SetComponent(
@@ -91,9 +95,14 @@ namespace hexegeer.internallib {
 							} else {
 								commandBuffer.SetComponent(sortKey, instance, new EntityOwner { owner = request.ValueRO.owner });
 							}
+
+							Entity modelRequestEntity = commandBuffer.CreateEntity(sortKey);
+							modelRequest.observeEntity = instance;
+							commandBuffer.AddComponent(sortKey, modelRequestEntity, modelRequest);
 						}
 
 						commandBuffer.DestroyEntity(sortKey, entity);
+
 						break;
 					}
 				}

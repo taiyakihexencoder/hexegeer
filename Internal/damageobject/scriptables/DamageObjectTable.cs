@@ -9,6 +9,7 @@ namespace hexegeer.internallib {
 		public class DamageObject {
 			public int id;
 			public string name;
+			public string asset;
 			public int collider;
 		}
 
