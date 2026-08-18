@@ -41,6 +41,8 @@ namespace hexegeer.internallib {
 			RequireForUpdate<CameraInstance>();
 		}
 	}
+	[UpdateInGroup(typeof(HexegeerAfterPhysicsSystemGroup)), UpdateAfter(typeof(HexegeerColliderGroup))]
+	public partial class HexegeerUseColliderGroup : ComponentSystemGroup { }
 
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
@@ -77,4 +79,12 @@ namespace hexegeer.internallib {
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerInputSystemGroup : ComponentSystemGroup { }
+
+	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
+	public partial class HexegeerDebugSystemGroup : ComponentSystemGroup {
+		protected override void OnCreate() {
+			base.OnCreate();
+			RequireForUpdate<DebugMode>();
+		}
+	}
 }

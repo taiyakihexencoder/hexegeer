@@ -315,6 +315,7 @@ namespace hexegeer.editor {
 						heightField.SetValueWithoutNotify(geom.extent.y);
 						heightField.RegisterValueChangedCallback(v => {
 							geom.extent = new Vector3(geom.extent.x, v.newValue, geom.extent.x);
+							DamageObjectColliderSettings.instance.UpdateCollider(geom);
 						});
 						extentRow.AddChildren(
 							Text.Body("Extent"),

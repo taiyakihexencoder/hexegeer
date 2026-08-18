@@ -65,7 +65,8 @@ namespace hexegeer.internallib {
 				ComponentType.ReadOnly<GeometryCleanup>(),
 				ComponentType.ReadWrite<ColliderTriggerEvent>(),
 				ComponentType.ReadWrite<ColliderTriggerEnterEvent>(),
-				ComponentType.ReadOnly<PhysicsWorldIndex>()
+				ComponentType.ReadOnly<PhysicsWorldIndex>(),
+				ComponentType.ReadWrite<DamageObjectHit>()
 			);
 
 			_damageObjectEntryArchetype = EntityManager.CreateArchetype(
