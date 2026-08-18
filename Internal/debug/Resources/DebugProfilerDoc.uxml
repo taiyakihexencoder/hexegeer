@@ -1,0 +1,8 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="List" style="flex-grow: 1; width: 400px; margin-top: 20px; margin-right: 20px; margin-bottom: 20px; margin-left: 20px; align-items: flex-start; opacity: 0.75;">
+        <ui:VisualElement name="debug-fps-row" style="flex-grow: 0; flex-direction: row;">
+            <ui:Label text="FPS:" name="debug-fps-key" style="font-size: 32px; color: rgb(0, 0, 0); -unity-font-style: bold; margin-top: 0; margin-right: 24px; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;"/>
+            <ui:Label text="00.00" name="debug-fps-value" style="font-size: 32px; color: rgb(0, 0, 255); -unity-font-style: bold; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
