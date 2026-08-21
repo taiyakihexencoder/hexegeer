@@ -12,7 +12,8 @@
         "Unity.Physics.Hybrid",
         "Unity.InputSystem",
         "Unity.Addressables",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "Unity.RenderPipelines.Core.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
