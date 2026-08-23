@@ -15,6 +15,7 @@ namespace hexegeer.editor {
 			EditorWindow.CreateWindow<HexegeerEditorLayerWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorLayoutWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorSaveWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorSoundWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorVersionWindow>(windowType);
 			general.Focus();
 		}
