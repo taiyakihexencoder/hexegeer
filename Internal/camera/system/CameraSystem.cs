@@ -37,7 +37,7 @@ namespace hexegeer.internallib {
 					}
 
 					if (SystemAPI.IsComponentEnabled<CameraBounds>(cameraEntity)) {
-						CameraBounds camerBounds = SystemAPI.GetComponent<CameraBounds>(cameraEntity);
+						CameraBounds cameraBounds = SystemAPI.GetComponent<CameraBounds>(cameraEntity);
 					}
 				}
 
@@ -50,6 +50,31 @@ namespace hexegeer.internallib {
 						float alpha = cameraLerp.ValueRO.elapsedSeconds / cameraLerp.ValueRO.performSeconds;
 						localTransform.ValueRW.Position = math.lerp(cameraLerp.ValueRO.basePosition, localTransform.ValueRO.Position, alpha);
 						localTransform.ValueRW.Rotation = math.slerp(cameraLerp.ValueRO.baseRotation, localTransform.ValueRO.Rotation, alpha);
+					}
+				}
+
+				RefRW<CameraOscillation> oscillation = SystemAPI.GetComponentRW<CameraOscillation>(cameraEntity);
+				if (oscillation.ValueRO.type != CameraOscillationType.None) {
+					float alpha = oscillation.ValueRO.elapsed / oscillation.ValueRO.seconds;
+					switch (oscillation.ValueRO.type) {
+						case CameraOscillationType.Once: {
+							localTransform.ValueRW.Position += oscillation.ValueRO.level * math.exp(- alpha * 10f) * oscillation.ValueRO.direction;
+							break;
+						}
+
+						case CameraOscillationType.Sine: {
+							localTransform.ValueRW.Position += oscillation.ValueRO.level * math.sin(alpha * math.PI2 * oscillation.ValueRO.speed) * oscillation.ValueRO.direction;
+							break;
+						}
+					}
+
+					oscillation.ValueRW.elapsed += SystemAPI.Time.DeltaTime;
+					if (oscillation.ValueRO.elapsed > oscillation.ValueRO.seconds) {
+						oscillation.ValueRW.type = CameraOscillationType.None;
+						oscillation.ValueRW.direction = float3.zero;
+						oscillation.ValueRW.speed = 0f;
+						oscillation.ValueRW.seconds = 1f;
+						oscillation.ValueRW.level = 0f;
 					}
 				}
 			}

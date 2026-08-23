@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace hexegeer.internallib {
 	public static class ECS {
+		public static bool valid => World.DefaultGameObjectInjectionWorld != null;
 		public static EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
 	
 		[Conditional("UNITY_EDITOR")]

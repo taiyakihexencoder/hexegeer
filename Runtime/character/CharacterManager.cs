@@ -39,20 +39,25 @@ namespace hexegeer {
 			bool continueWait = true;
 			while(target == Entity.Null && continueWait) {
 				SyncContext.Post(() => {
-					EntityManager entityManager = ECS.EntityManager;
-					NativeArray<Entity> entities = _characterQuery.ToEntityArray(Allocator.Temp);
-					foreach(Entity entity in entities) {
-						CharacterHeader header = entityManager.GetComponentData<CharacterHeader>(entity);
-						if (header.id == characterId.Id) {
-							target = entity;
-							break;
-						}
-					}
-					entities.Dispose();
-
-					// もしリクエストがなければ待っても仕方ないので中断する
-					if (continueWait && _requestQuery.IsEmpty) {
+					if (! ECS.valid) {
+						// エディタ用。起動時にエラーが起きるとループを抜け出せなくなるため。
 						continueWait = false;
+					} else {
+						EntityManager entityManager = ECS.EntityManager;
+						NativeArray<Entity> entities = _characterQuery.ToEntityArray(Allocator.Temp);
+						foreach(Entity entity in entities) {
+							CharacterHeader header = entityManager.GetComponentData<CharacterHeader>(entity);
+							if (header.id == characterId.Id) {
+								target = entity;
+								break;
+							}
+						}
+						entities.Dispose();
+
+						// もしリクエストがなければ待っても仕方ないので中断する
+						if (continueWait && _requestQuery.IsEmpty) {
+							continueWait = false;
+						}
 					}
 				});
 				await Task.Delay(50);

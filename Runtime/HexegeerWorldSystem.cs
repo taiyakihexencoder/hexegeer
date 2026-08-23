@@ -120,6 +120,7 @@ namespace hexegeer {
 				new Parent(),
 				new AttachHexegeerTree()
 			);
+			entityManager.AddComponent<CameraOscillation>(_cameraEntity);
 
 			entityManager.SetComponentEnabled<CameraBounds>(_cameraEntity, false);
 			entityManager.SetComponentEnabled<FixedCamera>(_cameraEntity, false);
