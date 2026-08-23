@@ -11,6 +11,7 @@ namespace hexegeer.editor {
 			EditorWindow.CreateWindow<HexegeerEditorCharacterWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorContentKeyWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorDamageObjectWindow>(windowType);
+			EditorWindow.CreateWindow<HexegeerEditorEventPointWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorFieldWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorLayerWindow>(windowType);
 			EditorWindow.CreateWindow<HexegeerEditorLayoutWindow>(windowType);
