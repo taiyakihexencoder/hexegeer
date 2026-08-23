@@ -61,6 +61,7 @@ namespace hexegeer.internallib {
 			float elapsed = 0.0f;
 
 			while (elapsed < FADE_SECONDS) {
+
 				if (token.IsCancellationRequested) {
 					return;
 				}
@@ -96,12 +97,31 @@ namespace hexegeer.internallib {
 			}
 		}
 
-		public async Task Load() {
-			LoadRequested = true;
-			_musicTable = await AssetUtil.RequestLoad<MusicTable>(MusicTable.RESOURCE_ADDRESS);
+		public void RequestPlay(int id) {
+			Task.Run(async () => {
+				if (_musicTable == null) {
+					if (!LoadRequested) {
+						LoadRequested = true;
+						_musicTable = await AssetUtil.RequestLoad<MusicTable>(MusicTable.RESOURCE_ADDRESS);
+					}
+
+					_cancelTaskSource = new CancellationTokenSource();
+					CancellationToken token = _cancelTaskSource.Token;
+					while (_musicTable == null) {
+						if (token.IsCancellationRequested) {
+							return;
+						}
+						await Task.Yield();
+					}
+				}
+
+				SyncContext.Post(() => {
+					Play(id);
+				});
+			});
 		}
 
-		public void RequestPlay(int id) {
+		private void Play(int id) {
 			AudioClip clip = null;
 			for (int i = 0; i < _musics.Count; ++i) {
 				if (_musics[i].id == id) {
@@ -133,7 +153,10 @@ namespace hexegeer.internallib {
 						clip = clip,
 					}
 				);
-				StartMusic(clip);
+
+				SyncContext.Post(() => {
+					StartMusic(clip);
+				});
 
 				while (_musics.Count > CLIP_CACHE_SIZE) {
 					AssetUtil.Release(_musics[0].address);
@@ -159,6 +182,7 @@ namespace hexegeer.internallib {
 			}
 
 			_cancelTaskSource = new CancellationTokenSource();
+
 			Task.Run(
 				async () => { await UpdateProcess(_cancelTaskSource.Token); }, 
 				_cancelTaskSource.Token

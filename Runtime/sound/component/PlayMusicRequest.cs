@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-namespace hexegeer.internallib {
+namespace hexegeer {
 	public struct PlayMusicRequest : IComponentData {
 		public int id;
 	}

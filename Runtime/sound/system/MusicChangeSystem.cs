@@ -21,13 +21,6 @@ namespace hexegeer.internallib {
 			RequireForUpdate(_query);
 		}
 
-		protected override void OnStartRunning() {
-			base.OnStartRunning();
-			if (!_player.LoadRequested) {
-				Task.Run(_player.Load);
-			}
-		}
-
 		protected override void OnDestroy() {
 			base.OnDestroy();
 		}
@@ -50,9 +43,7 @@ namespace hexegeer.internallib {
 
 		[BurstDiscard]
 		private void Request(int id) {
-			if (_player.Ready) {
-				_player.RequestPlay(id);
-			}
+			_player.RequestPlay(id);
 		}
 	}
 }
