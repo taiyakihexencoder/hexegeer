@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Xml.Linq;
 using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
@@ -22,6 +23,9 @@ namespace hexegeer.editor {
 
 		private List<BaseFieldBlueprint> _blueprints = new List<BaseFieldBlueprint>();
 		private List<IViewContents> _viewContents = new List<IViewContents>();
+		
+		private List<IViewContents> _characterContents;
+		private List<IViewContents> _eventContents;
 
 		private Color _characterColor = new Color(0.0f, 1.0f, 1.0f, 0.5f);
 		private Color _noColliderColor = new Color(1.0f, 0.0f, 0.25f, 0.5f);
@@ -72,10 +76,8 @@ namespace hexegeer.editor {
 
 		private void OnLostFocus() {
 			_detailView.Clear();
-			foreach(IViewContents content in _viewContents) {
-				content.OnDestroy();
-			}
-			_viewContents.Clear();
+			Clear3DContents();
+
 			previewPaused = true;
 		}
 
@@ -92,6 +94,9 @@ namespace hexegeer.editor {
 		}
 
 		private VisualElement CreateView() {
+			_characterContents = new List<IViewContents>();
+			_eventContents = new List<IViewContents>();
+
 			VisualElement layeredView = new VisualElement();
 
 			VisualElement overlay = new VisualElement();
@@ -199,10 +204,8 @@ namespace hexegeer.editor {
 
 		private void OnSelectContentKey(int contentKey) {
 			_detailView.Clear();
-			foreach(IViewContents content in _viewContents) {
-				content.OnDestroy();
-			}
-			_viewContents.Clear();
+
+			Clear3DContents();
 
 			InitMaterial(ref _characterMaterial, _characterColor);
 			InitMaterial(ref _noColliderCharacterMaterial, _noColliderColor);
@@ -212,6 +215,23 @@ namespace hexegeer.editor {
 			if (contentKey != ContentKey.Global.value) {
 				LoadContentKey(_selectedContentKey);
 			}
+		}
+
+		private void Clear3DContents() {
+			foreach (IViewContents content in _viewContents) {
+				content.OnDestroy();
+			}
+			_viewContents.Clear();
+
+			foreach (IViewContents content in _characterContents) {
+				content.OnDestroy();
+			}
+			_characterContents.Clear();
+
+			foreach (IViewContents content in _eventContents) {
+				content.OnDestroy();
+			}
+			_eventContents.Clear();
 		}
 
 		private void InitMaterial(ref Material material, Color color) {
@@ -267,6 +287,9 @@ namespace hexegeer.editor {
 
 
 			if (layoutIndex >= 0) { 
+				LocateCharacters3DView(layoutIndex);
+				LocateEvent3DView(layoutIndex);
+
 				LayoutSetting.LayoutProfile layout = layoutSetting.LayoutProfiles[layoutIndex];
 				CreateLayoutDetailView(layoutIndex);
 			}
@@ -275,14 +298,46 @@ namespace hexegeer.editor {
 		private void CreateLayoutDetailView(int layoutIndex) {
 			_detailView.Clear();
 
-			// 再描画を考慮して作成コンテンツをすべて破棄
-			for(int i = _viewContents.Count-1; i >= 0; --i) {
-				if (_viewContents[i] is CapsuleViewContents) {
-					_viewContents[i].OnDestroy();
-					_viewContents.RemoveAt(i);
-				}
+			internallib.Column characterView = new internallib.Column();
+			CharacterDetailView(characterView, layoutIndex);
+
+			internallib.Column eventPointView = new internallib.Column();
+			EventPointDetailView(eventPointView, layoutIndex);
+
+			_detailView.AddChildren(
+				characterView,
+				new Spacer(height:16f),
+				eventPointView
+			);
+		}
+
+		private void LocateCharacters3DView(int layoutIndex) {
+			foreach (IViewContents content in _characterContents) {
+				content.OnDestroy();
+			}
+			_characterContents.Clear();
+
+			LayoutSetting layoutSetting = LayoutSetting.instance;
+			LayoutSetting.LayoutProfile layout = layoutSetting.LayoutProfiles[layoutIndex];
+			foreach (LayoutSetting.CharacterLayout character in layout.characters) {
+				_characterContents.Add(AddCharacterContent(character.character, character.position, character.rotation));
+			}
+		}
+
+		private void LocateEvent3DView(int layoutIndex) {
+			foreach (IViewContents content in _eventContents) {
+				content.OnDestroy();
 			}
 
+			LayoutSetting layoutSetting = LayoutSetting.instance;
+			LayoutSetting.LayoutProfile layout = layoutSetting.LayoutProfiles[layoutIndex];
+			foreach (LayoutSetting.EventLayout evt in layout.events) {
+				_eventContents.Add(AddEventContent(evt));
+			}
+		}
+
+		private void CharacterDetailView(internallib.Column view, int layoutIndex) {
+			view.Clear();
 			LayoutSetting layoutSetting = LayoutSetting.instance;
 			LayoutSetting.LayoutProfile layout = layoutSetting.LayoutProfiles[layoutIndex];
 
@@ -291,13 +346,12 @@ namespace hexegeer.editor {
 			List<CharacterSettings.CharacterData> characters = characterSettings.Characters;
 			ListPopupBuilder<int> characterPopupBuilder = characterSettings.CreateListPopupBuilder();
 
-			_detailView.Add(Text.H3("Characters"));
+			view.Add(Text.H3("Characters"));
 			for (int i = 0; i < layout.characters.Count; ++i) {
-				_detailView.Add(new Spacer(height: 6f));
+				view.Add(new Spacer(height: 6f));
 				int characterIndex = i;
 				LayoutSetting.CharacterLayout character = layout.characters[i];
 				CharacterSettings.CharacterData data = characters.Find(_ => _.id == character.character);
-				IViewContents sceneContents = AddCharacterContent(character.character, character.position, character.rotation);
 
 				Row headerRow = new Row()
 					.HorzontalArrangement(Justify.SpaceBetween)
@@ -307,7 +361,9 @@ namespace hexegeer.editor {
 					.Label("-");
 				deleteButton.OnClicked += () => {
 					layoutSetting.RemoveCharacter(layoutIndex, characterIndex);
-					CreateLayoutDetailView(layoutIndex);
+					CharacterDetailView(view, layoutIndex);
+					_characterContents[characterIndex].OnDestroy();
+					_characterContents.RemoveAt(characterIndex);
 				};
 				Text nameText = Text.Body(data?.name ?? "!Undefined");
 				headerRow.AddChildren(nameText, deleteButton);
@@ -320,8 +376,9 @@ namespace hexegeer.editor {
 				PopupField<int> characterPopup = characterPopupBuilder.Generate(character.character);
 				characterPopup.RegisterValueChangedCallback(v => {
 					layoutSetting.UpdateCharacter(layoutIndex, characterIndex, v.newValue);
-					// GameObjectを作り直しなのでビューごと更新
-					CreateLayoutDetailView(layoutIndex);
+					CharacterDetailView(view, layoutIndex);
+					_characterContents[characterIndex].OnDestroy();
+					_characterContents[characterIndex] = AddCharacterContent(v.newValue, character.position, character.rotation);
 				});
 
 				Text positionText = Text.Body("Position");
@@ -330,9 +387,7 @@ namespace hexegeer.editor {
 				positionField.SetValueWithoutNotify(character.position);
 				positionField.RegisterValueChangedCallback(v => {
 					layoutSetting.UpdateCharacterPosition(layoutIndex, characterIndex, v.newValue);
-					if (sceneContents != null) {
-						sceneContents.GameObject.transform.position = v.newValue;
-					}
+					_characterContents[characterIndex].GameObject.transform.position = v.newValue;
 				});
 
 				Text rotationText = Text.Body("Rotation");
@@ -342,9 +397,7 @@ namespace hexegeer.editor {
 				rotationField.RegisterValueChangedCallback(v => {
 					Quaternion rotation = Quaternion.Euler(v.newValue);
 					layoutSetting.UpdateCharacterRotation(layoutIndex, characterIndex, rotation);
-					if (sceneContents != null) {
-						sceneContents.GameObject.transform.rotation = rotation;
-					}
+					_characterContents[characterIndex].GameObject.transform.rotation = rotation;
 				});
 				headerFoldout.AddChildren(
 					new Spacer(height: 12f),
@@ -354,18 +407,186 @@ namespace hexegeer.editor {
 					rotationText, 
 					rotationField
 				);
-				_detailView.Add(headerFoldout);
+				view.Add(headerFoldout);
 			}
 			ClickButton addCharacterButton = ClickButton.Create(Align.FlexEnd)
 				.Label("+")
 				.Circle(30f)
 				.Margin(12f);
 			addCharacterButton.OnClicked += () => {
-				layoutSetting.AddCharacter(layoutIndex);
-				CreateLayoutDetailView(layoutIndex);
+				var newCharacter = layoutSetting.AddCharacter(layoutIndex);
+				CharacterDetailView(view, layoutIndex);
+				_characterContents.Add(AddCharacterContent(newCharacter.character, newCharacter.position, newCharacter.rotation));
 			};
-			_detailView.Add(addCharacterButton);
+			view.Add(addCharacterButton);
+		}
 
+		private void EventPointDetailView(internallib.Column view, int layoutIndex) {
+			view.Clear();
+			view.Add(Text.H3("Event Point"));
+			LayoutSetting layoutSetting = LayoutSetting.instance;
+			LayoutSetting.LayoutProfile layout = layoutSetting.LayoutProfiles[layoutIndex];
+
+			EventPointSettings eventSetting = EventPointSettings.instance;
+			ListPopupBuilder<int> eventPopupBuilder = eventSetting.CreateListPopupBuilder();
+
+			for (int i = 0; i < layout.events.Count; ++i) {
+				int index = i;
+				LayoutSetting.EventLayout evt = layout.events[i];
+
+				EventPointSettings.EventInfo data = eventSetting.Rows.Find(_ => _.eventId == evt.eventId);
+
+				Row headerRow = new Row()
+					.HorzontalArrangement(Justify.SpaceBetween)
+					.Weight(1f);
+				ClickButton deleteButton = ClickButton.Create(Align.FlexEnd)
+					.Circle(16f)
+					.Label("-");
+				deleteButton.OnClicked += () => {
+					layoutSetting.RemoveEvent(layoutIndex, index);
+					EventPointDetailView(view, layoutIndex);
+					_eventContents[index].OnDestroy();
+					_eventContents.RemoveAt(index);
+				};
+				Text nameText = Text.Body(data?.name ?? "!Undefined");
+				headerRow.AddChildren(nameText, deleteButton);
+
+				internallib.Foldout headerFoldout = new internallib.Foldout(headerRow)
+					.Background(new Color(0.2f, 0.2f, 0.2f))
+					.Border(Color.white, 1f, 8f)
+					.Padding(horizontal: 12f, vertical: 6f);
+
+
+				PopupField<int> popup = eventPopupBuilder.Generate(evt.eventId);
+				popup.RegisterValueChangedCallback(v => {
+					LayoutSetting.EventLayout eventLayout = evt;
+					eventLayout.eventId = v.newValue;
+					layoutSetting.UpdateEvent(layoutIndex, index, eventLayout);
+					_eventContents[index].OnDestroy();
+					_eventContents[index] = AddEventContent(eventLayout);
+				});
+
+				VisualElement extentField = new VisualElement();
+				extentField.style.paddingLeft = 20f;
+				UpdateExtentEditView(extentField, evt.shape, evt.extent, v => {
+					LayoutSetting.EventLayout eventLayout = evt;
+					eventLayout.extent = v;
+					layoutSetting.UpdateEvent(layoutIndex, index, eventLayout);
+					_eventContents[index].OnDestroy();
+					_eventContents[index] = AddEventContent(eventLayout);
+				});
+
+				Row shapeRow = new Row();
+				EnumField shapeField = new EnumField(evt.shape);
+				shapeField.RegisterValueChangedCallback(v => {
+					LayoutSetting.EventLayout eventLayout = evt;
+					eventLayout.shape = (HitAreaShape)v.newValue;
+					layoutSetting.UpdateEvent(layoutIndex, index, eventLayout);
+					_eventContents[index].OnDestroy();
+					_eventContents[index] = AddEventContent(eventLayout);
+
+					UpdateExtentEditView(extentField, evt.shape, evt.extent, v => {
+						LayoutSetting.EventLayout eventLayout = evt;
+						eventLayout.extent = v;
+						layoutSetting.UpdateEvent(layoutIndex, index, eventLayout);
+						_eventContents[index].OnDestroy();
+						_eventContents[index] = AddEventContent(eventLayout);
+					});
+				});
+				
+				shapeField.style.flexBasis = 0f;
+				shapeField.style.flexGrow = 1f;
+				shapeRow.AddChildren(
+					Text.Body("Shape"),
+					shapeField
+				);
+
+				Text positionText = Text.Body("Position");
+				Vector3Field positionField = new Vector3Field();
+				positionField.style.paddingLeft = 20f;
+				positionField.SetValueWithoutNotify(evt.position);
+				positionField.RegisterValueChangedCallback(v => {
+					layoutSetting.UpdateEventPosition(layoutIndex, index, v.newValue);
+					_eventContents[index].GameObject.transform.position = v.newValue;
+				});
+
+				Text rotationText = Text.Body("Rotation");
+				Vector3Field rotationField = new Vector3Field();
+				rotationField.style.paddingLeft = 20f;
+				rotationField.SetValueWithoutNotify(evt.rotation.eulerAngles);
+				rotationField.RegisterValueChangedCallback(v => {
+					Quaternion rotation = Quaternion.Euler(v.newValue);
+					layoutSetting.UpdateEventRotation(layoutIndex, index, rotation);
+					_eventContents[index].GameObject.transform.rotation = rotation;
+				});
+
+				headerFoldout.AddChildren(
+					new Spacer(height: 12f),
+					popup, 
+					shapeRow,
+					extentField,
+					positionText, 
+					positionField, 
+					rotationText, 
+					rotationField
+				);
+				view.Add(headerFoldout);
+			}
+
+			ClickButton addCharacterButton = ClickButton.Create(Align.FlexEnd)
+				.Label("+")
+				.Circle(30f)
+				.Margin(12f);
+			addCharacterButton.OnClicked += () => {
+				LayoutSetting.EventLayout newLayout = layoutSetting.AddEvent(layoutIndex);
+				EventPointDetailView(view, layoutIndex);
+				_eventContents.Add(AddEventContent(newLayout));
+			};
+			view.Add(addCharacterButton);
+		}
+
+		private void UpdateExtentEditView(VisualElement element, HitAreaShape shape, Vector3 extent, System.Action<Vector3> onChanged) {
+			element.Clear();
+			element.style.flexDirection = FlexDirection.Row;
+			switch(shape) {
+				case HitAreaShape.Box: {
+					Vector3Field extentField = new Vector3Field();
+					extentField.SetValueWithoutNotify(extent);
+					extentField.RegisterValueChangedCallback(v => onChanged(v.newValue));
+					extentField.style.flexBasis = 0f;
+					extentField.style.flexGrow = 1f;
+					element.Add(extentField);
+					break;
+				}
+				case HitAreaShape.Cylinder: {
+					element.Add(Text.Body("R"));
+					FloatField radiusField = new FloatField();
+					radiusField.SetValueWithoutNotify(extent.x);
+					radiusField.RegisterValueChangedCallback(v => onChanged(new Vector3(v.newValue, extent.y, v.newValue)));
+					radiusField.style.flexBasis = 0f;
+					radiusField.style.flexGrow = 1f;
+					element.Add(radiusField);
+
+					element.Add(Text.Body("H"));
+					FloatField heightField = new FloatField();
+					heightField.SetValueWithoutNotify(extent.y);
+					heightField.RegisterValueChangedCallback(v => onChanged(new Vector3(extent.x, v.newValue, extent.z)));
+					heightField.style.flexBasis = 0f;
+					heightField.style.flexGrow = 1f;
+					element.Add(heightField);
+					break;
+				}
+				case HitAreaShape.Sphere: {
+					element.Add(Text.Body("R"));
+					FloatField radiusField = new FloatField();
+					radiusField.SetValueWithoutNotify(extent.x);
+					radiusField.RegisterValueChangedCallback(v => onChanged(new Vector3(v.newValue, extent.y, v.newValue)));
+					radiusField.style.flexBasis = 0f;
+					radiusField.style.flexGrow = 1f;
+					element.Add(radiusField);
+					break;
+				}
+			}
 		}
 
 		private IViewContents AddCharacterContent(int characterId, Vector3 position, Quaternion rotation) {
@@ -386,7 +607,6 @@ namespace hexegeer.editor {
 					_characterMaterial
 				);
 				sceneContents.AddTo(scene);
-				_viewContents.Add(sceneContents);
 			} else {
 				sceneContents = CapsuleContents(
 					data?.name ?? "!Undefined",
@@ -397,11 +617,80 @@ namespace hexegeer.editor {
 					_noColliderCharacterMaterial
 				);
 				sceneContents.AddTo(scene);
-				_viewContents.Add(sceneContents);
 			}
 			return sceneContents;
 		}
 
+		private IViewContents AddEventContent(LayoutSetting.EventLayout evt) {
+			EventPointSettings evts = EventPointSettings.instance;
+			EventPointSettings.EventInfo entity = evts.Rows.Find(_ => _.eventId == evt.eventId);
+			float height = evt.extent.x;
+
+			Mesh mesh = null;
+			switch(evt.shape) {
+				case HitAreaShape.Box: {
+					mesh = CreateBox(evt.extent);
+					break;
+				}
+				case HitAreaShape.Cylinder: {
+					mesh = CreateCylinder(evt.extent.x, evt.extent.y);
+					break;
+				}
+				case HitAreaShape.Sphere: {
+					mesh = CreateSphere(evt.extent.x);
+					break;
+				}
+				default: {
+					mesh = CreateSphere(evt.extent.x);
+					break;
+				}
+			}
+
+			IViewContents sceneContents = new MeshViewContents(
+				mesh,
+				_noColliderCharacterMaterial,
+				evt.position,
+				evt.rotation,
+				new Vector3(0f, height + Mathf.Min(height * 0.2f, 0.25f), 0f),
+				entity?.name ?? "!Undefined"
+			);
+			sceneContents.AddTo(scene);
+			return sceneContents;
+		}
+
+		private Mesh CreateSphere(float radius) {
+			Mesh mesh = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
+			Mesh meshInstance = Instantiate(mesh);
+			Vector3[] vertices = meshInstance.vertices;
+			for (int i = 0; i < vertices.Length; ++i) {
+				vertices[i] *= radius;
+			}
+			meshInstance.SetVertices(vertices);
+			return meshInstance;
+		}
+
+		private Mesh CreateBox(Vector3 extent) {
+			Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+			Mesh meshInstance = Instantiate(mesh);
+			Vector3[] vertices = meshInstance.vertices;
+			for (int i = 0; i < vertices.Length; ++i) {
+				vertices[i] = new Vector3(vertices[i].x * extent.x, vertices[i].y * extent.y, vertices[i].z * extent.z);
+			}
+			meshInstance.SetVertices(vertices);
+			return meshInstance;
+		}
+
+		private Mesh CreateCylinder(float radius, float height) {
+			Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
+			Mesh meshInstance = Instantiate(mesh);
+			Vector3[] vertices = meshInstance.vertices;
+			for (int i = 0; i < vertices.Length; ++i) {
+				// 注）Cylinderのデフォルトサイズはheightが2um
+				vertices[i] = new Vector3(vertices[i].x * radius, vertices[i].y * height * 0.5f, vertices[i].z * radius);
+			}
+			meshInstance.SetVertices(vertices);
+			return meshInstance;
+		}
 
 		private IViewContents CapsuleContents(
 			string name,
@@ -411,7 +700,7 @@ namespace hexegeer.editor {
 			float height,
 			Material material
 		) {
-			return new CapsuleViewContents(
+			return new MeshViewContents(
 				CreateCapsule(radius, height, CAPSULE_RESOLUTION), 
 				material, 
 				position, 
@@ -502,12 +791,12 @@ namespace hexegeer.editor {
 			void OnDestroy();
 		}
 
-		private class CapsuleViewContents : IViewContents {
+		private class MeshViewContents : IViewContents {
 			GameObject IViewContents.GameObject => obj;
 			private GameObject obj;
 			private Mesh mesh;
 
-			public CapsuleViewContents(
+			public MeshViewContents(
 				Mesh mesh, 
 				Material material, 
 				Vector3 position, 

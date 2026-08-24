@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace hexegeer.editor {
 		public class LayoutProfile {
 			public int contentKey;
 			public List<CharacterLayout> characters;
+			public List<EventLayout> events;
 		}
 
 		[System.Serializable]
@@ -16,6 +18,15 @@ namespace hexegeer.editor {
 			public int character;
 			public Vector3 position;
 			public Quaternion rotation;
+		}
+
+		[System.Serializable]
+		public class EventLayout {
+			public int eventId;
+			public Vector3 position;
+			public Quaternion rotation;
+			public HitAreaShape shape;
+			public Vector3 extent;
 		}
 
 		[SerializeField]
@@ -55,19 +66,63 @@ namespace hexegeer.editor {
 			Save(true);
 		}
 
-		public void AddCharacter(int layout) {
-			_layoutProfiles[layout].characters.Add(
-				new CharacterLayout {
-					character = 0,
-					position = Vector3.zero,
-					rotation = Quaternion.identity,
-				}
-			);
+		public CharacterLayout AddCharacter(int layout) {
+			CharacterLayout character = new CharacterLayout {
+				character = 0,
+				position = Vector3.zero,
+				rotation = Quaternion.identity,
+			};
+			_layoutProfiles[layout].characters.Add(character);
 			Save(true);
+			return character;
 		}
 
 		public void RemoveCharacter(int layout, int index) {
 			_layoutProfiles[layout].characters.RemoveAt(index);
+		}
+
+		public void UpdateEvent(
+			int layout,
+			int index,
+			EventLayout evt
+		) {
+			_layoutProfiles[layout].events[index] = evt;
+			Save(true);
+		}
+
+		public void UpdateEventPosition(
+			int layout,
+			int index, 
+			Vector3 position
+		) {
+			_layoutProfiles[layout].events[index].position = position;
+			Save(true);
+		}
+
+		public void UpdateEventRotation(
+			int layout,
+			int index, 
+			Quaternion rotation
+		) {
+			_layoutProfiles[layout].events[index].rotation = rotation;
+			Save(true);
+		}
+
+		public EventLayout AddEvent(int layout) {
+			EventLayout eventLayout = new EventLayout {
+				eventId = 0,
+				position = Vector3.zero,
+				rotation = Quaternion.identity,
+				shape = HitAreaShape.Sphere,
+				extent = new Vector3(1f,1f,1f),
+			};
+			_layoutProfiles[layout].events.Add(eventLayout);
+			Save(true);
+			return eventLayout;
+		}
+
+		public void RemoveEvent(int layout, int index) {
+			_layoutProfiles[layout].events.RemoveAt(index);
 		}
 
 		public void UpdateLayouts(List<int> keys) {

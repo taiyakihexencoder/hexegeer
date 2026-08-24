@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
 
@@ -63,6 +64,28 @@ namespace hexegeer.editor {
 				}
 			);
 			Save(true);
+		}
+
+		public ListPopupBuilder<int> CreateListPopupBuilder() {
+			ListPopupBuilder<int> builder = new ListPopupBuilder<int>();
+
+			builder.SetConverter(key => {
+				foreach(EventInfo row in Rows) {
+					if (row.eventId == key) { return row.name; }
+				}
+				return " - ";
+			});
+
+			builder = UpdateKeys(builder);
+			return builder;
+		}
+
+		public ListPopupBuilder<int> UpdateKeys(ListPopupBuilder<int> builder) {
+			List<int> keys = new List<int>();
+			foreach(EventInfo row in Rows) {
+				keys.Add(row.eventId);
+			}
+			return builder.SetKeys(keys);
 		}
 	}
 }
