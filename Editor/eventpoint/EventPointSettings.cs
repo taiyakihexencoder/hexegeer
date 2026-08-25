@@ -14,12 +14,21 @@ namespace hexegeer.editor {
 		}
 
 		[SerializeField]
+		private int _layer = -1;
+		public int Layer => _layer;
+
+		[SerializeField]
 		private List<EventInfo> _rows;
 		public List<EventInfo> Rows {
 			get {
 				if (_rows == null) { _rows = new List<EventInfo>(); }
 				return _rows;
 			}
+		}
+
+		public void UpdateLayer(int layer) {
+			_layer = layer;
+			Save(true);
 		}
 
 		public void UpdateParameter(int index, in EventInfo info) {

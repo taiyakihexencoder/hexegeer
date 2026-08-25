@@ -18,6 +18,10 @@ namespace hexegeer.internallib {
 			[SerializeField]
 			private List<CharacterLayout> _characters;
 			public List<CharacterLayout> Characters => _characters;
+
+			[SerializeField]
+			private List<EventLayout> _events;
+			public List<EventLayout> Events => _events;
 		}
 
 		[System.Serializable]
@@ -33,6 +37,29 @@ namespace hexegeer.internallib {
 			[SerializeField]
 			private Quaternion _rotation;
 			public Quaternion Rotation => _rotation;
+		}
+
+		[System.Serializable]
+		public class EventLayout {
+			[SerializeField]
+			private int _eventId;
+			public int EventId => _eventId;
+
+			[SerializeField]
+			private Vector3 _position;
+			public Vector3 Position => _position;
+
+			[SerializeField]
+			private Quaternion _rotation;
+			public Quaternion Rotation => _rotation;
+
+			[SerializeField]
+			private HitAreaShape _shape;
+			public HitAreaShape Shape => _shape;
+
+			[SerializeField]
+			private Vector3 _extent;
+			public Vector3 Extent => _extent;
 		}
 
 		[SerializeField]

@@ -22,12 +22,16 @@ namespace hexegeer.internallib {
 		private ConcurrentDictionary<int, BlobAssetReference<Collider>> _damageObjectColliders;
 		private Dictionary<int, Entity> _damageObjects;
 
+		private Entity _eventPointRootEntity;
+
 		private EntityArchetype _characterEntryArchetype;
 		private EntityArchetype _characterArchetype;
 		private EntityArchetype _characterHitAreaArchetype;
 
 		private EntityArchetype _damageObjectEntryArchetype;
 		private EntityArchetype _damageObjectArchetype;
+
+		private EntityArchetype _eventPointArchetype;
 
 		override protected void OnCreate() {
 			_initialized = false;
@@ -91,6 +95,18 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<DamageObjectControl>()
 			);
 
+			_eventPointArchetype = EntityManager.CreateArchetype(
+				ComponentType.ReadWrite<LocalTransform>(),
+				ComponentType.ReadWrite<LocalToWorld>(),
+				ComponentType.ReadWrite<Parent>(),
+				ComponentType.ReadOnly<GeometryCleanup>(),
+				ComponentType.ReadWrite<PhysicsCollider>(),
+				ComponentType.ReadWrite<ColliderTriggerEvent>(),
+				ComponentType.ReadWrite<ColliderTriggerStayEvent>(),
+				ComponentType.ReadOnly<PhysicsWorldIndex>(),
+				ComponentType.ReadWrite<EventPoint>()
+			);
+
 			_query = new EntityQueryBuilder(Allocator.Temp)
 				.WithAll<ContentKeyLoadRequest>()
 				.Build(EntityManager);
@@ -124,6 +140,14 @@ namespace hexegeer.internallib {
 
 				_damageObjectColliders = new ConcurrentDictionary<int, BlobAssetReference<Collider>>();
 				_damageObjects = new Dictionary<int, Entity>();
+
+				_eventPointRootEntity = EntityManager.Create(
+					new LocalToWorld { Value = float4x4.identity, },
+					LocalTransform.FromPosition(float3.zero),
+					new Parent(),
+					new AttachHexegeerTree()
+				);
+				ECS.SetEntityName(EntityManager, _eventPointRootEntity, "EventPoint@Hexegeer");
 
 				_initialized = true;
 			}
@@ -225,6 +249,12 @@ namespace hexegeer.internallib {
 						for (int j = 0; j < layoutTable.asset.Value.rows[i].characterLayout.Length; ++j) {
 							LayoutCharacterInfo characterInfo = layoutTable.asset.Value.rows[i].characterLayout[j];
 							SpawnCharacter(characterInfo.id, characterInfo.position, characterInfo.rotation);
+						}
+
+						// Locate Events
+						for (int j = 0; j < layoutTable.asset.Value.rows[i].eventLayout.Length; ++j) {
+							LayoutEventInfo eventInfo = layoutTable.asset.Value.rows[i].eventLayout[j];
+							LocateEvent(layoutTable.eventCollideInfo.belongsTo, layoutTable.eventCollideInfo.collidesWith, contentKey, eventInfo);
 						}
 					}
 				}
@@ -427,6 +457,39 @@ namespace hexegeer.internallib {
 			}
 		}
 
+		private void LocateEvent(
+			uint belongsTo,
+			uint collidesWith,
+			int contentKey, 
+			in LayoutEventInfo evt
+		) {
+			Entity entity = EntityManager.CreateEntity(_eventPointArchetype);
+			ECS.SetEntityName(EntityManager, entity, $"Event Point");
+
+			BlobAssetReference<Collider> collider = CreateCollider(evt.shape, evt.extent, quaternion.identity, belongsTo, collidesWith);
+			collider.Value.SetCollisionResponse(CollisionResponsePolicy.RaiseTriggerEvents);
+
+			ECS.SetComponents(
+				EntityManager,
+				entity,
+				LocalTransform.FromPositionRotation(evt.position, evt.rotation),
+				new LocalToWorld { Value = float4x4.TRS(evt.position, evt.rotation, new float3(1f,1f,1f)) },
+				new Parent { Value = _eventPointRootEntity, },
+				new PhysicsCollider { Value = collider, },
+				new GeometryCleanup { geometry = collider, }
+			);
+
+			ECS.SetComponents(
+				EntityManager,
+				entity,
+				new EventPoint { 
+					contentKey = contentKey,
+					eventId = evt.eventId, 
+				}
+			);
+			EntityManager.SetSharedComponentManaged(entity, new PhysicsWorldIndex{ Value = 0, });
+		}
+
 		private DamageObjectColliderInfo? FindCollider(in DamageObjectBlobTable table, int id) {
 			for (int i = 0; i < table.damageObject.Value.colliderList.Length; ++i) {
 				if (table.damageObject.Value.colliderList[i].id == id) {
@@ -476,6 +539,59 @@ namespace hexegeer.internallib {
 
 			entityManager.SetSharedComponentManaged(prefab, new PhysicsWorldIndex{ Value = 0, });
 			_damageObjects.Add(info.id, prefab);
+		}
+
+		private BlobAssetReference<Collider> CreateCollider(HitAreaShape shape, float3 extent, quaternion rotation, uint belongsTo, uint collidesWith) {
+			Material physicsMaterial = Material.Default;
+			physicsMaterial.Friction = 0.0f;
+			physicsMaterial.FrictionCombinePolicy = Material.CombinePolicy.Minimum;
+
+			CollisionFilter filter = new CollisionFilter {
+				BelongsTo = belongsTo,
+				CollidesWith = collidesWith,
+			};
+
+			switch (shape) {
+				case HitAreaShape.Sphere: {
+					return SphereCollider.Create(
+						geometry: new SphereGeometry {
+							Radius = extent.x,
+							Center = float3.zero,
+						},
+						filter,
+						physicsMaterial
+					);
+				}
+				case HitAreaShape.Box: {
+					return BoxCollider.Create(
+						geometry: new BoxGeometry {
+							BevelRadius = 0f,
+							Size = extent,
+							Center = float3.zero,
+							Orientation = rotation,
+						},
+						filter: filter,
+						material: physicsMaterial
+					);
+				}
+				case HitAreaShape.Cylinder: {
+					return CylinderCollider.Create(
+						geometry: new CylinderGeometry {
+							BevelRadius = 0f,
+							Radius = extent.x,
+							Height = extent.y,
+							Center = float3.zero,
+							Orientation = rotation,
+							SideCount = 12,
+						},
+						filter: filter,
+						material: physicsMaterial
+					);
+				}
+				default: {
+					return BlobAssetReference<Collider>.Null;
+				}
+			}
 		}
 
 		private BlobAssetReference<Collider> LoadDamageObjectCollider(in DamageObjectInfo info, in DamageObjectColliderInfo collider) {

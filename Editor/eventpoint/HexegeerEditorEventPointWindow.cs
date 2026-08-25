@@ -8,9 +8,12 @@ using UnityEngine.UIElements;
 namespace hexegeer.editor {
 	public sealed class HexegeerEditorEventPointWindow : EditorWindow {
 		private List<bool> _descriptionVisibility;
+		private ListPopupBuilder<int> _layerPopupBuilder;
 
 		private void OnEnable() {
 			titleContent = new GUIContent("Event Point");
+
+			_layerPopupBuilder = LayerSettings.instance.CreateListPopupBuilder();
 
 			ScrollPane pane = new ScrollPane()
 				.Margin(horizontal:24f, vertical:12f);
@@ -21,8 +24,15 @@ namespace hexegeer.editor {
 			CreateView(pane);
 		}
 
+		private void OnFocus() {
+			_layerPopupBuilder = LayerSettings.instance.UpdateKeys(_layerPopupBuilder);
+		}
+
 		private void CreateView(ScrollPane pane) {
 			pane.Clear();
+
+
+			EventPointSettings settings = EventPointSettings.instance;
 
 			Row titleRow = new Row().WidthPercent(90f);
 			ClickButton scriptGenerateButton = ClickButton.Create()
@@ -30,20 +40,29 @@ namespace hexegeer.editor {
 			scriptGenerateButton.OnClicked += () => {
 				EventPointScriptGenerator generator = new EventPointScriptGenerator();
 				if (generator.Validation(out List<string> messages)) {
-					generator.Generate($"eventpoint{Path.DirectorySeparatorChar}EventId.cs");
+					generator.Generate($"eventpoint{Path.DirectorySeparatorChar}EventPointPartials.cs");
 				} else {
 					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, messages), "Ok");
 				}
 			};
 
+			PopupField<int> layerPopup = _layerPopupBuilder.Generate(settings.Layer);
+			layerPopup.style.flexGrow = 1f;
+			layerPopup.RegisterValueChangedCallback( v => {
+				settings.UpdateLayer(v.newValue);
+			});
+
+
 			titleRow.AddChildren(
 				Text.H2("Event Point"), 
-				new Spacer().Weight(1f), 
+				new Spacer().Weight(3f), 
+				Text.Body("Layer"),
+				layerPopup,
+				new Spacer().Weight(3f),
 				scriptGenerateButton
 			);
 			pane.Add(titleRow);
 
-			EventPointSettings settings = EventPointSettings.instance;
 			for (int i = 0; i < settings.Rows.Count; ++i) {
 				while (_descriptionVisibility.Count <= i) {
 					_descriptionVisibility.Add(false);

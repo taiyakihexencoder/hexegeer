@@ -3,6 +3,7 @@ using Unity.Mathematics;
 
 namespace hexegeer.internallib {
 	public struct LayoutBlobTable : IComponentData {
+		public EventCollideInfo eventCollideInfo;
 		public BlobAssetReference<LayoutBlobAsset> asset;
 	}
 
@@ -12,8 +13,11 @@ namespace hexegeer.internallib {
 
 	public struct LayoutProfile {
 		public int contentKey;
+
 		public BlobArray<LayoutLoadCharacterInfo> loadCharacters;
 		public BlobArray<LayoutCharacterInfo> characterLayout;
+
+		public BlobArray<LayoutEventInfo> eventLayout;
 	}
 
 	public struct LayoutLoadCharacterInfo {
@@ -24,5 +28,18 @@ namespace hexegeer.internallib {
 		public int id;
 		public float3 position;
 		public quaternion rotation;
+	}
+
+	public struct EventCollideInfo {
+		public uint belongsTo;
+		public uint collidesWith;
+	}
+
+	public struct LayoutEventInfo {
+		public int eventId;
+		public float3 position;
+		public quaternion rotation;
+		public HitAreaShape shape;
+		public float3 extent;
 	}
 }

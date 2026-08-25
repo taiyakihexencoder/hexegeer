@@ -58,6 +58,19 @@ namespace hexegeer.editor {
 					characterProperty.Of("_rotation").quaternionValue = offsetRotation * character.rotation;
 				}
 
+				// Event Layouts
+				SerializedProperty eventsProperty = layoutProfileProperty.Of("_events");
+				eventsProperty.arraySize = profile.events.Count;
+				for (int j = 0; j < profile.events.Count; ++j) {
+					LayoutSetting.EventLayout evt = profile.events[j];
+					SerializedProperty eventProperty = eventsProperty.Of(j);
+					eventProperty.Of("_eventId").intValue = evt.eventId;
+					eventProperty.Of("_position").vector3Value = offsetPosition + offsetRotation * evt.position;
+					eventProperty.Of("_rotation").quaternionValue = offsetRotation * evt.rotation;
+					eventProperty.Of("_shape").intValue = (int)evt.shape;
+					eventProperty.Of("_extent").vector3Value = evt.extent;
+				}
+
 			}
 			SetAddress(serializedObject, LayoutTable.RESOURCE_ADDRESS);
 		}

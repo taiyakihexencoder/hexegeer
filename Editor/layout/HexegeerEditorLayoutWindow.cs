@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Xml.Linq;
 using hexegeer.internallib;
 using UnityEditor;
 using UnityEngine;
@@ -31,6 +30,9 @@ namespace hexegeer.editor {
 		private Color _noColliderColor = new Color(1.0f, 0.0f, 0.25f, 0.5f);
 		private Material _characterMaterial;
 		private Material _noColliderCharacterMaterial;
+
+		private Color _eventColor = new Color(1.0f, 1.0f, 0.0f, 0.5f);
+		private Material _eventMaterial;
 
 		private int _selectedContentKey = ContentKey.Global.value;
 
@@ -90,6 +92,11 @@ namespace hexegeer.editor {
 			if (_noColliderCharacterMaterial != null) { 
 				DestroyImmediate(_noColliderCharacterMaterial);
 				_noColliderCharacterMaterial = null;
+			}
+
+			if (_eventMaterial != null) {
+				DestroyImmediate(_eventMaterial);
+				_eventMaterial = null;
 			}
 		}
 
@@ -209,6 +216,7 @@ namespace hexegeer.editor {
 
 			InitMaterial(ref _characterMaterial, _characterColor);
 			InitMaterial(ref _noColliderCharacterMaterial, _noColliderColor);
+			InitMaterial(ref _eventMaterial, _eventColor);
 
 			_selectedContentKey = contentKey;
 
@@ -648,7 +656,7 @@ namespace hexegeer.editor {
 
 			IViewContents sceneContents = new MeshViewContents(
 				mesh,
-				_noColliderCharacterMaterial,
+				_eventMaterial,
 				evt.position,
 				evt.rotation,
 				new Vector3(0f, height + Mathf.Min(height * 0.2f, 0.25f), 0f),

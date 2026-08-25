@@ -204,9 +204,24 @@ namespace hexegeer {
 								rotation = profile.Characters[j].Rotation,
 							};
 						}
+
+						BlobBuilderArray<LayoutEventInfo> eventLayout = layoutBuilder.Allocate(ref rows[i].eventLayout, profile.Events.Count);
+						for (int j = 0; j < profile.Events.Count; ++j) {
+							eventLayout[j] = new LayoutEventInfo {
+								eventId = profile.Events[j].EventId,
+								position = profile.Events[j].Position,
+								rotation = profile.Events[j].Rotation,
+								shape = profile.Events[j].Shape,
+								extent = profile.Events[j].Extent,
+							};
+						}
 					}
 
 					LayoutBlobTable component = new LayoutBlobTable {
+						eventCollideInfo = new EventCollideInfo {
+							belongsTo = EventColliderLayer.BelongsTo,
+							collidesWith = EventColliderLayer.CollidesWith,
+						},
 						asset = layoutBuilder.CreateBlobAssetReference<LayoutBlobAsset>(Allocator.Persistent),
 					};
 					
