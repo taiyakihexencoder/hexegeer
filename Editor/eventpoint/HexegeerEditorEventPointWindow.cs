@@ -8,12 +8,9 @@ using UnityEngine.UIElements;
 namespace hexegeer.editor {
 	public sealed class HexegeerEditorEventPointWindow : EditorWindow {
 		private List<bool> _descriptionVisibility;
-		private ListPopupBuilder<int> _layerPopupBuilder;
 
 		private void OnEnable() {
 			titleContent = new GUIContent("Event Point");
-
-			_layerPopupBuilder = LayerSettings.instance.CreateListPopupBuilder();
 
 			ScrollPane pane = new ScrollPane()
 				.Margin(horizontal:24f, vertical:12f);
@@ -22,10 +19,6 @@ namespace hexegeer.editor {
 			_descriptionVisibility = new List<bool>();
 
 			CreateView(pane);
-		}
-
-		private void OnFocus() {
-			_layerPopupBuilder = LayerSettings.instance.UpdateKeys(_layerPopupBuilder);
 		}
 
 		private void CreateView(ScrollPane pane) {
@@ -46,19 +39,9 @@ namespace hexegeer.editor {
 				}
 			};
 
-			PopupField<int> layerPopup = _layerPopupBuilder.Generate(settings.Layer);
-			layerPopup.style.flexGrow = 1f;
-			layerPopup.RegisterValueChangedCallback( v => {
-				settings.UpdateLayer(v.newValue);
-			});
-
-
 			titleRow.AddChildren(
 				Text.H2("Event Point"), 
-				new Spacer().Weight(3f), 
-				Text.Body("Layer"),
-				layerPopup,
-				new Spacer().Weight(3f),
+				new Spacer().Weight(1f),
 				scriptGenerateButton
 			);
 			pane.Add(titleRow);

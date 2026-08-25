@@ -42,22 +42,6 @@ namespace hexegeer.editor {
 						AppendLine($"public static EventId {row.name} = new EventId({row.eventId}, \"{row.name}\");");
 					}
 				}
-
-				AppendLine();
-
-				string belongsTo = "0";
-				string collidesWith = "0";
-				if (0 <= settings.Layer && settings.Layer < LayerSettings.LAYER_COUNT) {
-					belongsTo = $"Layer.{layerSettings.LayerName(settings.Layer)}";
-					collidesWith = $"LayerCollide.{layerSettings.LayerName(settings.Layer)}";
-				}
-
-				using (Class("EventColliderLayer", isPartial: true, isStatic: true)) {
-					using (Function("static partial void SetLayer()")) {
-						AppendLine($"BelongsTo = {belongsTo};");
-						AppendLine($"CollidesWith = {collidesWith};");
-					}
-				}
 			}
 		}
 	}

@@ -16,7 +16,9 @@ namespace hexegeer.internallib {
 		void ISystem.OnUpdate(ref SystemState state) {
 			EntityCommandBuffer commandBuffer = CreateCommandBuffer(ref state);
 
-			commandBuffer.DestroyEntity(_query, EntityQueryCaptureMode.AtPlayback);
+			state.Dependency = new UnloadJob {
+				commandBuffer = commandBuffer,
+			}.Schedule(_query, state.Dependency);
 		}
 	
 		void ISystem.OnDestroy(ref SystemState state) {
@@ -26,6 +28,17 @@ namespace hexegeer.internallib {
 			return SystemAPI
 				.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
 				.CreateCommandBuffer(state.World.Unmanaged);
+		}
+
+		partial struct UnloadJob : IJobEntity {
+			public EntityCommandBuffer commandBuffer;
+
+			void Execute(in Entity entity, RefRO<ContentKeyUnloadRequest> request) {
+				Entity eventPointDeleteEntity = commandBuffer.CreateEntity();
+				commandBuffer.AddComponent(eventPointDeleteEntity, new EventPointDeleteRequest { contentKey = request.ValueRO.contentKey, });
+
+				commandBuffer.DestroyEntity(entity);
+			}
 		}
 	}
 }

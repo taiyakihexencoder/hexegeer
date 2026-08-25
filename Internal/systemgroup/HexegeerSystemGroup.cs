@@ -65,6 +65,9 @@ namespace hexegeer.internallib {
 	public partial class HexegeerDamageObjectSystemGroup : ComponentSystemGroup { }
 
 	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
+	public partial class HexegeerEventPointSystemGroup : ComponentSystemGroup { }
+
+	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
 	public partial class HexegeerContentKeySystemGroup : ComponentSystemGroup { }
 
 

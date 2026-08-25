@@ -51,6 +51,7 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<CharacterHeader>(),
 				ComponentType.ReadWrite<CharacterMoveStatus>(),
 				ComponentType.ReadWrite<CharacterGroundedStatus>(),
+				ComponentType.ReadWrite<EventPointAccessible>(),
 				ComponentType.ReadWrite<PhysicsCollider>(),
 				ComponentType.ReadWrite<PhysicsGravityFactor>(),
 				ComponentType.ReadWrite<PhysicsMass>(),
@@ -102,7 +103,8 @@ namespace hexegeer.internallib {
 				ComponentType.ReadOnly<GeometryCleanup>(),
 				ComponentType.ReadWrite<PhysicsCollider>(),
 				ComponentType.ReadWrite<ColliderTriggerEvent>(),
-				ComponentType.ReadWrite<ColliderTriggerStayEvent>(),
+				ComponentType.ReadWrite<ColliderTriggerEnterEvent>(),
+				ComponentType.ReadWrite<ColliderTriggerExitEvent>(),
 				ComponentType.ReadOnly<PhysicsWorldIndex>(),
 				ComponentType.ReadWrite<EventPoint>()
 			);

@@ -219,8 +219,8 @@ namespace hexegeer {
 
 					LayoutBlobTable component = new LayoutBlobTable {
 						eventCollideInfo = new EventCollideInfo {
-							belongsTo = EventColliderLayer.BelongsTo,
-							collidesWith = EventColliderLayer.CollidesWith,
+							belongsTo = Layer.Terrain,
+							collidesWith = Layer.PhysicsObject,
 						},
 						asset = layoutBuilder.CreateBlobAssetReference<LayoutBlobAsset>(Allocator.Persistent),
 					};
