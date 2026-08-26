@@ -29,6 +29,7 @@ namespace hexegeer.editor {
 				characterProperty.Of("belongsTo").intValue = 1 << data.layer;
 				characterProperty.Of("collidesWith").intValue = collidesWith;
 				characterProperty.Of("hasObservationPoint").boolValue = settings.IsObservationPoint(data);
+				characterProperty.Of("eventAccessible").boolValue = settings.IsEventAccessible(data);
 
 				// hitArea
 				SerializedProperty hitAreasProperty = characterProperty.Of("hitAreas");

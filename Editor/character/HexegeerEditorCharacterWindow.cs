@@ -330,9 +330,9 @@ namespace hexegeer.editor {
 				layerRow.AddChildren(layerLabel, new Spacer(width: 10f), layerPopup);
 				pane.Add(layerRow);
 
+				Row checkBoxRow = new Row();
+
 				// Observation Point
-				Row observationRow = new Row();
-				Text observationLabel = Text.Body("Has Observation Point");
 				Toggle observationToggle = new Toggle();
 				observationToggle.SetValueWithoutNotify(settings.IsObservationPoint(character));
 				observationToggle.RegisterValueChangedCallback(v => {
@@ -342,8 +342,27 @@ namespace hexegeer.editor {
 						settings.RemoveObservationPoint(character.id);
 					}
 				});
-				observationRow.AddChildren(observationLabel, new Spacer().Weight(1f), observationToggle, new Spacer().Weight(2f));
-				pane.Add(observationRow);
+
+				Toggle eventAccessToggle = new Toggle();
+				eventAccessToggle.SetValueWithoutNotify(settings.IsEventAccessible(character));
+				eventAccessToggle.RegisterValueChangedCallback(v => {
+					if (v.newValue) {
+						settings.AddEventAccessible(character.id);
+					} else {
+						settings.RemoveObservationPoint(character.id);
+					}
+				});
+
+				checkBoxRow.AddChildren(
+					observationToggle, 
+					Text.Body("Observation Point"), 
+					new Spacer().Weight(1f), 
+					eventAccessToggle,
+					Text.Body("Event Accessible"),
+					new Spacer().Weight(2f)
+				);
+
+				pane.Add(checkBoxRow);
 
 				pane.Add(new Spacer(height: 12f));
 

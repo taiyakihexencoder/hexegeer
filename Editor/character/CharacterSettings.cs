@@ -40,8 +40,21 @@ namespace hexegeer.editor {
 		public List<CharacterData> Characters => _characters;
 
 		[SerializeField]
-		private int[] _observationPoint;
-		public int[] ObservationPoint => _observationPoint;
+		private List<int> _observationPoint;
+		public List<int> ObservationPoint {
+			get {
+				if (_observationPoint == null) { _observationPoint = new List<int>(); }
+				return _observationPoint;
+			}
+		}
+
+		private List<int> _eventAccessibles;
+		public List<int> EventAccessibles {
+			get {
+				if (_eventAccessibles == null) { _eventAccessibles = new List<int>(); }
+				return _eventAccessibles;
+			}
+		}
 
 		public void SetName(CharacterData characterData, string name) {
 			UpdateItem(characterData, character => character.name = name);
@@ -206,36 +219,36 @@ namespace hexegeer.editor {
 		}
 
 		public bool IsObservationPoint(CharacterData character) {
-			foreach(int id in _observationPoint) {
-				if (character.id == id) { return true; }
-			}
-			return false;
+			return ObservationPoint.Contains(character.id);
 		}
 
 		public void AddObservationPoint(int id) {
-			for (int i = 0; i < _observationPoint.Length; ++i) {
-				if (_observationPoint[i] == id) {
-					return;
-				}
+			if (!ObservationPoint.Contains(id)) {
+				_observationPoint.Add(id);
+				Save(true);
 			}
-
-			int[] newList = new int[_observationPoint.Length+1];
-			System.Array.Copy(_observationPoint, newList, _observationPoint.Length);
-			newList[_observationPoint.Length] = id;
-			_observationPoint = newList;
-			Save(true);
 		}
 
 		public void RemoveObservationPoint(int id) {
-			for (int i = 0; i < _observationPoint.Length; ++i) {
-				if (_observationPoint[i] == id) {
-					int[] newList = new int[_observationPoint.Length-1];
-					System.Array.Copy(_observationPoint, newList, i);
-					System.Array.Copy(_observationPoint, i+1, newList, i, newList.Length-i);
-					_observationPoint = newList;
-					Save(true);
-					return;
-				}
+			if (ObservationPoint.Remove(id)) {
+				Save(true);
+			}
+		}
+
+		public bool IsEventAccessible(CharacterData character) {
+			return EventAccessibles.Contains(character.id);
+		}
+
+		public void AddEventAccessible(int id) {
+			if (!EventAccessibles.Contains(id)) {
+				_eventAccessibles.Add(id);
+				Save(true);
+			}
+		}
+
+		public void RemoveEventAccessible(int id) {
+			if (EventAccessibles.Remove(id)) {
+				Save(true);
 			}
 		}
 	}

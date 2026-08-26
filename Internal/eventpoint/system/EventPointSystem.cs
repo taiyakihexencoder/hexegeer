@@ -1,12 +1,12 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
+using Unity.Transforms;
 
 namespace hexegeer.internallib {
 	[UpdateInGroup(typeof(HexegeerUseColliderGroup))]
 	public partial struct EventPointSystem : ISystem {
 		private EntityQuery _query;
 
-		private NativeList<int> _eventList;
 		private ComponentLookup<EventPointAccessible> _accessibles;
 
 		void ISystem.OnCreate(ref SystemState state) {
@@ -15,26 +15,36 @@ namespace hexegeer.internallib {
 				.Build(ref state);
 			state.RequireForUpdate(_query);
 
-			_eventList = new NativeList<int>(Allocator.Persistent);
 			_accessibles = state.GetComponentLookup<EventPointAccessible>(true);
+
+			Entity eventObserveEntity = state.EntityManager.Create(
+				new Parent{},
+				new AttachHexegeerTree{},
+				LocalTransform.FromPosition(0f,0f,0f),
+				new LocalToWorld{ Value = Unity.Mathematics.float4x4.identity, }
+			);
+			state.EntityManager.SetName(eventObserveEntity, "Event Elements@Hexegeer");
+			state.EntityManager.AddBuffer<EventElement>(eventObserveEntity);
 		}
 
 		void ISystem.OnUpdate(ref SystemState state) {
 			_accessibles.Update(ref state);
 
-			state.Dependency = new TriggerEnterJob {
-				accessibles = _accessibles,
-				eventList = _eventList,
-			}.Schedule(_query, state.Dependency);
+			if (SystemAPI.TryGetSingletonBuffer(out DynamicBuffer<EventElement> eventElements) ) {
+				state.Dependency = new TriggerEnterJob {
+					accessibles = _accessibles,
+					eventElements = eventElements,
+				}.Schedule(_query, state.Dependency);
 
-			state.Dependency = new TriggerExitJob {
-				accessibles = _accessibles,
-				eventList = _eventList,
-			}.Schedule(_query, state.Dependency);
+				state.Dependency = new TriggerExitJob {
+					accessibles = _accessibles,
+					eventElements = eventElements,
+				}.Schedule(_query, state.Dependency);
+			}
+
 		}
 	
 		void ISystem.OnDestroy(ref SystemState state) {
-			_eventList.Dispose();
 		}
 
 		private readonly EntityCommandBuffer CreateCommandBuffer(ref SystemState state) {
@@ -45,12 +55,17 @@ namespace hexegeer.internallib {
 
 		partial struct TriggerEnterJob : IJobEntity {
 			[ReadOnly] public ComponentLookup<EventPointAccessible> accessibles;
-			public NativeList<int> eventList;
+			public DynamicBuffer<EventElement> eventElements;
 
 			void Execute(in Entity entity, RefRO<EventPoint> eventpoint, ref DynamicBuffer<ColliderTriggerEnterEvent> evts) {
 				foreach (ColliderTriggerEnterEvent evt in evts) {
 					if (accessibles.HasComponent(evt.Other)) {
-						eventList.Add(eventpoint.ValueRO.eventId);
+						eventElements.Add(
+							new EventElement {
+								eventId = eventpoint.ValueRO.eventId,
+								entity = evt.Other
+							}
+						);
 					}
 				}
 			}
@@ -58,14 +73,15 @@ namespace hexegeer.internallib {
 
 		partial struct TriggerExitJob : IJobEntity {
 			[ReadOnly] public ComponentLookup<EventPointAccessible> accessibles;
-			public NativeList<int> eventList;
+			public DynamicBuffer<EventElement> eventElements;
 
 			void Execute(in Entity entity, RefRO<EventPoint> eventpoint, ref DynamicBuffer<ColliderTriggerExitEvent> evts) {
 				foreach (ColliderTriggerExitEvent evt in evts) {
 					if (accessibles.HasComponent(evt.Other)) {
-						for (int i = 0; i < eventList.Count; ++i) {
-							if (eventList[i] == eventpoint.ValueRO.eventId) {
-								eventList.RemoveAt(i);
+						for (int i = 0; i < eventElements.Length; ++i) {
+							if (eventElements[i].eventId == eventpoint.ValueRO.eventId &&
+								eventElements[i].entity == evt.Other ) {
+								eventElements.RemoveAt(i);
 								break;
 							}
 						}

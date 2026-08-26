@@ -261,6 +261,7 @@ namespace hexegeer {
 							belongsTo = row.belongsTo,
 							collidesWith = row.collidesWith,
 							hasObservationPoint = row.hasObservationPoint,
+							eventAccessible = row.eventAccessible,
 						};
 					}
 					

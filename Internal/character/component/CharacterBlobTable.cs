@@ -37,6 +37,7 @@ namespace hexegeer.internallib {
 		public int belongsTo;
 		public int collidesWith;
 		public bool hasObservationPoint;
+		public bool eventAccessible;
 	}
 
 	public struct CharacterHitAreaListAsset {

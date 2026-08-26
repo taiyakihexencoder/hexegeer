@@ -51,7 +51,6 @@ namespace hexegeer.internallib {
 				ComponentType.ReadWrite<CharacterHeader>(),
 				ComponentType.ReadWrite<CharacterMoveStatus>(),
 				ComponentType.ReadWrite<CharacterGroundedStatus>(),
-				ComponentType.ReadWrite<EventPointAccessible>(),
 				ComponentType.ReadWrite<PhysicsCollider>(),
 				ComponentType.ReadWrite<PhysicsGravityFactor>(),
 				ComponentType.ReadWrite<PhysicsMass>(),
@@ -319,6 +318,10 @@ namespace hexegeer.internallib {
 
 			if (info.hasObservationPoint) {
 				entityManager.AddComponent<FieldObservationPoint>(prefab);
+			}
+
+			if (info.eventAccessible) {
+				entityManager.AddComponent<EventPointAccessible>(prefab);
 			}
 
 			// Motion Settings
