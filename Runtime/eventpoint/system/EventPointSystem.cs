@@ -1,8 +1,9 @@
-﻿using Unity.Collections;
+﻿using hexegeer.internallib;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 
-namespace hexegeer.internallib {
+namespace hexegeer {
 	[UpdateInGroup(typeof(HexegeerUseColliderGroup))]
 	public partial struct EventPointSystem : ISystem {
 		private EntityQuery _query;

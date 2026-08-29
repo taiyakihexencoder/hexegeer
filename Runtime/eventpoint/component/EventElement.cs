@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-namespace hexegeer.internallib {
+namespace hexegeer {
 	public struct EventElement : IBufferElementData {
 		public int eventId;
 		public Entity entity;
