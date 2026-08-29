@@ -5,7 +5,7 @@ using UnityEngine;
 namespace hexegeer.editor {
 	internal class HexegeerEditor {
 		[MenuItem("Hexegeer/Setting Window")]
-		private static void Open() {
+		private static void OpenSettingWindow() {
 			HexegeerEditorGeneralWindow general = EditorWindow.CreateWindow<HexegeerEditorGeneralWindow>();
 			System.Type windowType = general.GetType();
 			EditorWindow.CreateWindow<HexegeerEditorCharacterWindow>(windowType);
@@ -30,5 +30,14 @@ namespace hexegeer.editor {
 		private static void OpenStreamingAssetFolder() {
 			EditorUtility.RevealInFinder(Application.streamingAssetsPath + Path.DirectorySeparatorChar);
 		}
+
+		[MenuItem("Hexegeer/Master Data Window")]
+		private static void OpenMasterDataWindow() {
+			HexegeerMasterDataTop top = EditorWindow.CreateWindow<HexegeerMasterDataTop>();
+			System.Type windowType = top.GetType();
+			EditorWindow.CreateWindow<HexegeerMasterDataTable>(windowType);
+			top.Focus();
+		}
+
 	}
 }
