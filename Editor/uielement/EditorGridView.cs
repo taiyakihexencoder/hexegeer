@@ -151,6 +151,11 @@ namespace hexegeer.editor {
 			Add(_background);
 
 			DrawBackground();
+
+			for (int r = 0; r < _heights.Count; ++r) {
+				OnAddRow(_heights[r]);
+			}
+			DrawRows();
 		}
 
 		private void Load(string pathFromAssets) {
@@ -584,89 +589,155 @@ namespace hexegeer.editor {
 		}
 
 		private void OnClick(int row, int column) {
-			if (_editField != null) {
-				_background.contentContainer.Remove(_editField);
-			}
+			ShowEditField(row, column);
+		}
+
+		private void ShowEditField(int row, int column) {
+			HideEditField();
+
+			int id = _columns[column].Id;
 
 			switch(_columns[column].Type) {
 				case ColumnType.INT: {
-					IntegerField intField = new IntegerField();
-					_editField = intField;
+					for (int i = 0; i < _intIds.Length; ++i) {
+						if (_intIds[i] == id) {
+							IntegerField intField = new IntegerField();
+							intField.SetValueWithoutNotify(_intData[i][row]);
+							int index = i;
+							intField.RegisterValueChangedCallback(v => { 
+								_intData[index][row] = v.newValue; 
+								DrawRow(row);
+							});
+							_editField = intField;
+							break;
+						}
+					}
 					break;
 				}
 				case ColumnType.LONG: {
-					LongField longField = new LongField();
-					_editField = longField;
+					for (int i = 0; i < _longIds.Length; ++i) {
+						if (_longIds[i] == id) {
+							LongField longField = new LongField();
+							longField.SetValueWithoutNotify(_longData[i][row]);
+							int index = i;
+							longField.RegisterValueChangedCallback(v => { 
+								_longData[index][row] = v.newValue; 
+								DrawRow(row);
+							});
+							_editField = longField;
+						}
+					}
 					break;
 				}
 				case ColumnType.BOOL: {
-					Toggle toggle = new Toggle();
-					Box box = new Box();
-					box.Add(toggle);
-					box.style.justifyContent = Justify.Center;
-					box.style.alignItems = Align.Center;
-					_editField = box;
+					for (int i = 0; i < _boolIds.Length; ++i) {
+						if (_boolIds[i] == id) {
+							Toggle toggle = new Toggle();
+							toggle.SetValueWithoutNotify(_boolData[i][row]);
+							int index = i;
+							toggle.RegisterValueChangedCallback(v => { 
+								_boolData[index][row] = v.newValue; 
+								DrawRow(row);
+							});
+							Box box = new Box();
+							box.Add(toggle);
+							box.style.justifyContent = Justify.Center;
+							box.style.alignItems = Align.Center;
+							_editField = box;
+						}
+					}
 					break;
 				}
 				case ColumnType.FLOAT: {
-					FloatField floatField = new FloatField();
-					_editField = floatField;
+					for (int i = 0; i < _floatIds.Length; ++i) {
+						if (_floatIds[i] == id) {
+							FloatField floatField = new FloatField();
+							floatField.SetValueWithoutNotify(_floatData[i][row]);
+							int index = i;
+							floatField.RegisterValueChangedCallback(v => { 
+								_floatData[index][row] = v.newValue;
+								DrawRow(row);
+							});
+							_editField = floatField;
+						}
+					}
 					break;
 				}
 				case ColumnType.STRING: {
-					TextField textField = new TextField();
-					_editField = textField;
+					for (int i = 0; i < _textIds.Length; ++i) {
+						if (_textIds[i] == id) {
+							TextField textField = new TextField();
+							textField.SetValueWithoutNotify(_textData[i][row]);
+							int index = i;
+							textField.RegisterValueChangedCallback(v => {
+								_textData[index][row] = v.newValue;
+								DrawRow(row);
+							});
+							_editField = textField;
+						}
+					}
 					break;
 				}
 			}
 
-			float left = ROW_HEADER_WIDTH;
-			for (int i = 0; i < column; ++i) {
-				left += _widths[i];
+			if (_editField != null) {
+				float left = ROW_HEADER_WIDTH;
+				for (int i = 0; i < column; ++i) {
+					left += _widths[i];
+				}
+				float width = _widths[column];
+
+				float top = COLUMN_HEADER_HEIGHT;
+				for (int i = 0; i < row; ++i) {
+					top += _heights[i];
+				}
+				float height = _heights[row];
+
+				Color borderColor = new Color(0.5f, 0.6f, 1f);
+				_editField.style.marginLeft = 0f;
+				_editField.style.marginRight = 0f;
+				_editField.style.marginTop = 0f;
+				_editField.style.marginBottom = 0f;
+
+				_editField.style.position = Position.Absolute;
+				_editField.style.left = (int)left+1;
+				_editField.style.top = (int)top+1;
+				_editField.style.width = width;
+				_editField.style.height = height;
+
+				VisualElement innerDesign = _editField.Q("unity-text-input") ?? _editField;
+				innerDesign.style.backgroundImage = Background.FromTexture2D(null);
+				innerDesign.style.backgroundColor = new Color(1f,1f,1f,1f);
+				innerDesign.style.marginLeft = 0f;
+				innerDesign.style.marginRight = 0f;
+				innerDesign.style.marginTop = 0f;
+				innerDesign.style.marginBottom = 0f;
+				innerDesign.style.color = Color.black;
+
+				innerDesign.style.borderTopLeftRadius = 0f;
+				innerDesign.style.borderTopRightRadius = 0f;
+				innerDesign.style.borderBottomLeftRadius = 0f;
+				innerDesign.style.borderBottomRightRadius = 0f;
+
+				innerDesign.style.borderLeftColor = borderColor;
+				innerDesign.style.borderRightColor = borderColor;
+				innerDesign.style.borderTopColor = borderColor;
+				innerDesign.style.borderBottomColor = borderColor;
+
+				_background.contentContainer.Add(_editField);
 			}
-			float width = _widths[column];
+		}
 
-			float top = COLUMN_HEADER_HEIGHT;
-			for (int i = 0; i < row; ++i) {
-				top += _heights[i];
+		private void HideEditField() {
+			if (_background.contentContainer.Contains(_editField)) {
+				_background.contentContainer.Remove(_editField);
+				_editField = null;
 			}
-			float height = _heights[row];
-
-			Color borderColor = new Color(0.5f, 0.6f, 1f);
-			_editField.style.marginLeft = 0f;
-			_editField.style.marginRight = 0f;
-			_editField.style.marginTop = 0f;
-			_editField.style.marginBottom = 0f;
-
-			_editField.style.position = Position.Absolute;
-			_editField.style.left = (int)left+1;
-			_editField.style.top = (int)top+1;
-			_editField.style.width = width;
-			_editField.style.height = height;
-
-			VisualElement innerDesign = _editField.Q("unity-text-input") ?? _editField;
-			innerDesign.style.backgroundImage = Background.FromTexture2D(null);
-			innerDesign.style.backgroundColor = new Color(1f,1f,1f,1f);
-			innerDesign.style.marginLeft = 0f;
-			innerDesign.style.marginRight = 0f;
-			innerDesign.style.marginTop = 0f;
-			innerDesign.style.marginBottom = 0f;
-			innerDesign.style.color = Color.black;
-
-			innerDesign.style.borderTopLeftRadius = 0f;
-			innerDesign.style.borderTopRightRadius = 0f;
-			innerDesign.style.borderBottomLeftRadius = 0f;
-			innerDesign.style.borderBottomRightRadius = 0f;
-
-			innerDesign.style.borderLeftColor = borderColor;
-			innerDesign.style.borderRightColor = borderColor;
-			innerDesign.style.borderTopColor = borderColor;
-			innerDesign.style.borderBottomColor = borderColor;
-
-			_background.contentContainer.Add(_editField);
 		}
 
 		private void RemoveRow(int index) {
+			HideEditField();
+
 			foreach(List<int> intList in _intData) { intList.RemoveAt(index); }
 			foreach(List<long> longList in _longData) { longList.RemoveAt(index); }
 			foreach(List<bool> boolList in _boolData) { boolList.RemoveAt(index); }
@@ -680,9 +751,9 @@ namespace hexegeer.editor {
 			UpdateBackground();
 		}
 
-		private void OnAddRow() {
+		private void OnAddRow(float? height = null) {
 			Row row = new Row()
-				.Height(DEFAULT_CONTENT_HEIGHT);
+				.Height(height ?? DEFAULT_CONTENT_HEIGHT);
 			row.pickingMode = PickingMode.Ignore;
 			for (int c = 0; c < _columns.Length; ++c) {
 				Label label = new Label();
@@ -744,6 +815,55 @@ namespace hexegeer.editor {
 			for (int i = 0; i < _columns.Length; ++i) {
 				Label label = labels[i];
 				label.text = values[i];
+			}
+		}
+
+		private void DrawRows() {
+			int intIdx = 0, longIdx = 0, boolIdx = 0, floatIdx = 0, textIdx = 0;
+
+			string[] values = new string[_columns.Length];
+			List<string[]> valueList = new List<string[]>(_heights.Count);
+			for (int row = 0; row < _heights.Count; ++row) {
+				valueList.Add(new string[_columns.Length]);
+			}
+
+			for(int c = 0; c < _columns.Length; ++c) {
+				int id = _columns[c].Id;
+				if (intIdx < _intIds.Length && _intIds[intIdx] == id) {
+					for (int row = 0; row < _heights.Count; ++row) {
+						valueList[row][c] = _intData[intIdx][row].ToString();
+					}
+					intIdx++;
+					continue;
+				} else if (longIdx < _longIds.Length && _longIds[longIdx] == id) {
+					for (int row = 0; row < _heights.Count; ++row) {
+						valueList[row][c] = _longData[longIdx][row].ToString();
+					}
+					longIdx++;
+					continue;
+				} else if (boolIdx < _boolIds.Length && _boolIds[boolIdx] == id) {
+					for (int row = 0; row < _heights.Count; ++row) {
+						valueList[row][c] = _boolData[boolIdx][row].ToString();
+					}
+					boolIdx++;
+					continue;
+				} else if (floatIdx < _floatIds.Length && _floatIds[floatIdx] == id) {
+					for (int row = 0; row < _heights.Count; ++row) {
+						valueList[row][c] = _floatData[floatIdx][row].ToString();
+					}
+					floatIdx++;
+					continue;
+				} else if (textIdx < _textIds.Length && _textIds[textIdx] == id) {
+					for (int row = 0; row < _heights.Count; ++row) {
+						valueList[row][c] = _textData[textIdx][row];
+					}
+					textIdx++;
+					continue;
+				}
+			}
+
+			for (int row = 0; row < _heights.Count; ++row) {
+				DrawRow(row, valueList[row]);
 			}
 		}
 
