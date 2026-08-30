@@ -8,7 +8,7 @@ namespace hexegeer.editor {
 			titleContent = new GUIContent("Table Sample");
 
 			EditorGridView grid = new EditorGridView(
-				Application.streamingAssetsPath + Path.DirectorySeparatorChar + "sample.bytes",
+				"StreamingAssets" + Path.DirectorySeparatorChar + "sample.bytes",
 				new EditorGridView.Column(1, "Column 1", EditorGridView.ColumnType.INT),
 				new EditorGridView.Column(2, "Column 2", EditorGridView.ColumnType.BOOL),
 				new EditorGridView.Column(3, "Column 3", EditorGridView.ColumnType.FLOAT),

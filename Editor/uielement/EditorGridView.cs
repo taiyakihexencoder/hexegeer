@@ -30,6 +30,7 @@ namespace hexegeer.editor {
 
 		public enum ColumnType {
 			INT,
+			LONG,
 			BOOL,
 			FLOAT,
 			STRING,
@@ -51,19 +52,24 @@ namespace hexegeer.editor {
 		private List<VisualElement> _foregroundViews = new List<VisualElement>();
 
 		private int[] _intIds;
+		private int[] _longIds;
 		private int[] _boolIds;
 		private int[] _floatIds;
 		private int[] _textIds;
 
 		List<int>[] _intData = null;
+		List<long>[] _longData = null;
 		List<bool>[] _boolData = null;
 		List<float>[] _floatData = null;
 		List<string>[] _textData = null;
 
-		public EditorGridView(string filePath, params Column[] columns) {
+		private string _pathFromAssets;
+
+		public EditorGridView(string pathFromAssets, params Column[] columns) {
 			style.width = new Length(100, LengthUnit.Percent);
 			style.height = new Length(100, LengthUnit.Percent);
 
+			_pathFromAssets = pathFromAssets;
 			_columns = columns;
 
 			_widths = new List<float>();
@@ -74,6 +80,7 @@ namespace hexegeer.editor {
 			_heights = new List<float>();
 
 			List<int> intColumns = new List<int>();
+			List<int> longColumns = new List<int>();
 			List<int> boolColumns = new List<int>();
 			List<int> floatColumns = new List<int>();
 			List<int> textColumns = new List<int>();
@@ -81,6 +88,10 @@ namespace hexegeer.editor {
 				switch(columns[c].Type) {
 					case ColumnType.INT: {
 						intColumns.Add(c);
+						break;
+					}
+					case ColumnType.LONG: {
+						longColumns.Add(c);
 						break;
 					}
 					case ColumnType.BOOL: {
@@ -105,6 +116,13 @@ namespace hexegeer.editor {
 				_intData[i] = new List<int>();
 			}
 
+			_longIds = new int[longColumns.Count];
+			_longData = new List<long>[longColumns.Count];
+			for (int i = 0; i < longColumns.Count; ++i) {
+				_longIds[i] = columns[longColumns[i]].Id;
+				_longData[i] = new List<long>();
+			}
+
 			_boolIds = new int[boolColumns.Count];
 			_boolData = new List<bool>[boolColumns.Count];
 			for (int i = 0; i < boolColumns.Count; ++i) {
@@ -126,7 +144,7 @@ namespace hexegeer.editor {
 				_textData[i] = new List<string>();
 			}
 
-			Load(filePath);
+			Load(pathFromAssets);
 
 			_background = new ScrollView(ScrollViewMode.VerticalAndHorizontal);
 			_background.StretchToParentSize();
@@ -135,7 +153,8 @@ namespace hexegeer.editor {
 			DrawBackground();
 		}
 
-		private void Load(string filePath) {
+		private void Load(string pathFromAssets) {
+			string filePath = Application.dataPath + Path.DirectorySeparatorChar + pathFromAssets;
 			if (File.Exists(filePath)) {
 				try {
 					using (FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read)) {
@@ -145,6 +164,24 @@ namespace hexegeer.editor {
 
 							int[] ids = new int[columns];
 							ColumnType[] types = new ColumnType[columns];
+							float[] widths = new float[columns];
+
+							for (short i = 0; i < columns; ++i) {
+								ids[i] = reader.ReadInt32();
+								types[i] = (ColumnType)(int)reader.ReadByte();
+								widths[i] = reader.ReadSingle();
+							}
+
+							_heights = new List<float>(ReadFloatArray(reader, rows));
+
+							for (short i = 0; i < columns; ++i) {
+								for (short c = 0; c < _columns.Length; ++c) {
+									if (_columns[c].Id == ids[i]) {
+										if (_columns[c].Type == types[c]) { _widths[c] = widths[i]; }
+										break;
+									}
+								}
+							}
 
 							short[][] textLength = new short[_textData.Length][];
 							for (int i = 0; i < textLength.Length; ++i) {
@@ -154,36 +191,50 @@ namespace hexegeer.editor {
 							for (int c = 0; c < columns; ++c) {
 								switch(types[c]) {
 									case ColumnType.INT: {
+										int[] intList = ReadIntArray(reader, rows);
 										for (int i = 0; i < _intIds.Length; ++i) {
 											if (_intIds[i] == ids[c]) {
-												_intData[i] = new List<int>(ReadIntArray(reader, rows));
+												_intData[i] = new List<int>(intList);
+												break;
+											}
+										}
+										break;
+									}
+									case ColumnType.LONG: {
+										long[] longList = ReadLongArray(reader, rows);
+										for (int i = 0; i < _longIds.Length; ++i) {
+											if (_longIds[i] == ids[c]) {
+												_longData[i] = new List<long>(longList);
 												break;
 											}
 										}
 										break;
 									}
 									case ColumnType.BOOL: {
+										bool[] boolList = ReadBoolArray(reader, rows);
 										for (int i = 0; i < _boolIds.Length; ++i) {
 											if (_boolIds[i] == ids[c]) {
-												_boolData[i] = new List<bool>(ReadBoolArray(reader, rows));
+												_boolData[i] = new List<bool>(boolList);
 												break;
 											}
 										}
 										break;
 									}
 									case ColumnType.FLOAT: {
+										float[] floatList = ReadFloatArray(reader, rows);
 										for (int i = 0; i < _floatIds.Length; ++i) {
 											if (_floatIds[i] == ids[c]) {
-												_floatData[i] = new List<float>(ReadFloatArray(reader, rows));
+												_floatData[i] = new List<float>(floatList);
 												break;
 											}
 										}
 										break;
 									}
 									case ColumnType.STRING: {
+										short[] textLengthList = ReadShortArray(reader, rows);
 										for (int i = 0; i < _textIds.Length; ++i) {
 											if (_textIds[i] == ids[c]) {
-												textLength[i] = ReadShortArray(reader, rows);
+												textLength[i] = textLengthList;
 												break;
 											}
 										}
@@ -208,6 +259,11 @@ namespace hexegeer.editor {
 									_intData[i] = new List<int>(new int[rows]);
 								}
 							}
+							for (int i = 0; i < _longData.Length; ++i) {
+								if (_longData[i].Count < rows) {
+									_longData[i] = new List<long>(new long[rows]);
+								}
+							}
 							for (int i = 0; i < _boolData.Length; ++i) {
 								if (_boolData[i].Count < rows) {
 									_boolData[i] = new List<bool>(new bool[rows]);
@@ -217,11 +273,6 @@ namespace hexegeer.editor {
 								if (_floatData[i].Count < rows) {
 									_floatData[i] = new List<float>(new float[rows]);
 								}
-							}
-
-							_heights.Clear();
-							for (int i = 0; i < rows; ++i) {
-								_heights.Add(DEFAULT_CONTENT_HEIGHT);
 							}
 						}
 					}
@@ -235,6 +286,11 @@ namespace hexegeer.editor {
 		private int[] ReadIntArray(BinaryReader reader, int count) {
 			byte[] bytes = reader.ReadBytes(count * sizeof(int));
 			return MemoryMarshal.Cast<byte, int>(bytes).ToArray();
+		}
+
+		private long[] ReadLongArray(BinaryReader reader, int count) {
+			byte[] bytes = reader.ReadBytes(count * sizeof(long));
+			return MemoryMarshal.Cast<byte, long>(bytes).ToArray();
 		}
 
 		private short[] ReadShortArray(BinaryReader reader, int count) {
@@ -276,11 +332,11 @@ namespace hexegeer.editor {
 			_gridArea = new Box();
 			_gridArea.style.position = Position.Absolute;
 			_gridArea.style.left = ROW_HEADER_WIDTH;
+			_gridArea.style.right = 0;
 			_gridArea.style.marginTop = COLUMN_HEADER_HEIGHT;
 			_gridArea.style.marginBottom = CONTROL_PANEL_HEIGHT;
 			_background.contentContainer.Add(_gridArea);
 
-			_gridArea.style.width = backgroundWidth;
 
 			_gridArea.style.backgroundColor = backgroundColor;
 
@@ -327,8 +383,8 @@ namespace hexegeer.editor {
 			_rowNumberArea.style.position = Position.Absolute;
 			_rowNumberArea.style.backgroundColor = headerBackgroundColor;
 			_rowNumberArea.style.left = _background.scrollOffset.x;
-			_rowNumberArea.style.marginTop = COLUMN_HEADER_HEIGHT;
-			_rowNumberArea.style.marginBottom = CONTROL_PANEL_HEIGHT;
+			_rowNumberArea.style.top = COLUMN_HEADER_HEIGHT;
+			_rowNumberArea.style.bottom = CONTROL_PANEL_HEIGHT;
 			_rowNumberArea.style.width = ROW_HEADER_WIDTH;
 			_background.contentContainer.Add(_rowNumberArea);
 
@@ -336,8 +392,8 @@ namespace hexegeer.editor {
 			_columnNumberArea.style.position = Position.Absolute;
 			_columnNumberArea.style.backgroundColor = headerBackgroundColor;
 			_columnNumberArea.style.left = ROW_HEADER_WIDTH;
+			_columnNumberArea.style.right = 0;
 			_columnNumberArea.style.top = _background.scrollOffset.y;
-			_columnNumberArea.style.width = backgroundWidth;
 			_columnNumberArea.style.height = COLUMN_HEADER_HEIGHT;
 			_background.contentContainer.Add(_columnNumberArea);
 
@@ -412,17 +468,36 @@ namespace hexegeer.editor {
 				headerLine.style.left = currentWidth;
 				headerLine.style.top = 0f;
 				headerLine.style.width = BORDER_WIDTH;
-				headerLine.style.height = COLUMN_HEADER_HEIGHT;
+				headerLine.style.height = COLUMN_HEADER_HEIGHT-1;
 				headerLine.style.backgroundColor = headerBorderColor;
 				_columnNumberArea.Add(headerLine);
 			}
 
+			Button saveButton = new Button(clickEvent: () => {
+				try {
+					Save();
+				} catch (System.Exception e) {
+					EditorUtility.DisplayDialog("Error", $"Save failed:{e.Message}", "Ok");
+					Debug.LogError(e);
+				}
+			});
+			saveButton.style.borderTopLeftRadius = 4f;
+			saveButton.style.borderTopRightRadius = 4f;
+			saveButton.style.borderBottomLeftRadius = 4f;
+			saveButton.style.borderBottomRightRadius = 4f;
+			saveButton.style.marginTop = 2f;
+			saveButton.style.marginBottom = 2f;
+			saveButton.style.paddingLeft = 12f;
+			saveButton.style.paddingRight = 12f;
+			saveButton.text = "Save";
+
 			Button addButton = new Button(clickEvent: () => {
 				OnAddRow();
-				foreach(List<int> intList in _intData) { intList.Add(default); }
-				foreach(List<bool> boolList in _boolData) { boolList.Add(default); }
-				foreach(List<float> floatList in _floatData) { floatList.Add(default); }
-				foreach(List<string> textList in _textData) { textList.Add(default); }
+				foreach(List<int> intList in _intData) { intList.Add(0); }
+				foreach(List<long> longList in _longData) { longList.Add(0L); }
+				foreach(List<bool> boolList in _boolData) { boolList.Add(false); }
+				foreach(List<float> floatList in _floatData) { floatList.Add(0f); }
+				foreach(List<string> textList in _textData) { textList.Add(""); }
 				_heights.Add(DEFAULT_CONTENT_HEIGHT);
 				UpdateBackground();
 				DrawRow(_heights.Count-1);
@@ -440,6 +515,7 @@ namespace hexegeer.editor {
 			addButton.text = "+";
 
 			_controlPanel.AddChildren(
+				saveButton,
 				new Spacer().Weight(1f),
 				addButton
 			);
@@ -463,7 +539,6 @@ namespace hexegeer.editor {
 			}
 			_horizontalLines.Clear();
 
-			_rowNumberArea.style.height = backgroundHeight;
 			_rowNumberArea.Clear();
 
 			float currentHeight = 0f;
@@ -501,7 +576,7 @@ namespace hexegeer.editor {
 				headerLine.style.position = Position.Absolute;
 				headerLine.style.left = 0f;
 				headerLine.style.top = currentHeight;
-				headerLine.style.width = ROW_HEADER_WIDTH;
+				headerLine.style.width = ROW_HEADER_WIDTH-1;
 				headerLine.style.height = BORDER_WIDTH;
 				headerLine.style.backgroundColor = headerBorderColor;
 				_rowNumberArea.Add(headerLine);
@@ -517,6 +592,11 @@ namespace hexegeer.editor {
 				case ColumnType.INT: {
 					IntegerField intField = new IntegerField();
 					_editField = intField;
+					break;
+				}
+				case ColumnType.LONG: {
+					LongField longField = new LongField();
+					_editField = longField;
 					break;
 				}
 				case ColumnType.BOOL: {
@@ -588,6 +668,7 @@ namespace hexegeer.editor {
 
 		private void RemoveRow(int index) {
 			foreach(List<int> intList in _intData) { intList.RemoveAt(index); }
+			foreach(List<long> longList in _longData) { longList.RemoveAt(index); }
 			foreach(List<bool> boolList in _boolData) { boolList.RemoveAt(index); }
 			foreach(List<float> floatList in _floatData) { floatList.RemoveAt(index); }
 			foreach(List<string> textList in _textData) { textList.RemoveAt(index); }
@@ -613,6 +694,7 @@ namespace hexegeer.editor {
 				label.pickingMode = PickingMode.Ignore;
 				switch(_columns[c].Type) {
 					case ColumnType.INT: { label.style.unityTextAlign = TextAnchor.MiddleRight; break; }
+					case ColumnType.LONG: { label.style.unityTextAlign = TextAnchor.MiddleRight; break; }
 					case ColumnType.BOOL: { label.style.unityTextAlign = TextAnchor.MiddleCenter; break; }
 					case ColumnType.FLOAT: { label.style.unityTextAlign = TextAnchor.MiddleRight; break; }
 					case ColumnType.STRING: { label.style.unityTextAlign = TextAnchor.MiddleLeft; break; }
@@ -624,7 +706,7 @@ namespace hexegeer.editor {
 		}
 
 		private void DrawRow(int row) {
-			int intIdx = 0, boolIdx = 0, floatIdx = 0, textIdx = 0;
+			int intIdx = 0, longIdx = 0, boolIdx = 0, floatIdx = 0, textIdx = 0;
 
 			string[] values = new string[_columns.Length];
 			for(int c = 0; c < _columns.Length; ++c) {
@@ -632,6 +714,10 @@ namespace hexegeer.editor {
 				if (intIdx < _intIds.Length && _intIds[intIdx] == id) {
 					values[c] = _intData[intIdx][row].ToString();
 					intIdx++;
+					continue;
+				} else if (longIdx < _longIds.Length && _longIds[longIdx] == id) {
+					values[c] = _longData[longIdx][row].ToString();
+					longIdx++;
 					continue;
 				} else if (boolIdx < _boolIds.Length && _boolIds[boolIdx] == id) {
 					values[c] = _boolData[boolIdx][row].ToString();
@@ -658,6 +744,77 @@ namespace hexegeer.editor {
 			for (int i = 0; i < _columns.Length; ++i) {
 				Label label = labels[i];
 				label.text = values[i];
+			}
+		}
+
+		public void Save() {
+			string basePath = Application.dataPath;
+			string[] paths = _pathFromAssets.Split(Path.DirectorySeparatorChar);
+			foreach(string path in paths) {
+				if (!Directory.Exists(basePath)) {
+					Directory.CreateDirectory(basePath);
+				}
+				basePath += Path.DirectorySeparatorChar + path;
+			}
+			string absPath = Application.dataPath + Path.DirectorySeparatorChar + _pathFromAssets;
+
+			using (FileStream stream = new FileStream(absPath, FileMode.OpenOrCreate, FileAccess.Write)) {
+				using (BinaryWriter writer = new BinaryWriter(stream, System.Text.Encoding.UTF8)) {
+					// 列数
+					writer.Write((short)_columns.Length);
+					// 行数
+					writer.Write(_heights.Count);
+
+					// 列情報 id, type, width
+					for (int c = 0; c < _columns.Length; ++c) {
+						writer.Write(_columns[c].Id);
+						writer.Write((byte)(int)_columns[c].Type);
+						writer.Write(_widths[c]);
+					}
+
+					// 行情報
+					writer.Write(MemoryMarshal.Cast<float, byte>(_heights.ToArray()).ToArray());
+
+					List<byte[]>[] textData = new List<byte[]>[_textData.Length];
+					List<short>[] textLengths = new List<short>[_textData.Length];
+					for (int i = 0; i < _textData.Length; ++i) {
+						textData[i] = new List<byte[]>(_textData[i].Count);
+						textLengths[i] = new List<short>(_textData[i].Count);
+						for (int j = 0; j < _textData[i].Count; ++j) {
+							byte[] data = System.Text.Encoding.UTF8.GetBytes(_textData[i][j]);
+							textData[i].Add(data);
+							textLengths[i].Add((short)data.Length);
+						}
+					}
+
+					// 各列のリスト
+					int intIdx = 0, longIdx = 0, boolIdx = 0, floatIdx = 0, textIdx = 0;
+					foreach (Column column in _columns) {
+						int id = column.Id;
+						if (intIdx < _intIds.Length && _intIds[intIdx] == id) {
+							writer.Write(MemoryMarshal.Cast<int, byte>(_intData[intIdx].ToArray()).ToArray());
+							intIdx++;
+						} else if (longIdx < _longIds.Length && _longIds[longIdx] == id) {
+							writer.Write(MemoryMarshal.Cast<long, byte>(_longData[longIdx].ToArray()).ToArray());
+							longIdx++;
+						} else if (boolIdx < _boolIds.Length && _boolIds[boolIdx] == id) {
+							writer.Write(MemoryMarshal.Cast<bool, byte>(_boolData[boolIdx].ToArray()).ToArray());
+							boolIdx++;
+						} else if (floatIdx < _floatIds.Length && _floatIds[floatIdx] == id) {
+							writer.Write(MemoryMarshal.Cast<float, byte>(_floatData[floatIdx].ToArray()).ToArray());
+							floatIdx++;
+						} else if (textIdx < _textIds.Length && _textIds[textIdx] == id) {
+							writer.Write(MemoryMarshal.Cast<short, byte>(textLengths[textIdx].ToArray()).ToArray());
+							textIdx++;
+						}
+					}
+
+					foreach(List<byte[]> texts in textData) {
+						foreach(byte[] text in texts) {
+							writer.Write(text);
+						}
+					}
+				}
 			}
 		}
 	}
