@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace hexegeer.internallib {
@@ -66,6 +67,20 @@ namespace hexegeer.internallib {
 				}
 			);
 			_scrollView.Add(ve);
+		}
+
+		public void RemoveSelection(System.Func<T, bool> condition) {
+			Unselect();
+			List<VisualElement> deleteList = new List<VisualElement>();
+			foreach(VisualElement ve in _scrollView.Children()) {
+				if (ve.userData is T userData) {
+					deleteList.Add(ve);
+				}
+			}
+
+			foreach (VisualElement ve in deleteList) {
+				_scrollView.Remove(ve);
+			}
 		}
 
 		private void OnListSelected() {

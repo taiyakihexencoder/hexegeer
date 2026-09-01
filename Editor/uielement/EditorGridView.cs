@@ -16,10 +16,11 @@ namespace hexegeer.editor {
 
 		private const float BORDER_WIDTH = 1f;
 
+		[System.Serializable]
 		public class Column {
-			public readonly int Id;
-			public readonly string Name;
-			public readonly ColumnType Type;
+			public int Id;
+			public string Name;
+			public ColumnType Type;
 
 			public Column(int id, string name, ColumnType type) {
 				Id = id;

@@ -4,24 +4,38 @@ using UnityEngine;
 
 namespace hexegeer.editor {
 	public sealed class HexegeerMasterDataTable : EditorWindow {
-		private void OnEnable() {
-			titleContent = new GUIContent("Table Sample");
+		public static string TablePath => $"StreamingAssets{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
+		private int _id;
+		private EditorGridView _gridView = null;
 
-			EditorGridView grid = new EditorGridView(
-				"StreamingAssets" + Path.DirectorySeparatorChar + "sample.bytes",
-				new EditorGridView.Column(1, "Column 1", EditorGridView.ColumnType.INT),
-				new EditorGridView.Column(2, "Column 2", EditorGridView.ColumnType.BOOL),
-				new EditorGridView.Column(3, "Column 3", EditorGridView.ColumnType.FLOAT),
-				new EditorGridView.Column(4, "Column 4", EditorGridView.ColumnType.STRING),
-				new EditorGridView.Column(5, "Column 5", EditorGridView.ColumnType.INT),
-				new EditorGridView.Column(6, "Column 6", EditorGridView.ColumnType.INT),
-				new EditorGridView.Column(7, "Column 7", EditorGridView.ColumnType.INT),
-				new EditorGridView.Column(8, "Column 8", EditorGridView.ColumnType.INT),
-				new EditorGridView.Column(9, "Column 9", EditorGridView.ColumnType.INT),
-				new EditorGridView.Column(10, "Column 10", EditorGridView.ColumnType.INT)
-			);
+		public static HexegeerMasterDataTable Open(int id) {
+			HexegeerMasterDataSettings settings = HexegeerMasterDataSettings.instance;
+			HexegeerMasterDataSettings.DataClass data = settings.ClassList.Find(_ => _.id == id);
 
-			rootVisualElement.Add(grid);
+			System.Type type = typeof(HexegeerMasterDataTop);
+			HexegeerMasterDataTable window = CreateWindow<HexegeerMasterDataTable>(type);
+
+			window._id = id;
+			if (data != null) {
+				window.titleContent = new GUIContent(data.className);
+			}
+			return window;
+		}
+
+		private void OnFocus() {
+			HexegeerMasterDataSettings settings = HexegeerMasterDataSettings.instance;
+			HexegeerMasterDataSettings.DataClass data = settings.ClassList.Find(_ => _.id == _id);
+			if (data != null) {
+				_gridView = new EditorGridView($"{TablePath}{data.fileName}", data.columns.ToArray());
+				rootVisualElement.Add(_gridView);
+			}
+		}
+
+		private void OnLostFocus() {
+			if (_gridView != null) {
+				rootVisualElement.Remove(_gridView);
+				_gridView = null;
+			}
 		}
 	}
 }
