@@ -671,8 +671,14 @@ namespace hexegeer.editor {
 							textField.SetValueWithoutNotify(_textData[i][row]);
 							int index = i;
 							textField.RegisterValueChangedCallback(v => {
-								_textData[index][row] = v.newValue;
-								DrawRow(row);
+								byte[] data = System.Text.Encoding.UTF8.GetBytes(v.newValue);
+								if (data.Length <= 60) {
+									_textData[index][row] = v.newValue;
+									DrawRow(row);
+								} else {
+									EditorUtility.DisplayDialog("Validation", "text need to be 60 or less bytes.", "Ok");
+									textField.SetValueWithoutNotify(_textData[index][row]);
+								}
 							});
 							_editField = textField;
 						}
@@ -902,7 +908,7 @@ namespace hexegeer.editor {
 						textData[i] = new List<byte[]>(_textData[i].Count);
 						textLengths[i] = new List<short>(_textData[i].Count);
 						for (int j = 0; j < _textData[i].Count; ++j) {
-							byte[] data = System.Text.Encoding.UTF8.GetBytes(_textData[i][j]);
+							byte[] data = System.Text.Encoding.UTF8.GetBytes(_textData[i][j] ?? "");
 							textData[i].Add(data);
 							textLengths[i].Add((short)data.Length);
 						}

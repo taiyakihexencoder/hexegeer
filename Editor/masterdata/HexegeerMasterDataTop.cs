@@ -24,6 +24,19 @@ namespace hexegeer.editor {
 			ScrollPane listPane = new ScrollPane();
 			_listView = new SelectableList<HexegeerMasterDataSettings.DataClass>();
 			CreateListView();
+
+			ClickButton generateButton = ClickButton.Create()
+				.Label("Generate Script")
+				.Margin(8f);
+			generateButton.OnClicked += () => {
+				HexegeerMasterDataScriptGenerator generator = new HexegeerMasterDataScriptGenerator();
+				if (generator.Validation(out List<string> messages)) {
+					generator.Generate($"masterdata{Path.DirectorySeparatorChar}MasterData.cs");
+				} else {
+					EditorUtility.DisplayDialog("Error", $"{string.Join(System.Environment.NewLine, messages)}", "Ok");
+				}
+			};
+
 			ClickButton addButton = ClickButton.Create()
 				.Label("+")
 				.Margin(8f);
@@ -34,6 +47,7 @@ namespace hexegeer.editor {
 				CreateListView();
 			};
 
+			listPane.Add(generateButton);
 			listPane.Add(Text.Body("Tables").Margin(8f));
 			listPane.Add(_listView);
 			listPane.Add(addButton);

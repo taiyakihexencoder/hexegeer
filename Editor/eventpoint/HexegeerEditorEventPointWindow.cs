@@ -108,6 +108,8 @@ namespace hexegeer.editor {
 				row.AddChildren(
 					descriptionButton,
 					nameField,
+					Text.Body("ID="),
+					Text.Body(settings.Rows[index].eventId.ToString()).Width(40f),
 					new Spacer().Weight(1f),
 					moveUpButton,
 					new Spacer(width:12f),

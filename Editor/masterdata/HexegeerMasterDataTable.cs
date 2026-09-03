@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace hexegeer.editor {
 	public sealed class HexegeerMasterDataTable : EditorWindow {
-		public static string TablePath => $"StreamingAssets{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
+		public static string TablePath => $"StreamingAssets{Path.DirectorySeparatorChar}hexegeer{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
 		private int _id;
 		private EditorGridView _gridView = null;
 
@@ -25,7 +25,7 @@ namespace hexegeer.editor {
 		private void OnFocus() {
 			HexegeerMasterDataSettings settings = HexegeerMasterDataSettings.instance;
 			HexegeerMasterDataSettings.DataClass data = settings.ClassList.Find(_ => _.id == _id);
-			if (data != null) {
+			if (data != null && _gridView == null) {
 				_gridView = new EditorGridView($"{TablePath}{data.fileName}", data.columns.ToArray());
 				rootVisualElement.Add(_gridView);
 			}
