@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using hexegeer.internallib;
-using Unity.Entities;
 using Unity.Mathematics;
 
 namespace hexegeer {
@@ -128,6 +127,15 @@ namespace hexegeer {
 
 				_nowTranslate = true;
 				Task.Run(() => Transition(currentList.ToArray(), nextList.ToArray(), matchedIndex));
+			}
+		}
+
+		internal void ForceEnd() {
+			if (_nodes.TryGetValue(_currentNode, out SequenceNode node)) {
+				while (node != null) {
+					node.sequencer.OnExit(this);
+					node = node.parent;
+				}
 			}
 		}
 
