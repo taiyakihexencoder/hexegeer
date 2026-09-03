@@ -61,8 +61,11 @@ namespace hexegeer.editor {
 			rootVisualElement.Add(_mainView);
 
 			EditorApplication.delayCall += () => {
+				List<HexegeerMasterDataTable> windowList = new List<HexegeerMasterDataTable>(Resources.FindObjectsOfTypeAll<HexegeerMasterDataTable>());
 				foreach (HexegeerMasterDataSettings.DataClass data in HexegeerMasterDataSettings.instance.ClassList) {
-					OpenTableWindow(data);
+					if (!windowList.Exists(_ => _.Id == data.id)) {
+						OpenTableWindow(data);
+					}
 				}
 				Focus();
 			};

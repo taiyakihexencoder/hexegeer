@@ -4,11 +4,12 @@ using UnityEngine;
 
 namespace hexegeer.editor {
 	public sealed class HexegeerMasterDataTable : EditorWindow {
-		public static string TablePath => $"StreamingAssets{Path.DirectorySeparatorChar}hexegeer{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
+		internal static string TablePath => $"StreamingAssets{Path.DirectorySeparatorChar}hexegeer{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
 		private int _id;
+		internal int Id => _id;
 		private EditorGridView _gridView = null;
 
-		public static HexegeerMasterDataTable Open(int id) {
+		internal static HexegeerMasterDataTable Open(int id) {
 			HexegeerMasterDataSettings settings = HexegeerMasterDataSettings.instance;
 			HexegeerMasterDataSettings.DataClass data = settings.ClassList.Find(_ => _.id == id);
 
