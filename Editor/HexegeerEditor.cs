@@ -33,7 +33,18 @@ namespace hexegeer.editor {
 
 		[MenuItem("Hexegeer/Master Data Window")]
 		private static void OpenMasterDataWindow() {
-			HexegeerMasterDataTop top = EditorWindow.CreateWindow<HexegeerMasterDataTop>();
+			EditorWindow.CreateWindow<HexegeerMasterDataTop>();
+		}
+
+		[MenuItem("Hexegeer/Generate Addressable List")]
+		private static void GenerateAddressableList() {
+			try {
+				AddressableListGenerator generator = new AddressableListGenerator();
+				generator.Generate($"utility{Path.DirectorySeparatorChar}ResourceAddressList.cs");
+			} catch (System.Exception e) {
+				EditorUtility.DisplayDialog("Error", e.Message, "Ok");
+				D.LogE(e);
+			}
 		}
 	}
 }
