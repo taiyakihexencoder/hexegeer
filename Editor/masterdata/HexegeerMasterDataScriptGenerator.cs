@@ -85,7 +85,7 @@ namespace hexegeer.editor {
 										offset += sizeof(int) + sizeof(byte) + sizeof(float);
 									}
 
-									using (Function($"case MasterDataKey.{ToSneak(data.className)}_ID:")) {
+									using (Function($"case MasterDataKey.{ToSnake(data.className)}_ID:")) {
 										AppendLine($"{data.className}Table componentOf{data.className} = new {data.className}Table();");
 										using (Function("using (BlobBuilder builder = new BlobBuilder(Allocator.Temp))")) {
 											AppendLine($"ref EventEntityBlobAsset asset = ref builder.ConstructRoot<{data.className}BlobAsset>();");
@@ -169,7 +169,7 @@ namespace hexegeer.editor {
 					using(Function("static partial void DisposeTable(EntityManager entityManager, MasterDataKey key)")) {
 						foreach (HexegeerMasterDataSettings.DataClass data in settings.ClassList) {
 							using (Function("switch (key.Id)")) {
-								using (Function($"case MasterDataKey.{ToSneak(data.className)}_ID:")) {
+								using (Function($"case MasterDataKey.{ToSnake(data.className)}_ID:")) {
 									using (Function($"if (entityManager.Exists(_table{data.className}Entity))")) {
 										AppendLine($"entityManager.GetComponentData<{data.className}Table>(_table{data.className}Entity).reference.Dispose();");
 										AppendLine($"entityManager.DestroyEntity(_table{data.className}Entity);");
@@ -199,7 +199,7 @@ namespace hexegeer.editor {
 					List<string> keyName = new List<string>();
 					List<string> fileName = new List<string>();
 					foreach(HexegeerMasterDataSettings.DataClass data in settings.ClassList) {
-						string str = ToSneak(data.className);
+						string str = ToSnake(data.className);
 						AppendLine($"public const int {str}_ID = {data.id};");
 						keyName.Add(data.className);
 						constName.Add(str);
@@ -257,7 +257,7 @@ namespace hexegeer.editor {
 			}
 		}
 
-		private string ToSneak(string pattern) {
+		private string ToSnake(string pattern) {
 			string str = "";
 			foreach (char ch in pattern) {
 				if (str.Length == 0) {
