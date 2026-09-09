@@ -46,5 +46,16 @@ namespace hexegeer.editor {
 				D.LogE(e);
 			}
 		}
+
+		[MenuItem("Hexegeer/Generate Localize List")]
+		private static void GenerateLocalizeList() {
+			try {
+				LocalizeListGenerator generator = new LocalizeListGenerator();
+				generator.Generate($"utility{Path.DirectorySeparatorChar}LocalizeKey.cs");
+			} catch (System.Exception e) {
+				EditorUtility.DisplayDialog("Error", e.Message, "Ok");
+				D.LogE(e);
+			}
+		}
 	}
 }

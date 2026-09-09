@@ -5,7 +5,9 @@
         "com.hexencoder.hexegeer.internal",
         "com.hexencoder.hexegeer",
         "Unity.Addressables",
-        "Unity.Addressables.Editor"
+        "Unity.Addressables.Editor",
+        "Unity.Localization",
+        "Unity.Localization.Editor"
     ],
     "includePlatforms": [
         "Editor"

@@ -8,6 +8,7 @@
     "com.unity.inputsystem": "1.18.0",
     "com.unity.entities": "6.5.0",
     "com.unity.entities.graphics": "6.5.0",
+    "com.unity.localization": "1.5.13",
     "com.unity.physics": "6.5.0"
   }
 }
