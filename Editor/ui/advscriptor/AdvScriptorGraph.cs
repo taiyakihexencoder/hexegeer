@@ -84,4 +84,26 @@ namespace hexegeer.editor {
 			context.AddInputPort("");
 		}
 	}
+
+	[System.Serializable, UseWithGraph(typeof(AdvScriptorGraph))]
+	public sealed class AdvWaitInput : Node {
+		protected override void OnDefineOptions(IOptionDefinitionContext context) {
+			
+		}
+
+		protected override void OnDefinePorts(IPortDefinitionContext context) {
+			context.AddInputPort("");
+		}
+	}
+
+	[System.Serializable, UseWithGraph(typeof(AdvScriptorGraph))]
+	public sealed class AdvWaitSeconds : Node {
+		protected override void OnDefineOptions(IOptionDefinitionContext context) {
+		}
+
+		protected override void OnDefinePorts(IPortDefinitionContext context) {
+			context.AddInputPort("");
+			context.AddInputPort<float>("Seconds");
+		}
+	}
 }

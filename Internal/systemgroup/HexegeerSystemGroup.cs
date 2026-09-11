@@ -79,6 +79,8 @@ namespace hexegeer.internallib {
 		}
 	}
 
+	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
+	public partial class HexegeerEventSystemGroup : ComponentSystemGroup { }
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerInputSystemGroup : ComponentSystemGroup { }
