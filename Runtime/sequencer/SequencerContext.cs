@@ -141,7 +141,7 @@ namespace hexegeer {
 
 		private async Task Transition(int[] upIndices, int[] downIndices, int rootIndex) {
 			// 共通しているレイヤーまで上っていく
-			for(int i = upIndices.Length-1; i >= rootIndex; ++i) {
+			for(int i = upIndices.Length-1; i >= rootIndex; --i) {
 				_currentNode = upIndices[i];
 				if (_nodes.TryGetValue(upIndices[i], out SequenceNode node)) {
 					await node.sequencer.OnExit(this);
