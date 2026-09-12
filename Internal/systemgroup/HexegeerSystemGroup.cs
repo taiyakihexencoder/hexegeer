@@ -73,14 +73,19 @@ namespace hexegeer.internallib {
 
 	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
 	public partial class HexegeerFieldSystemGroup : ComponentSystemGroup {
-		protected override void OnCreate(){
+		protected override void OnCreate() {
 			base.OnCreate();
 			RequireForUpdate<FieldSetting>();
 		}
 	}
 
 	[UpdateInGroup(typeof(HexegeerWorldSystemGroup))]
-	public partial class HexegeerEventSystemGroup : ComponentSystemGroup { }
+	public partial class HexegeerEventSystemGroup : ComponentSystemGroup {
+		protected override void OnCreate() {
+			base.OnCreate();
+			RequireForUpdate<HexegeerSystemModuleEventComponent>();
+		}
+	}
 
 	[UpdateInGroup(typeof(HexegeerSimulationSystemGroup))]
 	public partial class HexegeerInputSystemGroup : ComponentSystemGroup { }

@@ -72,5 +72,23 @@ namespace hexegeer.internallib {
 				_systemEntity = Entity.Null;
 			}
 		}
+
+		public static void StartModule(EntityCommandBuffer commandBuffer, HexegeerSystemModule module) {
+			Entity entity = commandBuffer.CreateEntity();
+			commandBuffer.AddComponent(entity, new HexegeerStartSystemModuleRequest { module = module, });
+		}
+
+		public static void StartModule(EntityManager entityManager, HexegeerSystemModule module) {
+			ECS.Create(entityManager, new HexegeerStartSystemModuleRequest { module = module, });
+		}
+
+		public static void EndModule(EntityCommandBuffer commandBuffer, HexegeerSystemModule module) {
+			Entity entity = commandBuffer.CreateEntity();
+			commandBuffer.AddComponent(entity, new HexegeerEndSystemModuleRequest { module = module, });
+		}
+
+		public static void EndModule(EntityManager entityManager, HexegeerSystemModule module) {
+			ECS.Create(entityManager, new HexegeerEndSystemModuleRequest { module = module, });
+		}
 	}
 }

@@ -106,5 +106,22 @@ namespace hexegeer {
 				}
 			);
 		}
+
+		public static void StartEventModule(EntityManager entityManager) {
+			HexegeerManager.StartModule(entityManager, HexegeerSystemModule.Event);
+		}
+
+		public static void StartEventModule(EntityCommandBuffer commandBuffer) {
+			HexegeerManager.StartModule(commandBuffer, HexegeerSystemModule.Event);
+		}
+
+		public static void EndEventModule(EntityManager entityManager) {
+			HexegeerManager.EndModule(entityManager, HexegeerSystemModule.Event);
+		}
+
+		public static void EndEventModule(EntityCommandBuffer commandBuffer) {
+			HexegeerManager.EndModule(commandBuffer, HexegeerSystemModule.Event);
+		}
+
 	}
 }
