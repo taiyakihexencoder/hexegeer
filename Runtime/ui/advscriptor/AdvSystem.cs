@@ -42,13 +42,18 @@ namespace hexegeer {
 		}
 
 		protected override void OnUpdate() {
-			if (_script != null) {
-				if (_player.FlagEnd) {
-					_script = null;
-					EntityCommandBuffer commandBuffer = CreateCommandBuffer();
-					commandBuffer.DestroyEntity(_query, EntityQueryCaptureMode.AtPlayback);
-				} else {
-					_player.Update(_script);
+			if (SystemAPI.TryGetSingletonEntity<InputMainStick>(out Entity inputEntity)){
+				DynamicBuffer<InputReleasedEvent> releasedEvent = SystemAPI.GetBuffer<InputReleasedEvent>(inputEntity);
+				RefRO<InputMainStick> mainStick = SystemAPI.GetComponentRO<InputMainStick>(inputEntity);
+
+				if (_script != null) {
+					if (_player.FlagEnd) {
+						_script = null;
+						EntityCommandBuffer commandBuffer = CreateCommandBuffer();
+						commandBuffer.DestroyEntity(_query, EntityQueryCaptureMode.AtPlayback);
+					} else {
+						_player.Update(_script, releasedEvent, mainStick.ValueRO);
+					}
 				}
 			}
 		}

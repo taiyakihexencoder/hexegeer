@@ -61,18 +61,24 @@ namespace hexegeer {
 			_flagEnd = true;
 		}
 
-		public void Update(AdvScript script) {
+		public void Update(AdvScript script, DynamicBuffer<InputReleasedEvent> releaseEvents, in InputMainStick mainStick) {
 			if (_processor != null && script != null) {
 				if (_windowSequenceProcess != null) {
 					_processor.ProcessWindowSequence(_windowSequenceProcess.CalledOnce, () => SetFlagWindowSequence(script));
 				} else if (_playTextProcess != null) {
 					_processor.ProcessPlayText(
+						mainStick,
+						releaseEvents,
 						_playTextProcess.Speaker,
 						_playTextProcess.Text,
 						() => SetFlagPlayerText(script)
 					);
 				} else if (_waitInputProcess != null) {
-					_processor.ProcessWaitInput(() => SetFlagWaitInput(script));
+					_processor.ProcessWaitInput(
+						mainStick,
+						releaseEvents,
+						() => SetFlagWaitInput(script)
+					);
 				} else if (_waitSecondsProcess != null) {
 					float dt = Time.deltaTime;
 					_waitSecondsElapsed += dt;
