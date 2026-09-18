@@ -106,4 +106,15 @@ namespace hexegeer.editor {
 			context.AddInputPort<float>("Seconds");
 		}
 	}
+
+	[System.Serializable, UseWithGraph(typeof(AdvScriptorGraph))]
+	public sealed class AdvEnd : Node {
+		protected override void OnDefineOptions(IOptionDefinitionContext context) {
+			context.AddOption<AdvEndType>("Type");
+		}
+
+		protected override void OnDefinePorts(IPortDefinitionContext context) {
+			context.AddInputPort("");
+		}
+	}
 }

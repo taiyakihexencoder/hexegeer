@@ -3,7 +3,7 @@ using Unity.Collections;
 using Unity.Entities;
 
 namespace hexegeer {
-	[UpdateInGroup(typeof(internallib.HexegeerGlobalSystemGroup))]
+	[UpdateInGroup(typeof(SimulationSystemGroup))]
 	public partial class SequencerSystem : SystemBase {
 		private EntityQuery query;
 

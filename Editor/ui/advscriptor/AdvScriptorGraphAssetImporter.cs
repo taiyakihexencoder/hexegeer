@@ -78,6 +78,8 @@ namespace hexegeer.editor {
 			} else if (node is AdvWaitSeconds waitSeconds) {
 				int nextIndex = listIndex == listCount-1 ? parentIndex : seqIndex+1;
 				AddNodeWaitSeconds(serializedObject, waitSeconds, seqIndex, nextIndex);
+			} else if (node is AdvEnd end) {
+				AddNodeEnd(serializedObject, end, seqIndex);
 			}
 		}
 
@@ -138,6 +140,16 @@ namespace hexegeer.editor {
 				property.FindPropertyRelative("_nextIndex").intValue = nextIndex;
 				if (node.TryGetInput("Seconds", out float value)) {
 					property.FindPropertyRelative("_seconds").floatValue = value;
+				}
+			});
+		}
+
+		private void AddNodeEnd(SerializedObject serializedObject, AdvEnd node, int seqIndex) {
+			SerializedProperty properties = serializedObject.FindProperty("_endProcess");
+			properties.Add(property => {
+				property.FindPropertyRelative("_sequenceIndex").intValue = seqIndex;
+				if (node.TryGetOption("Type", out AdvEndType endType)) {
+					property.FindPropertyRelative("_typeId").intValue = endType.Id;
 				}
 			});
 		}

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Physics.Systems;
 
 namespace hexegeer.internallib {
 	public static class ECS {
@@ -381,6 +382,13 @@ namespace hexegeer.internallib {
 			entityManager.RemoveComponent<T2>(entity);
 			entityManager.RemoveComponent<T3>(entity);
 			entityManager.RemoveComponent<T4>(entity);
+		}
+
+		internal static void SetPhysicsSystemEnabled(bool enabled) {
+			PhysicsSystemGroup physicsSystemGroup = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<PhysicsSystemGroup>();
+			if (physicsSystemGroup != null) {
+				physicsSystemGroup.Enabled = enabled;
+			}
 		}
 	}
 }

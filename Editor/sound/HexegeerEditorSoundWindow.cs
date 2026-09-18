@@ -17,11 +17,15 @@ namespace hexegeer.editor {
 		private ScrollPane _detailView = null;
 
 		private AddressableListPopupBuilder _musicPopupBuilder;
+		private AddressableListPopupBuilder _systemSoundPopupBuilder;
+		private AddressableListPopupBuilder _environmentSoundPopupBuilder;
 
 		private List<bool> _descriptionVisibility = new List<bool>();
 
 		private void OnEnable() {
 			_musicPopupBuilder = new AddressableListPopupBuilder(type: typeof(AudioClip), rootPath: "music");
+			_systemSoundPopupBuilder = new AddressableListPopupBuilder(type: typeof(AudioClip), rootPath: "systemSound");
+			_environmentSoundPopupBuilder = new AddressableListPopupBuilder(type: typeof(AudioClip), rootPath: "sound");
 
 			titleContent = new GUIContent("Sound");
 			rootVisualElement.Add(CreateView());
@@ -209,11 +213,235 @@ namespace hexegeer.editor {
 		}
 		private void SetSEView(ScrollPane pane) {
 			pane.Clear();
-			pane.Add(Text.H2("SE"));
+
+			Row title = new Row();
+			ClickButton generateScriptButton = ClickButton.Create()
+				.Label("Generate Script");
+			generateScriptButton.OnClicked += () => {
+				EnvironmentSoundScriptGenerator generator = new EnvironmentSoundScriptGenerator();
+				if (generator.Validation(out List<string> messages)) {
+					generator.Generate($"sound{Path.DirectorySeparatorChar}EnvironmentSoundId.cs");
+				} else {
+					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, messages), "Ok");
+				}
+			};
+			ClickButton generateResourceButton = ClickButton.Create()
+				.Label("Generate Resource");
+			generateResourceButton.OnClicked += () => {
+				EnvironmentSoundScriptGenerator validation = new EnvironmentSoundScriptGenerator();
+				if (validation.Validation(out List<string> messages)) {
+					EnvironmentSoundTableGenerator generator = new EnvironmentSoundTableGenerator();
+					generator.Generate("EnvironmentSoundTable.asset");
+				} else {
+					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, messages), "Ok");
+				}
+			};
+
+			title.AddChildren(
+				Text.H2("Environment Sound"),
+				new Spacer().Weight(1f),
+				generateScriptButton,
+				new Spacer(width:12f),
+				generateResourceButton
+			);
+
+			pane.Add(title);
+
+			SoundSettings settings = SoundSettings.instance;
+
+			for (int i = 0; i < settings.EnvironmentSoundList.Count; ++i) {
+				if (_descriptionVisibility.Count <= i) {
+					_descriptionVisibility.Add(false);
+				}
+
+				int index = i;
+				Row row = new Row();
+
+				TextField nameField = new TextField();
+				nameField.style.flexBasis = 0f;
+				nameField.style.flexGrow = 1f;
+				nameField.SetValueWithoutNotify(settings.EnvironmentSoundList[i].name);
+				nameField.RegisterValueChangedCallback(v => {
+					settings.EnvironmentSoundList[index].name = v.newValue;
+					settings.UpdateEnvironmentSound(index, settings.EnvironmentSoundList[index]);
+				});
+				
+				PopupField<string> assetPopup = _environmentSoundPopupBuilder.Generate(settings.EnvironmentSoundList[i].address);
+				assetPopup.style.flexBasis = 0f;
+				assetPopup.style.flexGrow = 1f;
+				assetPopup.RegisterValueChangedCallback(v => {
+					settings.EnvironmentSoundList[index].address = v.newValue;
+					settings.UpdateEnvironmentSound(index, settings.EnvironmentSoundList[index]);
+				});
+
+				ClickButton upButton = ClickButton.Create()
+					.Label("↑");
+				upButton.enabledSelf = index > 0;
+				upButton.OnClicked += () => {
+					bool temp = _descriptionVisibility[index];
+					_descriptionVisibility[index] = _descriptionVisibility[index-1];
+					_descriptionVisibility[index-1] = temp;
+
+					settings.MoveUpEnvironmentSound(index);
+					SetSEView(pane);
+				};
+				ClickButton downButton = ClickButton.Create()
+					.Label("↓");
+				downButton.enabledSelf = index < settings.EnvironmentSoundList.Count-1;
+				downButton.OnClicked += () => {
+					bool temp = _descriptionVisibility[index];
+					_descriptionVisibility[index] = _descriptionVisibility[index+1];
+					_descriptionVisibility[index+1] = temp;
+
+					settings.MoveDownEnvironmentSound(index);
+					SetSEView(pane);
+				};
+
+				ClickButton deleteButton = ClickButton.Create()
+					.Label("×");
+				deleteButton.OnClicked += () => {
+					_descriptionVisibility.RemoveAt(index);
+					settings.RemoveEnvironmentSound(index);
+					SetSEView(pane);
+				};
+
+				row.AddChildren(
+					nameField,
+					assetPopup,
+					new Spacer(width: 24f),
+					upButton,
+					downButton,
+					new Spacer(width: 24f),
+					deleteButton
+				);
+				pane.Add(row);
+			}
+
+			pane.Add(new Spacer(height: 20f));
+
+			ClickButton addButton = ClickButton.Create()
+				.Label("+");
+			addButton.OnClicked += () => {
+				settings.AddEnvironmentSound();
+				SetSEView(pane);
+			};
+			pane.Add(addButton);
 		}
 		private void SetSystemSEView(ScrollPane pane) {
 			pane.Clear();
-			pane.Add(Text.H2("SystemSE"));
+
+			Row title = new Row();
+			ClickButton generateScriptButton = ClickButton.Create()
+				.Label("Generate Script");
+			generateScriptButton.OnClicked += () => {
+				SystemSoundScriptGenerator generator = new SystemSoundScriptGenerator();
+				if (generator.Validation(out List<string> messages)) {
+					generator.Generate($"sound{Path.DirectorySeparatorChar}SystemSoundId.cs");
+				} else {
+					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, messages), "Ok");
+				}
+			};
+			ClickButton generateResourceButton = ClickButton.Create()
+				.Label("Generate Resource");
+			generateResourceButton.OnClicked += () => {
+				SystemSoundScriptGenerator validation = new SystemSoundScriptGenerator();
+				if (validation.Validation(out List<string> messages)) {
+					SystemSoundTableGenerator generator = new SystemSoundTableGenerator();
+					generator.Generate("SystemSoundTable.asset");
+				} else {
+					EditorUtility.DisplayDialog("Error", string.Join(System.Environment.NewLine, messages), "Ok");
+				}
+			};
+
+			title.AddChildren(
+				Text.H2("System Sound"),
+				new Spacer().Weight(1f),
+				generateScriptButton,
+				new Spacer(width:12f),
+				generateResourceButton
+			);
+
+			pane.Add(title);
+
+			SoundSettings settings = SoundSettings.instance;
+
+			for (int i = 0; i < settings.SystemSoundList.Count; ++i) {
+				if (_descriptionVisibility.Count <= i) {
+					_descriptionVisibility.Add(false);
+				}
+
+				int index = i;
+				Row row = new Row();
+
+				TextField nameField = new TextField();
+				nameField.style.flexBasis = 0f;
+				nameField.style.flexGrow = 1f;
+				nameField.SetValueWithoutNotify(settings.SystemSoundList[i].name);
+				nameField.RegisterValueChangedCallback(v => {
+					settings.SystemSoundList[index].name = v.newValue;
+					settings.UpdateSystemSound(index, settings.SystemSoundList[index]);
+				});
+				
+				PopupField<string> assetPopup = _systemSoundPopupBuilder.Generate(settings.SystemSoundList[i].address);
+				assetPopup.style.flexBasis = 0f;
+				assetPopup.style.flexGrow = 1f;
+				assetPopup.RegisterValueChangedCallback(v => {
+					settings.SystemSoundList[index].address = v.newValue;
+					settings.UpdateSystemSound(index, settings.SystemSoundList[index]);
+				});
+
+				ClickButton upButton = ClickButton.Create()
+					.Label("↑");
+				upButton.enabledSelf = index > 0;
+				upButton.OnClicked += () => {
+					bool temp = _descriptionVisibility[index];
+					_descriptionVisibility[index] = _descriptionVisibility[index-1];
+					_descriptionVisibility[index-1] = temp;
+
+					settings.MoveUpSystemSound(index);
+					SetSystemSEView(pane);
+				};
+				ClickButton downButton = ClickButton.Create()
+					.Label("↓");
+				downButton.enabledSelf = index < settings.SystemSoundList.Count-1;
+				downButton.OnClicked += () => {
+					bool temp = _descriptionVisibility[index];
+					_descriptionVisibility[index] = _descriptionVisibility[index+1];
+					_descriptionVisibility[index+1] = temp;
+
+					settings.MoveDownSystemSound(index);
+					SetSystemSEView(pane);
+				};
+
+				ClickButton deleteButton = ClickButton.Create()
+					.Label("×");
+				deleteButton.OnClicked += () => {
+					_descriptionVisibility.RemoveAt(index);
+					settings.RemoveSystemSound(index);
+					SetSystemSEView(pane);
+				};
+
+				row.AddChildren(
+					nameField,
+					assetPopup,
+					new Spacer(width: 24f),
+					upButton,
+					downButton,
+					new Spacer(width: 24f),
+					deleteButton
+				);
+				pane.Add(row);
+			}
+
+			pane.Add(new Spacer(height: 20f));
+
+			ClickButton addButton = ClickButton.Create()
+				.Label("+");
+			addButton.OnClicked += () => {
+				settings.AddSystemSound();
+				SetSEView(pane);
+			};
+			pane.Add(addButton);
 		}
 	}
 }
